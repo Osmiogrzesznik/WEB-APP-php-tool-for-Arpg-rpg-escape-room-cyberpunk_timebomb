@@ -245,8 +245,15 @@ fetch("allFonts.txt").then(x => x.text())
         document.body.insertAdjacentElement("afterbegin", s);
     })
 
+/**
+ * Pseudoclass quasi class let keywords allow each object have its own methods
+ *
+ * @param {string} pswd password
+ * @returns kbCtrl keyboard Controller object
+ */
 function CodeKeyboard(pswd) {
     let customKeyboard = {}
+
     let update = function () {
         let nd = this.disp,
             ib = this.inpBuf,
@@ -255,6 +262,7 @@ function CodeKeyboard(pswd) {
         nd.innerText = this.inpBuf + "_".repeat(ndl - ibl)
     }
 
+    // resets Display filling it with underscores depending on the passwrod length
     let resetDisplay = function () {
         this.kbd.innerText = "_".repeat(this.pswd.length);
     }
