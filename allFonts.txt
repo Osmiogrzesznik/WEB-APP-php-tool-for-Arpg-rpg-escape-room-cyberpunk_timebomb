@@ -1,0 +1,16 @@
+alarm clock.ttf
+Calculator.ttf
+Computerfont.ttf
+crystallightning.ttf
+Digit.TTF
+digitalix.ttf
+LCDM2B__.TTF
+LCDM2L__.TTF
+LCDM2N__.TTF
+LCDM2U__.TTF
+LCDMB___.TTF
+LCDML___.TTF
+LCDMN___.TTF
+LCDMU___.TTF
+Pixel-lcd-machine.ttf
+taximeter.ttf

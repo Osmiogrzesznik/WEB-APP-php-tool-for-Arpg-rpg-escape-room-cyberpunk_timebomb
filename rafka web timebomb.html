@@ -1,0 +1,191 @@
+<!DOCTYPE html><html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width" />
+  <title>Test</title>
+</head>
+<style>
+@font-face {
+    font-family: "digitalix";
+    src: url("fonts/digitalix.ttf") format("truetype");
+}
+html,body,button{
+	--fg:#20f86c;
+	background-color:#000;
+	color:#20f86c;
+	font-family:digitalix;
+	font-size:100%;
+}
+btn{
+	border:1px solid;
+	color:var(--fg);
+	padding:0.5em;
+	margin:0.5em;
+}
+.btnCNT{
+	position: absolute;
+	top:5px;
+	left:5px;
+}
+.counterCNT{
+/* 	position:relative; */
+	font-family:digitalix;
+}
+
+.counter{
+	text-align:center;
+	line-height:310%;
+/* 	text-align-last:center; */
+	color:red;
+
+	font-size:270%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+	font-family:digitalix;
+/*	position:absolute;
+	left:0; right:0;
+	top:0; bottom:0;
+	margin:auto;
+	max-width:100%;
+	max-height:100%;
+	overflow:auto;*/
+}
+.cyber{
+	font-family:digitalix;
+}
+
+</style>
+<body>
+
+	<div class="counterCNT">
+  <div id="counter" class="cyber counter">00:00:00</div>
+  <div id="btnCNT" class="btnCNT">	
+	<btn id="str" onclick="cx.start()">
+		ST
+	</btn>
+	<btn id="stp" onclick="cx.stop()">
+		SP
+	</btn>
+</div>
+	<div id="tt">
+		
+	</div>
+	</div>
+	
+
+  <script>
+
+
+  	
+cx = {
+	s:0,
+	m:0,
+	h:0,
+	d:0,
+	frm00:new Intl.NumberFormat(undefined,{
+		minimumIntegerDigits:2,
+		maximumFractionDigits:0
+		}),
+	frm0:new Intl.NumberFormat(undefined,{
+		minimumIntegerDigits:1,
+		maximumFractionDigits:0
+		}),
+	ct:counter,
+	mBase:Date.now(),
+	tLim:64000,
+	isPaused:false,
+	isRunning:false,
+	timeElapsed:0,
+	IID:null,
+	onTick(){},
+	showTime(h,m,s){
+		let st="",f=this.frm00.format;
+		this.ct.innerText=""+f(h)+":"+f(m)+":"+f(s)
+	},
+	start(){
+		if (this.isRunning){
+			return;
+		}
+		if (!this.isPaused){
+		this.mBase=Date.now();
+		//uwaga !!!
+		//WTEDY PAUZUJE TYLKO WYSWIETLANIE!!!!
+		//zaczyna ponownie ale dalej pamieta kiedy 
+		}
+		this.IID = window.setInterval(x=>{this.update()},1000);
+		this.isRunning=true;
+	},
+	stop(){
+		if (!this.isRunning){
+			return;
+		}
+		window.clearInterval(this.IID);
+		this.isRunning = false;
+	},
+	reset(){
+		if (this.isRunning){
+			this.stop();
+		}
+	this.mBase=Date.now();
+  	this.isPaused = false;
+	this.isRunning = false;
+	},
+	pause(){
+		if (!this.isRunning || this.isPaused){
+			return;
+		}
+		this.stop()
+		this.isPaused=true;
+		window.clearInterval(this.IID);
+		this.isRunning = false;
+	},
+	update(){
+		this.onTick(this);
+		if (this.timeElapsed < 0){
+			this.onFinished(this);
+		}
+		let te = this.tLim - (Date.now() - this.mBase);
+		this.timeElapsed=te;
+    let d, h, m, s, r;
+    h = ~~(te / (3600 * 1000));
+  	r = ~~(te % (3600 * 1000));
+    m = ~~(r / (60 * 1000));
+    r = ~~(r % (60 * 1000));
+    s = ~~(r / 1000);
+    r = ~~(r % 1000);
+   //  s = Math.floor(te / 1000);
+   //  m = Math.floor(s / 60);
+   //  s = s % 60;
+   //  h = Math.floor(m / 60);
+   //  m = m % 60;
+   //  d = Math.floor(h / 24);
+   // // h = h % 24;
+    
+		this.s=s;
+		this.m=m;
+		this.h=h;
+		// hours still contain days!!!
+		this.showTime(h,m,s);
+	}
+	
+	}
+
+
+	
+
+
+	cx.tLim = 64000;
+	cx.start();
+	var n=-0.1; 
+	/*
+	new Intl.NumberFormat(undefined, { minimumIntegerDigits: 4, minimumFractionDigits: 2, useGrouping: false }).format(n);
+	*/
+
+	
+	
+	
+	</script>
+</body>
+</html>
