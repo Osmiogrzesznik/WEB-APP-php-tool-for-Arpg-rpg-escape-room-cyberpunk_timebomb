@@ -254,20 +254,15 @@ fetch("allFonts.txt").then(x => x.text())
 function CodeKeyboard(pswd) {
     let customKeyboard = {}
 
-    let update = function () {
-        let nd = this.disp,
-            ib = this.inpBuf,
-            ndl = this.disp.innerText.length,
-            ibl = this.inpBuf.length;;
-        nd.innerText = this.inpBuf + "_".repeat(ndl - ibl)
-    }
+    
 
     // resets Display filling it with underscores depending on the passwrod length
     let resetDisplay = function () {
         this.kbd.innerText = "_".repeat(this.pswd.length);
     }
 
-    let kbCtrl = {
+    // keyboard controller
+    let KeyboardControllerClass = {
         setKbd(customKeyboard) {
             this.kbd = customKeyboard.KBDHTML;
             this.kbds = customKeyboard.KBDHTML.style;
@@ -281,15 +276,21 @@ function CodeKeyboard(pswd) {
         resetDisplay() {
             this.disp.innerText = "_".repeat(this.pswd.length);
         },
-        update: update,
+        update () {
+            let nd = this.disp,
+                ib = this.inpBuf,
+                ndl = this.disp.innerText.length,
+                ibl = this.inpBuf.length;;
+            nd.innerText = this.inpBuf + "_".repeat(ndl - ibl)
+        },
         hide() {
             this.kbds.display = "none";
             this.resetDisplay();
-            this.inp = this.inpOff;
+            this.inp = this.inpfuncWhenOff;
         },
         show() {
             this.kbds.display = "";
-            this.inp = this.inpOn;
+            this.inp = this.inpfuncWhenOn;
         },
         toggle() {
             //log("toggling")
@@ -299,9 +300,10 @@ function CodeKeyboard(pswd) {
             nk.display =
                 d == "none" ?
                     "" : "none";
+            //set input function accordingly
             this.inp =
                 d == "none" ?
-                    this.inpOn : this.inpOff;
+                    this.inpfuncWhenOn : this.inpfuncWhenOff;
         },
         del() {
             this.inpBuf = this.inpBuf.slice(0, this.inpBuf.length - 1);
@@ -310,17 +312,20 @@ function CodeKeyboard(pswd) {
             //                     this.finishInp()
             //                 }
         },
-        inpOn(btn) {
+        inpfuncWhenOn(btn) {
             this.inpBuf = this.inpBuf + btn.innerText;
             this.update();
             if (this.inpBuf.length == this.pswd.length) {
                 this.finishInp()
             }
         },
-        inpOff() { },
+        inpfuncWhenOff() { },
         inp() {
+            //this will be replaced by funcs inpfuncWhenOn or inpfuncWhenOff depending on the state 
+            //state includes visibility of keyboard
             log("inp not turned on yet!")
         },
+        // these are to be replaced by user
         onCorrectPassword() { },
         onIncorrectPassword() { },
         finishInp() {
@@ -346,20 +351,13 @@ function CodeKeyboard(pswd) {
             }
         },
         blockInp() {
-            this.inp = this.inpOff;
+            this.inp = this.inpfuncWhenOff;
         }
-
     }
-
-
-    customKeyboard = makeKBDHTML(QWERTY, kbCtrl);
+    customKeyboard = makeKBDHTML(QWERTY, KeyboardControllerClass);
     document.body.appendChild(customKeyboard.KBDHTML);
     customKeyboard.KBDHTML.style.display = "";
-
-
-
-
-    return kbCtrl;
+    return KeyboardControllerClass;
 }
 
 
@@ -381,14 +379,14 @@ function CodeKeyboard(pswd) {
 // 				log(a.a)
 
 
-function makeKBDHTML(stg, kbCtrl) {
+function makeKBDHTML(keyboardSettings, keyboardController) {
 
-    let kb = stg.defaultFuncs;
+    let kb = keyboardSettings.defaultFuncs;
     let newCustomKeyboard = {
         ctrl: kb
     }
-    let sK = Object.keys(stg.specKeys),
-        ts = stg.template;
+    let sK = Object.keys(keyboardSettings.specKeys),
+        ts = keyboardSettings.template;
 
     if (!ts) {
         throw new Error("makeKBDHTML has been given settings without keyboardSettings.template property");
@@ -396,7 +394,7 @@ function makeKBDHTML(stg, kbCtrl) {
     let KBDHTML = fromTemplate(customKeybTMPLT);
     let disp = KBDHTML.querySelector('.KBdisplay');
     let longestRowlength = 0;
-    if (!stg.displayHidden) {
+    if (!keyboardSettings.displayHidden) {
         disp.style.display = "";
     }
 
@@ -411,20 +409,20 @@ function makeKBDHTML(stg, kbCtrl) {
                 keyHTML.innerText = key;
                 if (sK.includes(key)) {
                     log(sK.includes(key));
-                    let sKey = stg.specKeys[key];
+                    let sKey = keyboardSettings.specKeys[key];
                     log(sKey);
                     keyHTML.innerText = sKey.text ? sKey.text : key;
                     if (sKey.func) {
-                        keyHTML.addEventListener("click", sKey.func(kbCtrl), false);
+                        keyHTML.addEventListener("click", sKey.func(keyboardController), false);
                     } else {
                         keyHTML.addEventListener("click", function (e) {
-                            kbCtrl.inp(e.target)
+                            keyboardController.inp(e.target)
                         }, false);
                     }
                 } else {
 
                     keyHTML.addEventListener("click", function (e) {
-                        kbCtrl.inp(e.target)
+                        keyboardController.inp(e.target)
                     }, false);
 
                 }
@@ -443,7 +441,7 @@ function makeKBDHTML(stg, kbCtrl) {
     newCustomKeyboard.KBDHTML = KBDHTML;
     newCustomKeyboard.disp = disp;
     newCustomKeyboard.ctrl = kb;
-    kbCtrl.setKbd(newCustomKeyboard)
+    keyboardController.setKbd(newCustomKeyboard)
 
     return newCustomKeyboard
 }
@@ -464,7 +462,7 @@ function fromTemplate(idorel) {
 }
 
 
-
+//make keyboard with 1234 as a pswd
 kb = CodeKeyboard("1234");
 kb.hide()
 
