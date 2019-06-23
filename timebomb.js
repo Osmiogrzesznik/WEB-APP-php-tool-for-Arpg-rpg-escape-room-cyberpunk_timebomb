@@ -3,7 +3,7 @@
 log = x => console.log(x);
 jlog = x => console.log(JSON.stringify(x, null, 2));
 
-//keyboard templates
+//keyboard settings - default templates
 
 const QWERTY = {
     template: [
@@ -80,6 +80,7 @@ cx = {
     fonts: {
         _b: [],
         _i: 0,
+        //next font circular
         n() {
             let i = this._i,
                 b = this._b;
