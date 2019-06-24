@@ -1,54 +1,16 @@
-
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<title>Document</title>
-</head>
-<body>
-<pre>
-amount of client devices/ each IP becomes ID - so instead of currently active users each client opening the link joins the game,
-how
-It is possible to implement admin stopping all clocks just before 
-deadline, clients need just to poll server 10 seconds before it
-and if the status changed stop clock on value set by admin (less than 10sec before explosion) 
-
-AdminUser opens the admin and sets the time
-store AdminIP, setExplosionTime, password(s)
-//TODO store BombNames(for identification)
-show Bombs statuses (active,refreshed)
-for each Clientuser that opens the client page
-	website opens with php 
-		instantly checking activity status
-		if clientIP is in Bombs 
-			client just refreshed 
-			store new refreshedTime in Bombs
-			send appropriate settings and continue with stuff
-		
-		else if clientIP == AdminIP DO nothing //he checks the status
-		else 
-			//TODO ask for ADMINpassword redirect or include() 
-			//TODO ifNot just redirect to different page with clock
-			//TODO	that displays if all bombs are deactivated
-			//TODO		instead of clock allow to register bomb
-			//TODO 		with its name and password
-			store add ClientIP to Bombs //TODO only if admin logged in and set it up to be a bomb
-			store 
-
-
-if no admin in db coming on getBombsettings should redirect to admin creation.
-    creating admin you create your password which you use to register new bomb
-    
-    
-
-
-CREATE TABLE IF NOT EXISTS `rafka_timebomb`.`admins` ( `id` INT NOT NULL , `ip` INT NOT NULL , `http_user_agent` INT NOT NULL ) ENGINE = InnoDB;
-
-CREATE TABLE 'bombDevices' ('id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 'Description' TEXT, 'ip' TEXT NOT NULL, 'http_user_agent' TEXT NOT NULL, 'password' TEXT NOT NULL , 'status' TEXT, 'LastUpdated' DATETIME DEFAULT CURRENT_TIMESTAMP);
-
-<pre>
 <?php
+
+//included from index.php
+
+
+
+if (!isset($_POST["name"])){
+    
+    
+    
+    
+    }
+
 
 
 
@@ -80,15 +42,17 @@ $DBH->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
 // $answertext = $data["answertext"];
 $queryAddAdmin = <<<EOD
 INSERT INTO admins (
-	`id` , `ip` , `http_user_agent`)
+	`id` , `ip` , `http_user_agent`,username,password)
 	VALUES 
-	(NULL,:ip,:http_user_agent)
+	(NULL,:ip,:http_user_agent,:username,:password)
 EOD;
 
 try{
 	$StatementHandle = $DBH->prepare($queryAddAdmin);
 	//$StatementHandle->bindParam(':questionTable',$questionTable); CANNOT BIND TABLENAMES :((((
 	$StatementHandle->bindParam(':ip',$ip);
+   $StatementHandle->bindParam(':username',$username);
+$StatementHandle->bindParam(':password',$password);
 	$StatementHandle->bindParam(':http_user_agent',$http_user_agent);
 	//$StatementHandle->bindParam(':time',time());
 	$StatementHandle->execute();
