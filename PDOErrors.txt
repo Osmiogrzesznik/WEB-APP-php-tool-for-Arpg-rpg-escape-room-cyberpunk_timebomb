@@ -1,0 +1,3 @@
+
+Sorry Bo - statement went bubu SQLSTATE[HY000]: General error: 1 no such table: admins::ffff:127.0.0.1 1561463928 USRAGT:  IP: ::ffff:127.0.0.1
+Sorry Bo - statement went bubu SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: admins.username127.0.0.1 1561480465 USRAGT: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36 IP: 127.0.0.1

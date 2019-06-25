@@ -8,6 +8,12 @@
 </head>
 <body>
 <pre>
+Jesli client z adresu zarejestrowanej bomby wchodzi na dodaj admina zablokuj,
+przeciez kazdy mogl w ten sposob obejsc system
+
+Consider allowing SQL injection for hacking simulation !!!
+
+
 amount of client devices/ each IP becomes ID - so instead of currently active users each client opening the link joins the game,
 how
 It is possible to implement admin stopping all clocks just before 

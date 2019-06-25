@@ -1,21 +1,16 @@
 <?php
 
 //included from index.php
+if (
+    isset($_POST["username"]) && 
+    isset($_POST["password"])
+        ){
 
-
-
-if (!isset($_POST["name"])){
+    $password = $_POST["password"];
+    $username = $_POST["username"];
+ //   jest windexie juz $http_user_agent ip i time
     
-    
-    
-    
-    }
 
-
-
-
-
-try {
 
 	// # MS SQL Server and Sybase with PDO_DBLIB
 	// $DBH = new PDO("mssql:host=$host;dbname=$dbname, $user, $pass");
@@ -26,15 +21,6 @@ try {
    
 	// # SQLite Database
 	//$db= new sqlite3("StudRepSurveyDB") or die("cannot open db");
-	
-	
-$DBH->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-  }
-  catch(PDOException $e) {
-	echo "\nSorry Bo , opening db went wrong- ".$e->getMessage().$ip." ".$info;
-    file_put_contents('PDOErrors.txt', $e->getMessage(), FILE_APPEND);
-  }
-
 // $data = json_decode(file_get_contents("php://input"),true);
 
 // $questionTable = "Answers_".$data["questionId"];
@@ -48,6 +34,14 @@ INSERT INTO admins (
 EOD;
 
 try{
+  
+	
+	//$DBH->query("CREATE TABLE IF NOT EXISTS `admins` ( `id` INT NOT NULL , `ip` TEXT NOT NULL , `http_user_agent` TEXT NOT NULL , ) ENGINE = InnoDB;")
+	if (!empty($DBH)){
+		include("DBAndIPtools.php");
+	}
+    
+    
 	$StatementHandle = $DBH->prepare($queryAddAdmin);
 	//$StatementHandle->bindParam(':questionTable',$questionTable); CANNOT BIND TABLENAMES :((((
 	$StatementHandle->bindParam(':ip',$ip);
@@ -59,13 +53,14 @@ $StatementHandle->bindParam(':password',$password);
 
 // echo $queryAddAdmin;
 // echo "\n".$ip;
-echo "Thank You !!! Admin added Successfully $info";
+echo "Thank You !!! Admin added $username added Successfully ";
+include("showBombDevices.php");
 //todo colect data like ip and date and so on
 //todo add rows to tables
 
 }
 catch(PDOException $e) {
-    $m = "\nSorry Bo - statement went bubu ".$e->getMessage().$ip." ".$info;
+    $m = "\nSorry, database error occured :".$e->getMessage().$ip." ".$info;
 	file_put_contents('PDOErrors.txt', $m, FILE_APPEND);
 	echo $m;
 }
@@ -76,8 +71,14 @@ catch(PDOException $e) {
 
 
 $DBH = null;
+}
+else{
+echo "sorry , you are either not logged in or cannot leave username or password blank";
+}
 
-exit();
+
+
+
 date_default_timezone_set('Europe/London');
 //$whenExplosion = date('Y-m-dTh:i:s');
 // $date = DateTime::createFromFormat('j-M-Y', '15-Feb-2009');
@@ -100,8 +101,20 @@ $response = json_encode($arr);
 echo $response;
 
 ?>
+<pre>
+Co w przypadku gdy Admin sie zalogowal i odswiezyl strone ? nie dostanie sie teraz.
 
+Jesli client z adresu zarejestrowanej bomby wchodzi na dodaj admina zablokuj,
+przeciez kazdy mogl w ten sposob obejsc system. Index.php dodaje ten modul do strony tylko jesli jest 0 adminow.
+</pre>
 <br>
+<form action="createAdmin.php" method="POST">
+<input name="username" placeholder="username">
+<input name="password" placeholder="password">
+<input type="submit">
+
+</form>
+
 	<script>document.write(~~(Date.now()/1000))</script>
 </body>
 </html>

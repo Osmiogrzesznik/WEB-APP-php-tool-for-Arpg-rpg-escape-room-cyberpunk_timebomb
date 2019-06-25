@@ -1,14 +1,7 @@
 <?php
 
-$DBH = new PDO("sqlite:rafka_timebomb.sqlite");
-try {
-	$DBH->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-	echo "\nSorry Bo , opening db went wrong- " . $e->getMessage() . $ip . " " . $info;
-	file_put_contents('PDOErrors.txt', $e->getMessage(), FILE_APPEND);
-};
 
-include("DBtools.php");
+include("DBAndIPtools.php");
 
 //$createAdmins = "CREATE TABLE IF NOT EXISTS `admins` ( `id` INT Primary key AUTO_INCREMENT , `ip` TEXT NOT NULL , `http_user_agent` TEXT NOT NULL ) ENGINE = InnoDB;";
 //$DBH->exec($createAdmins);
@@ -60,38 +53,9 @@ EOD;
 
 
 //exit();
-if ($AdminsCount == 0) {
+if (getRowCount($DBH,"admins") == 0) {
 	include("createAdmin.php");
 }
-
-try {
-	$StatementHandle = $DBH->prepare($queryAddAdmin);
-	//$StatementHandle->bindParam(':questionTable',$questionTable); CANNOT BIND TABLENAMES :((((
-	$StatementHandle->bindParam(':ip', $ip);
-	$StatementHandle->bindParam(':http_user_agent', $http_user_agent);
-	//$StatementHandle->bindParam(':time',time());
-	$StatementHandle->execute();
-
-	// echo $queryAddAnswer;
-	// echo "\n".$ip;
-	echo "Thank You !!! Admin added Successfully $info";
-	//todo colect data like ip and date and so on
-	//todo add rows to tables
-
-} catch (PDOException $e) {
-	$m = "\nSorry Bo - statement went bubu " . $e->getMessage() . $ip . " " . $info;
-	file_put_contents('PDOErrors.txt', $m, FILE_APPEND);
-	echo $m;
-}
-
-
-
-
-
-
-$DBH = null;
-
-exit();
 
 
 ?>
