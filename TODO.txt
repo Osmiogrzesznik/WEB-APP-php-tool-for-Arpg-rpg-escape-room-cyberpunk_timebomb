@@ -1,0 +1,5 @@
+-create registration of device
+-then check if it is possible to pretty print json encode $_SESSION into php html template(rafka timebomb z klawiatura2.php) and js script
+-add Beeps sound to bomb htmls
+	record, insert file and so on
+-add two glowing and flashing circles imitating diodes - one red one green and make them flash ontick

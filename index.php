@@ -38,6 +38,11 @@ class OneFileLoginApplication
     private $user_is_logged_in = false;
 
     /**
+     * @var bool Login status of device
+     */
+    private $device_is_logged_in = false;
+
+    /**
      * @var string System messages, likes errors, notices, etc.
      */
     public $feedback = "";
@@ -53,13 +58,13 @@ class OneFileLoginApplication
       *
       * @var string
       */
-     public $ip = "undefined yet"; 
+     public $ip = null; 
      /**
       * user agent of user that just accessed page
       *
       * @var string
       */
-     public $http_user_agent = "undefined yet";
+     public $http_user_agent = null;
 
      /**
       * status of the way user just logged in
@@ -110,7 +115,7 @@ class OneFileLoginApplication
     
     public function getIP($getFaked=DEBUG_MODE){
        
-        if ($this->ip != "undefined yet"){
+        if (isset($this->ip)){
        return $this->ip;
     }
             
@@ -126,15 +131,15 @@ class OneFileLoginApplication
         return $this->ip;
         }
         
-  public function checkIsRegisteredDevice(){
+  public function IsRegisteredDevice(){
 //IF ip is in database display bomb/device interface with time counting down
 if($this->createDatabaseConnection()){
-        $sql = 'SELECT user_name, user_email, user_password_hash
-                FROM user
-                WHERE user_name = :user_name OR user_email = :user_name
-                LIMIT 1';
+        $sql = 'SELECT *
+                FROM device
+                WHERE device_ip = :connection_ip;
+                ';
         $query = $this->db_connection->prepare($sql);
-        $query->bindValue(':user_name', $_POST['user_name']);
+        $query->bindValue(':connection_ip', $this-ip);
         $query->execute();
 
         // Btw that's the weird way to get num_rows in PDO with SQLite:
@@ -146,23 +151,25 @@ if($this->createDatabaseConnection()){
         $result_row = $query->fetchObject();
         if ($result_row) {
             // using PHP 5.5's password_verify() function to check password
-            if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
+            //if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
                 // write user data into PHP SESSION [a file on your server]
-                $_SESSION['user_name'] = $result_row->user_name;
-                $_SESSION['user_email'] = $result_row->user_email;
-                $_SESSION['user_is_logged_in'] = true;
-                $this->user_is_logged_in = true;
+                $_SESSION['device_id'] = $result_row->device_ip;
+                $_SESSION['device_name'] = $result_row->device_name;
+                $_SESSION['device_status'] = $result_row->device_status;
+                $_SESSION['time_set'] = $result_row->time_set;
+                $this->device_is_logged_in = true;
+                $this->device_time_set = $result_row->time_set;
                 return true;
-            } else {
-                $this->feedback = "Wrong password.";
-            }
+            //} else {
+            //    $this->feedback = "Wrong password.";
+            //}
         } else {
-            $this->feedback = "This user does not exist.";
+            $this->feedback = "This device does not exist yet.";
         }
         // default return
         return false;
     } 
-return false;
+return false;//connection not established
 }
     /**
      * This is basically the controller that handles the entire flow of the application.
@@ -171,15 +178,19 @@ return false;
     {
         //first check ip
         $this->getIP(DEBUG_MODE);
-        
-        $this->checkIsRegisteredDevice();
-        
         $this->http_user_agent = getenv('HTTP_USER_AGENT');
         $this->info = $this->time . " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
         file_put_contents('visitors.txt', $this->info, FILE_APPEND);
+        
+        
+        
+        
 
 
         // check is user wants to see register page (etc.)
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //this is the backdoor everybody who will write register 
+        // can backdoor into admin
         if (isset($_GET["action"]) && $_GET["action"] == "register") {
             $this->doRegistration();
             $this->showPageRegistration();
@@ -189,6 +200,9 @@ return false;
             $this->doStartSession();
             // check for possible user interactions (login with session/post data or logout)
         //see later if its possible to reuse the code or object on different sites;
+        If ($this->IsRegisteredDevice()){
+            include("rafka timebomb z klawiatura2.php");
+        };
             $this->performUserLoginAction();
             // show "page", according to user's login status
      // this is where bomb registration or  displaying bombstatuses takes place

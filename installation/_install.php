@@ -1,5 +1,5 @@
  <?php
-
+$installation_sql_file = "install.sql";
 /**
  * This is the installation file for the 0-one-file version of the php-login script.
  * It simply creates a new and empty database.
@@ -16,31 +16,10 @@ $db_sqlite_path = "../rafka_timebomb.sqlite";
 $db_connection = new PDO($db_type . ':' . $db_sqlite_path);
 
 // create new empty table inside the database (if table does not already exist)
-$sql = <<<EOD
-CREATE TABLE IF NOT EXISTS `user` (
-        `user_id` INTEGER PRIMARY KEY,
-        `user_ip` varchar(64) NOT NULL,
-        `http_user_agent` varchar(512) NOT NULL,
-        `user_name` varchar(64) NOT NULL,
-        `user_password_hash` varchar(255) NOT NULL,
-        `user_email` varchar(64));
-        CREATE UNIQUE INDEX `user_name_UNIQUE` ON `users` (`user_name` ASC);
-        CREATE UNIQUE INDEX `user_email_UNIQUE` ON `users` (`user_email` ASC);
-        
-        CREATE TABLE devices
-        ('device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-        'device_name' text
-        'device_description' TEXT,
-         'device_ip' TEXT NOT NULL,
-         'device_http_user_agent' TEXT NOT NULL, 
-        'device_password' TEXT NOT NULL ,
-        'device_type_id' INTEGER NOT NULL , 
-        'device_status' TEXT,
-         'time_last_uppdated' DATETIME DEFAULT CURRENT_TIMESTAMP,
-         CREATE UNIQUE INDEX `user_name_UNIQUE` ON `users` (`user_name` ASC);
-        CREATE UNIQUE INDEX `user_email_UNIQUE` ON `users` (`user_email` ASC);
-        ); 
-EOD;
+$sql = file_get_contents($installation_sql_file);
+if ($sql === false){
+    echo "problem reading from file $installation_sql_file";
+}
 
 // execute the above query
 $query = $db_connection->prepare($sql);
