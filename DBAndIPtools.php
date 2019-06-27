@@ -16,8 +16,8 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
 }
 $http_user_agent = getenv('HTTP_USER_AGENT');
 //$referrer = getenv('HTTP_REFERER');
-$info = $time . " USRAGT: " . $http_user_agent . " IP: " . $ip;
-
+$info = $time ." IP: " . $ip . " USRAGT: " . $http_user_agent;
+file_put_contents('visitors.txt', $info, FILE_APPEND);
 
 function getRowCount($DBH,$tablename){
 

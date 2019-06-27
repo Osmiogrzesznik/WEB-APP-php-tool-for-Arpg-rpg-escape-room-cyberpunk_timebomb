@@ -10,13 +10,13 @@ error_reporting(E_ALL);
 
 // config
 $db_type = "sqlite";
-$db_sqlite_path = "../users.db";
+$db_sqlite_path = "../rafka_timebomb.slite";
 
 // create new database connection
 $db_connection = new PDO($db_type . ':' . $db_sqlite_path);
 
 // query
-$sql = 'SELECT * FROM users';
+$sql = 'SELECT * FROM user';
 
 // execute query
 $query = $db_connection->prepare($sql);

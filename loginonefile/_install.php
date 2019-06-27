@@ -10,16 +10,18 @@ error_reporting(E_ALL);
 
 // config
 $db_type = "sqlite";
-$db_sqlite_path = "../users.db";
+$db_sqlite_path = "../rafka_timebomb.sqlite";
 
 // create new database file / connection (the file will be automatically created the first time a connection is made up)
 $db_connection = new PDO($db_type . ':' . $db_sqlite_path);
 
 // create new empty table inside the database (if table does not already exist)
-$sql = 'CREATE TABLE IF NOT EXISTS `users` (
+$sql = 'CREATE TABLE IF NOT EXISTS `user` (
         `user_id` INTEGER PRIMARY KEY,
-        `user_name` varchar(64),
-        `user_password_hash` varchar(255),
+        `user_ip` varchar(64) NOT NULL,
+        `http_user_agent` varchar(512) NOT NULL,
+        `user_name` varchar(64) NOT NULL,
+        `user_password_hash` varchar(255) NOT NULL,
         `user_email` varchar(64));
         CREATE UNIQUE INDEX `user_name_UNIQUE` ON `users` (`user_name` ASC);
         CREATE UNIQUE INDEX `user_email_UNIQUE` ON `users` (`user_email` ASC);
