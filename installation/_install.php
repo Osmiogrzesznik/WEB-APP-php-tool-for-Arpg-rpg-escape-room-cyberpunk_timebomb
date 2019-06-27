@@ -24,21 +24,21 @@ CREATE TABLE IF NOT EXISTS `user` (
         `user_name` varchar(64) NOT NULL,
         `user_password_hash` varchar(255) NOT NULL,
         `user_email` varchar(64));
-        CREATE UNIQUE INDEX `user_name_UNIQUE` ON `user` (`user_name` ASC);
-        CREATE UNIQUE INDEX `user_email_UNIQUE` ON `user` (`user_email` ASC);
+        CREATE UNIQUE INDEX `user_name_UNIQUE` ON `users` (`user_name` ASC);
+        CREATE UNIQUE INDEX `user_email_UNIQUE` ON `users` (`user_email` ASC);
         
-        CREATE TABLE device
+        CREATE TABLE devices
         ('device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-        'device_name' text,
+        'device_name' text
         'device_description' TEXT,
          'device_ip' TEXT NOT NULL,
          'device_http_user_agent' TEXT NOT NULL, 
         'device_password' TEXT NOT NULL ,
         'device_type_id' INTEGER NOT NULL , 
         'device_status' TEXT,
-         'time_last_uppdated' DATETIME DEFAULT CURRENT_TIMESTAMP,)
-         CREATE UNIQUE INDEX `device_ip_UNIQUE` ON `device` (device_ip` ASC);
-        CREATE UNIQUE INDEX `device_id_UNIQUE` ON `device` (`device_id` ASC);
+         'time_last_uppdated' DATETIME DEFAULT CURRENT_TIMESTAMP,
+         CREATE UNIQUE INDEX `user_name_UNIQUE` ON `users` (`user_name` ASC);
+        CREATE UNIQUE INDEX `user_email_UNIQUE` ON `users` (`user_email` ASC);
         ); 
 EOD;
 

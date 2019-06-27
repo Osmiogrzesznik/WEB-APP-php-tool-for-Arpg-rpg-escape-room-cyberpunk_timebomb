@@ -3,7 +3,7 @@
 // constants to determine if user just logged in or was active on this device
 define("JUST_LOGGING_IN",2);
 define("LOGGED_WITH_SESSION",3);
-
+define("DEBUG_MODE",0);
 /**
  * Class OneFileLoginApplication
  *
@@ -101,16 +101,79 @@ class OneFileLoginApplication
     }
 
     /**
+    * 
+    *gets Ip of the user or fakedIP from get/post params
+    *lazy getter sets ip only if it's not set yet.
+    *    @var $getFaked bool should ip be set from get params
+    *    @return string ip
+    */
+    
+    public function getIP($getFaked=DEBUG_MODE){
+       
+        if ($this->ip != "undefined yet"){
+       return $this->ip;
+    }
+            
+       if($getFaked  &&  isset($_GET["ip"])) {
+        $this->ip = $_GET["ip"];
+        return $this->ip;
+        }
+       else if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $this->ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            $this->ip = $_SERVER['REMOTE_ADDR'];
+        }
+        return $this->ip;
+        }
+        
+  public function checkIsRegisteredDevice(){
+//IF ip is in database display bomb/device interface with time counting down
+if($this->createDatabaseConnection()){
+        $sql = 'SELECT user_name, user_email, user_password_hash
+                FROM user
+                WHERE user_name = :user_name OR user_email = :user_name
+                LIMIT 1';
+        $query = $this->db_connection->prepare($sql);
+        $query->bindValue(':user_name', $_POST['user_name']);
+        $query->execute();
+
+        // Btw that's the weird way to get num_rows in PDO with SQLite:
+        // if (count($query->fetchAll(PDO::FETCH_NUM)) == 1) {
+        // Holy! But that's how it is. $result->numRows() works with SQLite pure, but not with SQLite PDO.
+        // This is so crappy, but that's how PDO works.
+        // As there is no numRows() in SQLite/PDO (!!) we have to do it this way:
+        // If you meet the inventor of PDO, punch him. Seriously.
+        $result_row = $query->fetchObject();
+        if ($result_row) {
+            // using PHP 5.5's password_verify() function to check password
+            if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
+                // write user data into PHP SESSION [a file on your server]
+                $_SESSION['user_name'] = $result_row->user_name;
+                $_SESSION['user_email'] = $result_row->user_email;
+                $_SESSION['user_is_logged_in'] = true;
+                $this->user_is_logged_in = true;
+                return true;
+            } else {
+                $this->feedback = "Wrong password.";
+            }
+        } else {
+            $this->feedback = "This user does not exist.";
+        }
+        // default return
+        return false;
+    } 
+return false;
+}
+    /**
      * This is basically the controller that handles the entire flow of the application.
      */
     public function runApplication()
     {
         //first check ip
-        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $this->ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else {
-            $this->ip = $_SERVER['REMOTE_ADDR'];
-        }
+        $this->getIP(DEBUG_MODE);
+        
+        $this->checkIsRegisteredDevice();
+        
         $this->http_user_agent = getenv('HTTP_USER_AGENT');
         $this->info = $this->time . " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
         file_put_contents('visitors.txt', $this->info, FILE_APPEND);
@@ -141,7 +204,7 @@ class OneFileLoginApplication
     }
 
     private function showAppriopriatePage(){
-        if ($this->use) {
+        if (true) {
             $this->doRegistration();
             $this->showPageRegistration();
 
@@ -155,6 +218,9 @@ class OneFileLoginApplication
      */
     private function createDatabaseConnection()
     {
+       if(isset($this->$db_connection)){
+            return true;
+        }
 
         try {
             $this->db_connection = new PDO($this->db_type . ':' . $this->db_sqlite_path);

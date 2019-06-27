@@ -1,4 +1,10 @@
 
+addEventListener("click", function() { var el = document.documentElement , rfs = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen ; rfs.call(el); });
+
+
+
+
+
 // debug tools
 log = x => console.log(x);
 jlog = x => console.log(JSON.stringify(x, null, 2));
@@ -172,7 +178,7 @@ cx = {
         if (!this.isRunning || this.isPaused) {
             return;
         }
-        this.stop()
+        this.stop();
         this.isPaused = true;
         window.clearInterval(this.IID);
         this.isRunning = false;
@@ -201,9 +207,9 @@ cx = {
     },
     setLimit(h = 0, m = 0, s = 0) {
         let tl = 0;
-        tl = s * 1000
-        tl += m * 60 * 1000
-        tl += h * 3600 * 1000
+        tl = s * 1000;
+        tl += m * 60 * 1000;
+        tl += h * 3600 * 1000;
         tl = ~~(tl);
         this.tLim = tl;
         this.showTime(~~h, ~~m, ~~s);
@@ -239,7 +245,7 @@ fetch("allFonts.txt").then(x => x.text())
         fls = x.trim().split("\n");
         nms = fls.map(x => x.replace(".ttf", "").replace(".TTF", ""));
         cx.fonts._b = nms;
-        s = document.createElement("style")
+        s = document.createElement("style");
         fls.forEach((f, i) => {
             s.innerText += templ.replace("XXXNAME", nms[i]).replace("XXXFILE", f);
         });
@@ -485,8 +491,9 @@ function dellast() {
 function test() {
     // kb.kbds.display="none";
     //kb.kbds.display="initial";
-    kb.hide();
-    setTimeout(x => kb.show(), 500)
+   //€ alert(1);
+    kb.toggle();
+    //setTimeout(x => kb.show(), 500)
 
 }
 
