@@ -96,13 +96,17 @@ cx = {
             return b[i];
         },
         c() {
-            return this._b[this._i]
+            return this._b[this._i];
         }
     },
     nxfnt() {
         this.setFont(this.fonts.n());
     },
     ct: counter,
+    cts: counter_sec,
+    ctm: counter_min,
+    cth: counter_hour,
+    ctflashers:counter.querySelectorAll(".flash"),
     mBase: Date.now(),
     ticklg: 1000, //refreshment rate
     tLim: 64000,
@@ -110,8 +114,10 @@ cx = {
     isPaused: false,
     isRunning: false,
     timeElapsed: 0,
-    onFinished() { },
     IID: null,
+   onFinished() { },
+   onTick() { },
+
     setFont(fntnm) {
         let o = this.ct.style;
 
@@ -127,13 +133,13 @@ cx = {
         }
         o.fontSize = (fsi - 5) + "vw";
     },
-    onTick() { },
     showTime(h, m, s) {
-        let st = "",
             //extracting formatting function to var f
             // in this case formatting to 00
-            f = this.frm00.format;
-        this.ct.innerText = "" + f(h) + ":" + f(m) + ":" + f(s)
+      let f = this.frm00.format;
+        this.cts.innerText = f(s);
+        this.ctm.innerText = f(m);
+        this.cth.innerText = f(h);
     },
 
     /**
@@ -152,10 +158,10 @@ cx = {
             //WTEDY PAUZUJE TYLKO WYSWIETLANIE!!!!
             //zaczyna ponownie ale dalej pamieta kiedy 
         }
-
         this.IID = window.setInterval(x => {
-            this.update()
+            this.update();
         }, this.ticklg);
+        
         this.isRunning = true;
         this.update();
     },
@@ -189,6 +195,9 @@ cx = {
         this.timeElapsed = te;
         if (this.timeElapsed < this.ticklg) {
             this.showTime(0, 0, 0);
+            for (let i=0;i<this.ctflashers.length;i++){
+                this.ctflashers[i].classList.remove("flash");
+            }
             this.stop();
             this.onFinished(this);
             return;
@@ -323,14 +332,14 @@ function CodeKeyboard(pswd) {
             this.inpBuf = this.inpBuf + btn.innerText;
             this.update();
             if (this.inpBuf.length == this.pswd.length) {
-                this.finishInp()
+                this.finishInp();
             }
         },
         inpfuncWhenOff() { },
         inp() {
             //this will be replaced by funcs inpfuncWhenOn or inpfuncWhenOff depending on the state 
             //state includes visibility of keyboard
-            log("inp not turned on yet!")
+            log("this is default nonfunction inp not turned on yet!")
         },
         // these are to be replaced by user
         onCorrectPassword() { },
@@ -346,7 +355,7 @@ function CodeKeyboard(pswd) {
             }, 1000);
         },
         enternumber(str) {
-            console.log(str)
+            console.log(str);
             if (this.pswd === str) {
                 this.kbd.classList.add("CorrectAnswer");
                 this.kbd.classList.remove("WrongAnswer");
@@ -391,7 +400,8 @@ function makeKBDHTML(keyboardSettings, keyboardController) {
     let kb = keyboardSettings.defaultFuncs;
     let newCustomKeyboard = {
         ctrl: kb
-    }
+    };
+    
     let sK = Object.keys(keyboardSettings.specKeys),
         ts = keyboardSettings.template;
 

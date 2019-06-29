@@ -1,4 +1,42 @@
+- PROBLEMS : install.sql/php doeas NOT create device table even thoug sql statements are there
+
+-- created device settings retrieval php script that outputs js script  with settings data
+
 -create registration of device
+	try to copy user registration mechanism but with ip's instead of username password
+	if device not registered 2 options: give your admin cred's and device
+	DO not save ip in db if user is not logged in
+	if device registered automatically should become logged in ---COMPLETE 
+	6 states connecting device:  (logged = !empty$SESSION) 
+								(registered = logged every bomb immediately automatically logs in )
+			1		user not logged and device not registered not logged -> user registration or login
+			2		user logged and device not registered not logged -> user choice should this device be 
+						bomb or admin panel
+			3		user not logged and device registered as bomb-> interface bomb
+			4		user logged and device registered as bomb-> ?
+			5		user not logged and device registered as admin panel -> login
+			6		user logged and device registered as admin panel -> admin
+
+
+10
+00
+01
+11
+
+	if device is registered as a bomb after user used it to log in user should be logged out
+	each user chooses ip which serves as his administration panel
+
+	IDEA: user should not require to go to device to activate it as bomb
+		every time device connects it is already stored in db
+		user chooses in db which to activate
+		PROBLEMS: polling needed  and maybe a lot of problems with separate paths for all this ajax post requests 
+
+
+
+
+
+
+
 -then check if it is possible to pretty print json encode $_SESSION into php html template(rafka timebomb z klawiatura2.php) and js script
 -add Beeps sound to bomb htmls
 	record, insert file and so on

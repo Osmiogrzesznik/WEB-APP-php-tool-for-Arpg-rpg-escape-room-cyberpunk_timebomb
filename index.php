@@ -232,7 +232,7 @@ return false;//connection not established
      */
     private function createDatabaseConnection()
     {
-       if(isset($this->$db_connection)){
+       if(isset($this->db_connection)){
             return true;
         }
 

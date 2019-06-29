@@ -18,13 +18,23 @@ CREATE TABLE IF NOT EXISTS device (
         'device_ip' TEXT NOT NULL,
         'device_http_user_agent' TEXT NOT NULL, 
         'device_password' TEXT NOT NULL ,
+        -- 'type_id' INTEGER NOT NULL , 
         'device_status' TEXT,
         'time_set' INTEGER,
-        'time_last_uppdated' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-                );
+        'time_last_uppdated' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        -- FOREIGN KEY(type_id) REFERENCES type (type_id)
+         );
 
 CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
 CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
-                
+        -- CREATE TABLE type (
+        --         'type_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+        --         'type_name' TEXT NOT NULL,
+        --         'type_description' TEXT,
+        --         'type_template_path' TEXT NOT NULL,
+        --         'type_status' TEXT,
+        --         'time_last_uppdated' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        --         FOREIGN KEY(type_id) REFERENCES type (type_id)
+        --          );
 
         
