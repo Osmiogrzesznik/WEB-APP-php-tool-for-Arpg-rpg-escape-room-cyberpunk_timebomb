@@ -1,6 +1,13 @@
+-add Beeps sound to bomb htmls
+	DONE record, insert file
+	implement in timebomb.js
+	
+
 - PROBLEMS : install.sql/php doeas NOT create device table even thoug sql statements are there
+- test timebombsettings.php retrieval by creating registered device in db and setting all fields
 
 -- created device settings retrieval php script that outputs js script  with settings data
+
 
 -create registration of device
 	try to copy user registration mechanism but with ip's instead of username password
@@ -17,7 +24,6 @@
 			5		user not logged and device registered as admin panel -> login
 			6		user logged and device registered as admin panel -> admin
 
-
 10
 00
 01
@@ -31,13 +37,3 @@
 		user chooses in db which to activate
 		PROBLEMS: polling needed  and maybe a lot of problems with separate paths for all this ajax post requests 
 
-
-
-
-
-
-
--then check if it is possible to pretty print json encode $_SESSION into php html template(rafka timebomb z klawiatura2.php) and js script
--add Beeps sound to bomb htmls
-	record, insert file and so on
--add two glowing and flashing circles imitating diodes - one red one green and make them flash ontick
