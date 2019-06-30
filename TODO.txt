@@ -1,7 +1,3 @@
--add Beeps sound to bomb htmls
-	DONE record, insert file
-	implement in timebomb.js
-	
 
 - PROBLEMS : install.sql/php doeas NOT create device table even thoug sql statements are there
 - test timebombsettings.php retrieval by creating registered device in db and setting all fields

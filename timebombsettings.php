@@ -192,7 +192,7 @@ return false;//connection not established
                // $this->showAppriopriatePage();
             } else {
                // not admin, not logged in, no path variable
-               echo "data = {error:'device not in db'}". $this->ip;
+               echo "data = {error:'device not in db' , device_ip: '". $this->ip . "'};";
                // $this->showPageLoginForm();
             }
     

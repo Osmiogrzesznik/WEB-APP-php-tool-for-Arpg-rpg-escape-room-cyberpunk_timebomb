@@ -142,7 +142,7 @@
     }
     
     .steppy{
-   // animation-timing-function: step(1,start)
+    /* animation-timing-function: step(1,start) */
     }
     
     .redglow{
@@ -200,6 +200,9 @@
         }
     }
     
+    .timeElapsed{
+        font-size:5vw;
+    }
     
 </style>
 
@@ -214,7 +217,9 @@
   <span id="counter_min">00</span>
   <span id="counter_colon2" class="flash">:</span>
   <span id="counter_sec">00</span>
-	</span>
+</span>
+<div id="counter_timeElapsed" class="timeElapsed">00000000000</div>
+	
         </div>
         <div id="btnCNT" class="btnCNT">
             <btn id="str" onclick="cx.start()">
@@ -289,6 +294,7 @@
   </tr>
  </table>
    -->
+
     <table id="customKeybTMPLT" class="btnCNT" style="display:none">
         <tr>
             <td colspan="9" class="KBdisplay" style="  ">
@@ -304,8 +310,18 @@
     </table>
 
 
+<audio id="ticksound" src="sounds/beep.mp3">
+    not suoported
+</audio>
+<audio id="wrongSound" src="sounds/invalidAnswer.mp3">
+    not suoported
+</audio>
+<script>
 
 
+
+
+</script>
     <script type="text/javascript" src="timebombsettings.php"></script>
 
     <script type="text/javascript" src="timebomb.js"></script>
