@@ -1,9 +1,9 @@
 <?php
-
+date_default_timezone_set('Europe/London');
 // constants to determine if user just logged in or was active on this device
-define("JUST_LOGGING_IN",2);
-define("LOGGED_WITH_SESSION",3);
-define("DEBUG_MODE",0);
+define("JUST_LOGGING_IN", 2);
+define("LOGGED_WITH_SESSION", 3);
+define("DEBUG_MODE", 1);
 /**
  * Class OneFileLoginApplication
  *
@@ -52,36 +52,34 @@ class OneFileLoginApplication
      *
      * @var int
      */
-    public $time = 0; 
-     /**
-      * ip of user that just accessed page
-      *
-      * @var string
-      */
-     public $ip = null; 
-     /**
-      * user agent of user that just accessed page
-      *
-      * @var string
-      */
-     public $http_user_agent = null;
+    public $time = 0;
+    /**
+     * ip of user that just accessed page
+     *
+     * @var string
+     */
+    public $ip = null;
+    /**
+     * user agent of user that just accessed page
+     *
+     * @var string
+     */
+    public $http_user_agent = null;
 
-     /**
-      * status of the way user just logged in
-      * whether he is session active or just logged on a new device
-      * @var int
-      */
-     public $user_logged_with = 0;
-
+    /**
+     * status of the way user just logged in
+     * whether he is session active or just logged on a new device
+     * @var int
+     */
+    public $user_logged_with = 0;
+    public $scriptName = null;
     /**
      * Does necessary checks for PHP version and PHP password compatibility library and runs the application
      */
     public function __construct()
     {
         $this->time = time();
-        if ($this->performMinimumRequirementsCheck()) {
-            $this->runApplication();
-        }
+        $this->scriptName = $_SERVER['SCRIPT_NAME'];
     }
 
     /**
@@ -91,7 +89,7 @@ class OneFileLoginApplication
      * (this library adds the PHP 5.5 password hashing functions to older versions of PHP)
      * @return bool Success status of minimum requirements check, default is false
      */
-    private function performMinimumRequirementsCheck()
+    public function performMinimumRequirementsCheck()
     {
         if (version_compare(PHP_VERSION, '5.3.7', '<')) {
             echo "Sorry, Simple PHP Login does not run on a PHP version older than 5.3.7 !";
@@ -106,52 +104,53 @@ class OneFileLoginApplication
     }
 
     /**
-    * 
-    *gets Ip of the user or fakedIP from get/post params
-    *lazy getter sets ip only if it's not set yet.
-    *    @var $getFaked bool should ip be set from get params
-    *    @return string ip
-    */
-    
-    public function getIP($getFaked=DEBUG_MODE){
-       
-        if (isset($this->ip)){
-       return $this->ip;
-    }
-            
-       if($getFaked  &&  isset($_GET["ip"])) {
-        $this->ip = $_GET["ip"];
-        return $this->ip;
+     * 
+     *gets Ip of the user or fakedIP from get/post params
+     *lazy getter sets ip only if it's not set yet.
+     *    @var $getFaked bool should ip be set from get params
+     *    @return string ip
+     */
+
+    public function getIP($getFaked = DEBUG_MODE)
+    {
+
+        if (isset($this->ip)) {
+            return $this->ip;
         }
-       else if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+
+        if ($getFaked  &&  isset($_GET["ip"])) {
+            $this->ip = $_GET["ip"];
+            return $this->ip;
+        } else if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             $this->ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
         } else {
             $this->ip = $_SERVER['REMOTE_ADDR'];
         }
         return $this->ip;
-        }
-        
-  public function IsRegisteredDevice(){
-//IF ip is in database display bomb/device interface with time counting down
-if($this->createDatabaseConnection()){
-        $sql = 'SELECT *
+    }
+
+    public function IsRegisteredDevice()
+    {
+        //IF ip is in database display bomb/device interface with time counting down
+        if ($this->createDatabaseConnection()) {
+            $sql = 'SELECT *
                 FROM device
                 WHERE device_ip = :connection_ip;
                 ';
-        $query = $this->db_connection->prepare($sql);
-        $query->bindValue(':connection_ip', $this-ip);
-        $query->execute();
+            $query = $this->db_connection->prepare($sql);
+            $query->bindValue(':connection_ip', $this->getIP(DEBUG_MODE));
+            $query->execute();
 
-        // Btw that's the weird way to get num_rows in PDO with SQLite:
-        // if (count($query->fetchAll(PDO::FETCH_NUM)) == 1) {
-        // Holy! But that's how it is. $result->numRows() works with SQLite pure, but not with SQLite PDO.
-        // This is so crappy, but that's how PDO works.
-        // As there is no numRows() in SQLite/PDO (!!) we have to do it this way:
-        // If you meet the inventor of PDO, punch him. Seriously.
-        $result_row = $query->fetchObject();
-        if ($result_row) {
-            // using PHP 5.5's password_verify() function to check password
-            //if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
+            // Btw that's the weird way to get num_rows in PDO with SQLite:
+            // if (count($query->fetchAll(PDO::FETCH_NUM)) == 1) {
+            // Holy! But that's how it is. $result->numRows() works with SQLite pure, but not with SQLite PDO.
+            // This is so crappy, but that's how PDO works.
+            // As there is no numRows() in SQLite/PDO (!!) we have to do it this way:
+            // If you meet the inventor of PDO, punch him. Seriously.
+            $result_row = $query->fetchObject();
+            if ($result_row) {
+                // using PHP 5.5's password_verify() function to check password
+                //if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
                 // write user data into PHP SESSION [a file on your server]
                 $_SESSION['device_id'] = $result_row->device_ip;
                 $_SESSION['device_name'] = $result_row->device_name;
@@ -160,17 +159,17 @@ if($this->createDatabaseConnection()){
                 $this->device_is_logged_in = true;
                 $this->device_time_set = $result_row->time_set;
                 return true;
-            //} else {
-            //    $this->feedback = "Wrong password.";
-            //}
-        } else {
-            $this->feedback = "This device does not exist yet.";
+                //} else {
+                //    $this->feedback = "Wrong password.";
+                //}
+            } else {
+                $this->feedback .= "This device is not registered yet in db.";
+            }
+            // default return
+            return false;
         }
-        // default return
-        return false;
-    } 
-return false;//connection not established
-}
+        return false; //connection not established
+    }
     /**
      * This is basically the controller that handles the entire flow of the application.
      */
@@ -180,11 +179,11 @@ return false;//connection not established
         $this->getIP(DEBUG_MODE);
         $this->http_user_agent = getenv('HTTP_USER_AGENT');
         $this->info = $this->time . " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
-        file_put_contents('visitors.txt', $this->info, FILE_APPEND);
-        
-        
-        
-        
+        file_put_contents('visitors.txt', "\n" . $this->info, FILE_APPEND);
+
+
+
+
 
 
         // check is user wants to see register page (etc.)
@@ -194,37 +193,50 @@ return false;//connection not established
         if (isset($_GET["action"]) && $_GET["action"] == "register") {
             $this->doRegistration();
             $this->showPageRegistration();
-
         } else {
             // start the session, always needed!
             $this->doStartSession();
-            // check for possible user interactions (login with session/post data or logout)
-        //see later if its possible to reuse the code or object on different sites;
-        If ($this->IsRegisteredDevice()){
-            include("rafka timebomb z klawiatura2.php");
-        };
+            
+            //check first if device is registered
+            if ($this->IsRegisteredDevice()) {
+                include("rafka timebomb z klawiatura.html");
+                exit();
+            };
+            //if device is not registered  
+            // check for possible userADmin interactions (login with session/post data or logout)
             $this->performUserLoginAction();
             // show "page", according to user's login status
-     // this is where bomb registration or  displaying bombstatuses takes place
-            if ($this->getUserLoginStatus()) {
-                
-                $this->showAppriopriatePage();
+            // this is where bomb registration or  displaying bombstatuses takes place
+            // if userAdmin is logged in and device is not registered
+            if ($this->getUserLoginStatus() && !$this->device_is_logged_in) {
+                $this->showPageAddToDevices();
+                $this->showPageLoggedIn();
             } else {
-               // not admin, not logged in, no path variable
-                
+                // not admin, not logged in, no path variable
+
                 $this->showPageLoginForm();
             }
         }
     }
 
-    private function showAppriopriatePage(){
-        if (true) {
-            $this->doRegistration();
-            $this->showPageRegistration();
-
+    private function showPageAddToDevices()
+    {
+    //     CREATE TABLE IF NOT EXISTS device (
+    //         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    //         'device_name' TEXT NOT NULL,
+    //         'device_description' TEXT,
+    //         'device_ip' TEXT NOT NULL,
+    //         'device_http_user_agent' TEXT NOT NULL, 
+    //         'device_password' TEXT NOT NULL ,
+    //         'device_status' TEXT,
+    //         'time_set' INTEGER,
+    //         'time_last_uppdated' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    //                 );
+    
+    // CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
+    // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
+        include("addToDevices.php");
         }
-        $this->showPageLoggedIn();
-    }
 
     /**
      * Creates a PDO database connection (in this case to a SQLite flat-file database)
@@ -232,7 +244,7 @@ return false;//connection not established
      */
     private function createDatabaseConnection()
     {
-       if(isset($this->db_connection)){
+        if (isset($this->db_connection)) {
             return true;
         }
 
@@ -246,11 +258,11 @@ return false;//connection not established
         } catch (PDOException $e) {
             $this->feedback = "PDO database connection problem: " . $e->getMessage();
             echo "\nSorry Bo , opening db went wrong- " . $e->getMessage();
-            file_put_contents('PDOErrors.txt', $e->getMessage(), FILE_APPEND);
+            file_put_contents('PDOErrors.txt', "\n" . $e->getMessage(), FILE_APPEND);
         } catch (Exception $e) {
             $this->feedback = "General problem: " . $e->getMessage();
             echo "\nSorry Bo , opening db went wrong- " . $e->getMessage();
-            file_put_contents('PDOErrors.txt', $e->getMessage(), FILE_APPEND);
+            file_put_contents('PDOErrors.txt', "\n" . $e->getMessage(), FILE_APPEND);
         }
         return false;
     }
@@ -268,7 +280,6 @@ return false;//connection not established
             //because it means that Admin is still on his phone
             $this->doLoginWithSessionData();
             $this->user_logged_with = LOGGED_WITH_SESSION;
-            
         } elseif (isset($_POST["login"])) {
             //this means that some valid admin logs in on a new device, maybe bomb
             $this->doLoginWithPostData();
@@ -313,7 +324,7 @@ return false;//connection not established
         $_SESSION = array();
         session_destroy();
         $this->user_is_logged_in = false;
-        $this->feedback = "You were just logged out.";
+        $this->feedback .= "You were just logged out.\n";
     }
 
     /**
@@ -324,13 +335,15 @@ return false;//connection not established
     {
         if ($this->checkRegistrationData()) {
             if ($this->createDatabaseConnection()) {
-                echo "connected";
                 $this->createNewUser();
-            }
+            } else {
+                $this->feedback .= "problem with db connection \n";
+               }
+        } else {
+            $this->feedback .= "registration data not ok ? \n";
+               
+            return false;
         }
-        // default return
-        echo "doREgistration : not connected";
-        return false;
     }
 
     /**
@@ -473,12 +486,15 @@ return false;//connection not established
         if ($result_row) {
             $this->feedback = "Sorry, that username / email is already taken. Please choose another one.";
         } else {
-            $sql = 'INSERT INTO user (user_name, user_password_hash, user_email)
-                    VALUES(:user_name, :user_password_hash, :user_email)';
+            $sql = 'INSERT INTO user (user_name, user_password_hash, user_email,user_ip, http_user_agent)
+                    VALUES(:user_name, :user_password_hash, :user_email,:user_ip,:http_user_agent)';
             $query = $this->db_connection->prepare($sql);
             $query->bindValue(':user_name', $user_name);
             $query->bindValue(':user_password_hash', $user_password_hash);
             $query->bindValue(':user_email', $user_email);
+            $query->bindValue(':http_user_agent', $_SERVER['HTTP_USER_AGENT']);
+            $query->bindValue(':user_ip', $this->getIP(true)); // false means get real IP 
+
             // PDO's execute() gives back TRUE when successful, FALSE when not
             // @link http://stackoverflow.com/q/1661863/1114320
             $registration_success_state = $query->execute();
@@ -511,7 +527,8 @@ return false;//connection not established
     private function showPageLoggedIn()
     {
         if ($this->feedback) {
-            echo $this->feedback . "<br/><br/>";
+            
+            echo "<pre>FEEDBACK : \n" . $this->feedback . "</pre><br/>";
         }
 
         echo 'Hello ' . $_SESSION['user_name'] . ', you are logged in.<br/><br/>';
@@ -572,3 +589,6 @@ return false;//connection not established
 
 // run the application
 $application = new OneFileLoginApplication();
+if ($application->performMinimumRequirementsCheck()) {
+    $application->runApplication();
+}

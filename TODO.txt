@@ -1,5 +1,17 @@
+- modify index.php to react to action=registerDevice POST and 
+	to add device to DB checking all input.
+- implement setTimeOnDate in Timebomb.js
+- separate clock and keyboard modules into two scripts
+- modify scripts so they are proper js classes 
+- clock controller should create its components on its own
+user just creates counterCNT'ainer
 
-- PROBLEMS : install.sql/php doeas NOT create device table even thoug sql statements are there
+DONE - make html post form for registering new Bombdevice
+
+DONE - PROBLEMS : install.sql/php doeas NOT create device table even thoug sql statements are there
+    SQLITE SEEMS TO DO NOT TOLERATE comments or comma before closing bracket
+    
+    
 - test timebombsettings.php retrieval by creating registered device in db and setting all fields
 
 -- created device settings retrieval php script that outputs js script  with settings data
@@ -8,8 +20,8 @@
 -create registration of device
 	try to copy user registration mechanism but with ip's instead of username password
 	if device not registered 2 options: give your admin cred's and device
-	DO not save ip in db if user is not logged in
-	if device registered automatically should become logged in ---COMPLETE 
+	DO not save ip in db if user-(Admin) is not logged in 
+	if device is registered automatically should become logged in ---COMPLETE 
 	6 states connecting device:  (logged = !empty$SESSION) 
 								(registered = logged every bomb immediately automatically logs in )
 			1		user not logged and device not registered not logged -> user registration or login
