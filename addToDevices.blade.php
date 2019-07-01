@@ -35,15 +35,15 @@ input:valid+span:after {
             device_description:
         </label>
             <input id="device_description" type="text" name="device_description"/>
-        <label for="login_input_password_new">
+        <label for="device_password_new">
             Device Password (min. 4 characters, only lowercase letters and numbers) used to stop the timer/unlock the doors
         </label>
-            <input id="device_password" class="login_input" type="password" name="device_password"
+            <input id="device_password_new" class="login_input" type="password" name="device_password_new"
             pattern="[a-z0-9]{4,32}" required autocomplete="off" />
-        <label for="device_password">
+        <label for="device_password_repeat">
             Repeat password
         </label>
-            <input id="device_password" class="login_input" type="password" name="device_password_repeat"
+            <input id="device_password_repeat" class="login_input" type="password" name="device_password_repeat"
             pattern="[a-z0-9]{4,32}" required autocomplete="off" />
         <label for="device_ip">
                 Device IP(default this one):

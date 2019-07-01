@@ -192,13 +192,19 @@ class OneFileLoginApplication
         // can backdoor into admin
         if (isset($_GET["action"]) && $_GET["action"] == "register") {
             $this->doRegistration();
-            $this->showPageRegistration();
+            $this->showPageLoginForm();
         } else {
             // start the session, always needed!
             $this->doStartSession();
-            
-            //check first if device is registered
-            if ($this->IsRegisteredDevice()) {
+            //check first if device is Being registered
+            if (isset($_GET["action"]) && $_GET["action"] == "registerDevice") {
+                $this->doDeviceRegistration();
+                // $this->showPageLoginForm();
+                // dont show nothing yet, it will be taken care of later down in the code
+                // if user is logged in and device was registered showpageloggedin will show all db
+            }
+            //check second if device is registered
+            elseif ($this->IsRegisteredDevice()) {
                 include("rafka timebomb z klawiatura.html");
                 exit();
             };
@@ -235,7 +241,7 @@ class OneFileLoginApplication
     
     // CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
     // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
-        include("addToDevices.php");
+        include("addToDevices.blade.php");
         }
 
     /**
@@ -334,6 +340,25 @@ class OneFileLoginApplication
     private function doRegistration()
     {
         if ($this->checkRegistrationData()) {
+            if ($this->createDatabaseConnection()) {
+                $this->createNewUser();
+            } else {
+                $this->feedback .= "problem with db connection \n";
+               }
+        } else {
+            $this->feedback .= "registration data not ok ? \n";
+               
+            return false;
+        }
+    }
+
+    /**
+     * The device registration flow
+     * @return bool
+     */
+    private function doDeviceRegistration()
+    {
+        if ($this->checkDeviceRegistrationData()) {
             if ($this->createDatabaseConnection()) {
                 $this->createNewUser();
             } else {
@@ -456,6 +481,79 @@ class OneFileLoginApplication
         // default return
         return false;
     }
+
+      /**
+     * Validates the device's registration input
+     * @return bool Success status of device's registration data validation
+     */
+    private function checkDeviceRegistrationData()
+    {
+        // if no registration form submitted: exit the method
+        if (!isset($_POST["register"])) {
+            return false;
+        }
+
+        // validating the input
+        if (
+        
+            !empty($_POST['device_name'])
+            && strlen($_POST['device_name']) <= 64
+            && strlen($_POST['device_name']) >= 2
+            && preg_match('/^[a-z\d]{2,64}$/i', $_POST['device_name'])
+            // && !empty($_POST['user_email'])
+            // && strlen($_POST['user_email']) <= 64
+            // && filter_var($_POST['user_email'], FILTER_VALIDATE_EMAIL)
+            && !empty($_POST['device_password_new'])
+            && strlen($_POST['device_password_new']) >= 6
+            && !empty($_POST['device_password_repeat'])
+            && ($_POST['device_password_new'] === $_POST['device_password_repeat'])
+
+            && !empty($_POST['device_ip'])
+            && !empty($_POST['time_set'])
+        ) {
+            // only this case return true, only this case is valid
+            return true;
+                //     CREATE TABLE IF NOT EXISTS device (
+                // -----------//         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                // -----------//         'device_name' TEXT NOT NULL,
+                // -----------//         'device_description' TEXT,
+                // -----------//         'device_ip' TEXT NOT NULL,
+                // //         'device_http_user_agent' TEXT NOT NULL, 
+                // -----------//         'device_password' TEXT NOT NULL ,
+                // -----------//         'device_status' TEXT,
+                // //         'time_set' INTEGER,
+                // -----------//         'time_last_uppdated' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                //                 );
+                
+                // CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
+                // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
+        } elseif (empty($_POST['user_name'])) {
+            $this->feedback = "Empty Username";
+        } elseif (empty($_POST['user_password_new']) || empty($_POST['user_password_repeat'])) {
+            $this->feedback = "Empty Password";
+        } elseif ($_POST['user_password_new'] !== $_POST['user_password_repeat']) {
+            $this->feedback = "Password and password repeat are not the same";
+        } elseif (strlen($_POST['user_password_new']) < 6) {
+            $this->feedback = "Password has a minimum length of 6 characters";
+        } elseif (strlen($_POST['user_name']) > 64 || strlen($_POST['user_name']) < 2) {
+            $this->feedback = "Username cannot be shorter than 2 or longer than 64 characters";
+        } elseif (!preg_match('/^[a-z\d]{2,64}$/i', $_POST['user_name'])) {
+            $this->feedback = "Username does not fit the name scheme: only a-Z and numbers are allowed, 2 to 64 characters";
+        } elseif (empty($_POST['user_email'])) {
+            $this->feedback = "Email cannot be empty";
+        } elseif (strlen($_POST['user_email']) > 64) {
+            $this->feedback = "Email cannot be longer than 64 characters";
+        } elseif (!filter_var($_POST['user_email'], FILTER_VALIDATE_EMAIL)) {
+            $this->feedback = "Your email address is not in a valid email format";
+        } else {
+            $this->feedback = "An unknown error occurred.";
+        }
+
+        // default return
+        return false;
+    }
+
+
 
     /**
      * Creates a new user.

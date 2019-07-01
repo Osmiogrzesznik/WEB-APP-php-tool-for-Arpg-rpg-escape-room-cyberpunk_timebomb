@@ -1,3 +1,8 @@
+DOING: modifying index.php to accommodate new device registration
+	all else ifs LINE 530
+	doDEviceregistration validation of post variables
+	TODO : save to db
+
 - modify index.php to react to action=registerDevice POST and 
 	to add device to DB checking all input.
 - implement setTimeOnDate in Timebomb.js
