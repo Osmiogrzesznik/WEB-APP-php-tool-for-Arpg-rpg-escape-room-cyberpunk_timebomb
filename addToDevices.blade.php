@@ -63,25 +63,50 @@ input:valid+span:after {
 
             <input type="submit" name="register" value="Register" />
     </form>
-    <pre>
-            //     CREATE TABLE IF NOT EXISTS device (
-                -----------//         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-                -----------//         'device_name' TEXT NOT NULL,
-                -----------//         'device_description' TEXT,
-                -----------//         'device_ip' TEXT NOT NULL,
-                //         'device_http_user_agent' TEXT NOT NULL, 
-                -----------//         'device_password' TEXT NOT NULL ,
-                -----------//         'device_status' TEXT,
-                //         'time_set' INTEGER,
-                -----------//         'time_last_uppdated' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-                //                 );
-                
-                // CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
-                // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
-            </pre>
         
     <a href="index.php">Homepage</a>
 
+    <div id="counterCNT" class="counterCNT">
+        <div id="counterMeas" class="counter">
+            <span id="counter" class="digits">
+            
+   <span id="counter_hour">00</span>
+  <span id="counter_colon1">:</span>
+  <span id="counter_min">00</span>
+  <span id="counter_colon2" class="flash">:</span>
+  <span id="counter_sec">00</span>
+</span>
+<div id="counter_timeElapsed" class="timeElapsed">00000000000</div>
+	
+        </div>
+        <div id="btnCNT" class="btnCNT">
+            <!-- <btn id="str" onclick="cx.start()">
+                ST
+            </btn>
+            <btn id="stp" onclick="cx.nxfnt()">
+                nxfnt
+            </btn>
+            <btn id="boominf" onclick="togglenumkeyb()">
+                numkeyb
+            </btn> -->
+            <div class="circle redglow flash"> </div>
+            <div class="circle greenglow "> </div>
+            
+            </div>
+            
+        </div>
+    </div>
+    <script type="text/javascript" src="clockController.js"></script>
+    <script type="text/javascript" src="touchKeyboard.js"></script>
+    <!-- <script type="text/javascript" src="timebomb.js"></script> -->
+<script>
+    time_set.addEventListener('change', (ev)=>{
+        cx.reset();
+        // alert(event.target.value);
+        cx.setTimestampEndfromString(ev.target.value);
+        cx.start();
+    },false)
+    </script>
 </body>
 
 </html>

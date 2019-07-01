@@ -7,31 +7,50 @@
     <title>Test</title>
 </head>
 <style type="text/css">
-    html,
     body,
     button {
         --fg: #20f86c;
         --rd: red;
+        --bg: rgba(0, 0, 0, .7);
         background-color: #000;
         color: #20f86c;
         font-family: digitalix;
-        font-size: 100%;
+        font-size: 3vw;
     }
     
     btn,
     td {
         border: 1px solid;
-        padding: 0.5em;
+        padding: 2vw;
         background-color: rgba(0, 0, 0, .7);
         text-align: center;
+        transition: all 0.2s;
+    }
+
+    .transitionable{
+        transition: all 1s;
+    }
+
+    .boom{
+        background-color: #ffffff;
+        color:#ffffff;
+        
+        text-shadow: 0px 0px 10vw #fff;
+        opacity:0;
     }
     
     btn {
         margin: 0.5em;
     }
+
+    /* this makes clickables flash*/
+    btn:active, td:active{
+        background-color: var(--fg);
+        color: var(--bg);
+    }
     
     .KBdisplay {
-        border: 0.5px solid;
+        border: 1px solid;
         /*         padding: 0.5em; */
         /*         margin: 0.5em; */
         background-color: rgba(0, 0, 0, .7);
@@ -126,10 +145,10 @@
         }
     
     .circle{
-      margin:15px;
-    width:10px;
-    height:10px;
-    padding:10px;
+      margin:2vw;
+    width:2vw;
+    height:2vw;
+    padding:2vw;
     border-radius:100%;
     
     }
@@ -147,12 +166,12 @@
     
     .redglow{
     background-color: var(--rd);
-    box-shadow: 0px 0px 10px var(--rd);
+    box-shadow: 0px 0px 2vw var(--rd);
     }
     
     .greenglow{
     background-color: var(--fg);
-    box-shadow: 0px 0px 10px var(--fg);
+    box-shadow: 0px 0px 2vw var(--fg);
     }
     
        @keyframes flash {
@@ -222,7 +241,7 @@
 	
         </div>
         <div id="btnCNT" class="btnCNT">
-            <btn id="str" onclick="cx.start()">
+            <!-- <btn id="str" onclick="cx.start()">
                 ST
             </btn>
             <btn id="stp" onclick="cx.nxfnt()">
@@ -230,7 +249,7 @@
             </btn>
             <btn id="boominf" onclick="togglenumkeyb()">
                 numkeyb
-            </btn>
+            </btn> -->
             <div class="circle redglow flash"> </div>
             <div class="circle greenglow "> </div>
             
@@ -241,59 +260,6 @@
 
 
 
-    <!-- 
- <table id="numkeyb" class="btnCNT" style="display:none">
-  <tr>
-   <td id="numDisp" colspan="9" class="KBdisplay" style="width:100%">
-	  ____
-   </td>
-  </tr>
-  <tr>
-   <td id="k7" onclick="numKbdHandler(event)">
-	7
-   </td>
-   <td id="k8" onclick="numKbdHandler(event)">
-	8
-   </td>
-   <td id="k9" onclick="numKbdHandler(event)">
-	9
-   </td>
-  </tr>
-  <tr>
-   <td id="k7" onclick="numKbdHandler(event)">
-	4
-   </td>
-   <td id="k8" onclick="numKbdHandler(event)">
-	5
-   </td>
-   <td id="k9" onclick="numKbdHandler(event)">
-	6
-   </td>
-  </tr>
-  <tr>
-   <td id="k7" onclick="numKbdHandler(event)">
-	1
-   </td>
-   <td id="k8" onclick="numKbdHandler(event)">
-	2
-   </td>
-   <td id="k9" onclick="numKbdHandler(event)">
-	3
-   </td>
-  </tr>
-  <tr>
-   <td id="k7" onclick="keyboff()">
-	X
-   </td>
-   <td id="k8" onclick="numKbdHandler(event)">
-	0
-   </td>
-   <td id="k9" onclick="dellast()">
-	D
-   </td>
-  </tr>
- </table>
-   -->
 
     <table id="customKeybTMPLT" class="btnCNT" style="display:none">
         <tr>
@@ -323,7 +289,8 @@
 
 </script>
     <script type="text/javascript" src="timebombsettings.php"></script>
-
+    <script type="text/javascript" src="clockController.js"></script>
+    <script type="text/javascript" src="touchKeyboard.js"></script>
     <script type="text/javascript" src="timebomb.js"></script>
 </body>
 

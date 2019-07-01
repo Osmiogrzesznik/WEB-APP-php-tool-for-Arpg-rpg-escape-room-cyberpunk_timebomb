@@ -1,7 +1,19 @@
-DOING: modifying index.php to accommodate new device registration
+
+TODO: Empty Passwordregistration data not ok ? feedback when registering device; check index.php
+
+
+Done TODO : rewrite mechanism of clock to be interested only in showing countdown to given date
+      
+
+- make clock beep faster at the end PROBLEM:SOUNDS ARE LOST)
+DONE : check it now DOING: modifying index.php to accommodate new device registration
 	all else ifs LINE 530
 	doDEviceregistration validation of post variables
 	TODO : save to db
+
+DONE:
+     this-feedback is now accumulative
+    todo:display feedback in red border
 
 - modify index.php to react to action=registerDevice POST and 
 	to add device to DB checking all input.

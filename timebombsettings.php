@@ -187,12 +187,12 @@ return false;//connection not established
             // show "page", according to device's login status
      // this is where bomb registration or  displaying bombstatuses takes place
             if ($this->getdeviceLoginStatus()) {
-                echo "data = " . json_encode($_SESSION,JSON_PRETTY_PRINT);
+                echo "jsdataFromServer = " . json_encode($_SESSION,JSON_PRETTY_PRINT);
                 //TODO here i should output not whole session but only timeset device name and so on
                // $this->showAppriopriatePage();
             } else {
                // not admin, not logged in, no path variable
-               echo "data = {error:'device not in db' , device_ip: '". $this->ip . "'};";
+               echo "jsdataFromServer = {error:'device not in db' , device_ip: '". $this->ip . "'};";
                // $this->showPageLoginForm();
             }
     
