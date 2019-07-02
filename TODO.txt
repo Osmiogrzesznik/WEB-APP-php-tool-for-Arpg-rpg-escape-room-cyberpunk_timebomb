@@ -1,37 +1,21 @@
+DONE:- modified index.php to react to action=registerDevice POST and 
+	to add device to DB checking all input.
 
-TODO: Empty Passwordregistration data not ok ? feedback when registering device; check index.php
+TODO:  display all devices in a table if user is logged in
+	-when device just added (show logged in)
+	 later  -> WHERE user_creator_id = :logged_user_id in showalldevices to allow many users to have separate bombsets
 
 
 Done TODO : rewrite mechanism of clock to be interested only in showing countdown to given date
       
 
 - make clock beep faster at the end PROBLEM:SOUNDS ARE LOST)
-DONE : check it now DOING: modifying index.php to accommodate new device registration
-	all else ifs LINE 530
-	doDEviceregistration validation of post variables
-	TODO : save to db
+todo:display feedback in red border
 
-DONE:
-     this-feedback is now accumulative
-    todo:display feedback in red border
-
-- modify index.php to react to action=registerDevice POST and 
-	to add device to DB checking all input.
-- implement setTimeOnDate in Timebomb.js
-- separate clock and keyboard modules into two scripts
 - modify scripts so they are proper js classes 
 - clock controller should create its components on its own
 user just creates counterCNT'ainer
-
-DONE - make html post form for registering new Bombdevice
-
-DONE - PROBLEMS : install.sql/php doeas NOT create device table even thoug sql statements are there
-    SQLITE SEEMS TO DO NOT TOLERATE comments or comma before closing bracket
-    
-    
-- test timebombsettings.php retrieval by creating registered device in db and setting all fields
-
--- created device settings retrieval php script that outputs js script  with settings data
+        
 
 
 -create registration of device

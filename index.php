@@ -221,8 +221,10 @@ class OneFileLoginApplication
                 $this->showPageLoggedIn();
             } elseif ($this->getUserLoginStatus() && $this->device_is_logged_in) {
               //do not show table of devices here this is 
+              $this->showPageLoggedIn();
                 $this->feedback .= "userAdmin is logged in and device is logged in ,
                 probably here user should have an option to logout";
+
                 }
                 else{
                 // not admin, not logged in, no path variable
@@ -504,14 +506,15 @@ $this->showPageLoginForm();
         // validating the input
         if (
             !empty($_POST['device_name'])
-            && strlen($_POST['device_name']) <= 64
+            && strlen($_POST['device_name']) <= 24
             && strlen($_POST['device_name']) >= 2
-            && preg_match('/^[a-z\d]{2,64}$/i', $_POST['device_name'])
+            && preg_match('/^[a-z\d]{2,24}$/i', $_POST['device_name'])
             // && !empty($_POST['user_email'])
             // && strlen($_POST['user_email']) <= 64
             // && filter_var($_POST['user_email'], FILTER_VALIDATE_EMAIL)
             && !empty($_POST['device_password_new'])
-            && strlen($_POST['device_password_new']) >= 6
+            && strlen($_POST['device_password_new']) >= 4
+            && strlen($_POST['device_password_new']) <= 24
             && !empty($_POST['device_password_repeat'])
             && ($_POST['device_password_new'] === $_POST['device_password_repeat'])
 
@@ -538,18 +541,18 @@ $this->showPageLoginForm();
                 // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
         } elseif (empty($_POST['device_name'])) {
             $this->feedback .="Empty device name";
-        } elseif (empty($_POST['device_password_new']) || empty($_POST['user_password_repeat'])) {
-            $this->feedback .="Empty Password";
-        } elseif ($_POST['device_password_new'] !== $_POST['user_password_repeat']) {
+        } elseif (empty($_POST['device_password_new']) || empty($_POST['device_password_repeat'])) {
+            $this->feedback .="Empty device Password";
+        } elseif ($_POST['device_password_new'] !== $_POST['device_password_repeat']) {
             $this->feedback .="Password and password repeat are not the same";
         } elseif (strlen($_POST['device_password_new']) < 4) {
             $this->feedback .="Password has a minimum length of 6 characters";
-        } elseif (!preg_match('/^[a-z\d]{4,32}$/', $_POST['device_password_new'])) {
-            $this->feedback .="passwordd does not fit the scheme: only a-z and numbers are allowed, 2 to 32 characters";
-        } elseif (strlen($_POST['user_name']) > 64 || strlen($_POST['user_name']) < 2) {
-            $this->feedback .="Username cannot be shorter than 2 or longer than 64 characters";
-        } elseif (!preg_match('/^[a-z\d]{2,64}$/', $_POST['user_name'])) {
-            $this->feedback .="Username does not fit the name scheme: only a-z and numbers are allowed, 2 to 64 characters";
+        } elseif (!preg_match('/^[a-z\d]{4,24}$/', $_POST['device_password_new'])) {
+            $this->feedback .="passwordd does not fit the scheme: only a-z and numbers are allowed, 4 to 24 characters";
+        } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
+            $this->feedback .="devicename cannot be shorter than 2 or longer than 64 characters";
+        } elseif (!preg_match('/^[a-z\d]{2,64}$/', $_POST['device_name'])) {
+            $this->feedback .="device name does not fit the name scheme: only a-z and numbers are allowed, 2 to 64 characters";
         } elseif (empty($_POST['device_ip'])) {
             $this->feedback .="device ip cannot be empty";
         } elseif (empty($_POST['time_set'])) {
@@ -559,7 +562,7 @@ $this->showPageLoginForm();
         } else {
             $this->feedback .="An unknown error occurred.";
         }
-
+        $this->feedback .="\n";
         // default return
         return false;
     }
@@ -622,7 +625,12 @@ private function createNewDevice()
         // remove html code etc. from username and email
         $device_name = htmlentities($_POST['device_name'], ENT_QUOTES);
         $device_ip = htmlentities($_POST['device_ip'], ENT_QUOTES);
+        $device_description = htmlentities($_POST['device_description'], ENT_QUOTES);
         $device_password = $_POST['device_password_new'];
+        $device_http_user_agent = $_SERVER['HTTP_USER_AGENT'];
+        $time_set = $_POST['time_set'];
+
+        
         // crypt the user's password with the PHP 5.5's password_hash() function, results in a 60 char hash string.
         // the constant PASSWORD_DEFAULT comes from PHP 5.5 or the password_compatibility_library
         // maybe later do the hash  version
@@ -666,6 +674,7 @@ private function createNewDevice()
             $query->bindValue(':device_http_user_agent', $_SERVER['HTTP_USER_AGENT']);
             $query->bindValue(':device_description', $device_description);
             $query->bindValue(':device_status', 'active');
+            $query->bindValue(':time_set', $time_set);
             
             
             
@@ -707,6 +716,9 @@ private function createNewDevice()
 
         echo 'Hello ' . $_SESSION['user_name'] . ', you are logged in.<br/><br/>';
         echo '<a href="' . $_SERVER['SCRIPT_NAME'] . '?action=logout">Log out</a>';
+
+
+        include('showAllDEvices.blade.php');
     }
 
     /**
