@@ -44,7 +44,7 @@
     }
 
     /* this makes clickables flash*/
-    btn:active, td:active{
+    btn:active, td:active, {
         background-color: var(--fg);
         color: var(--bg);
     }

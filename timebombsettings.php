@@ -237,7 +237,7 @@ return false;//connection not established
         if (isset($_GET["action"]) && $_GET["action"] == "logout") {
             $this->doLogout();
 
-        } elseif (!empty($_SESSION['device_name']) && ($_SESSION['device_is_logged_in'])) {
+        } elseif (!empty($_SESSION['device_name']) && !empty($_SESSION['device_is_logged_in'])) {
             $this->doLoginWithSessionData();
             $this->device_logged_with = LOGGED_WITH_SESSION;
             

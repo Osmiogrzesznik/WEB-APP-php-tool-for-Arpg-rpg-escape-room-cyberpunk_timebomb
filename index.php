@@ -207,7 +207,7 @@ class OneFileLoginApplication
             }
             //check second if device is registered
             elseif ($this->IsRegisteredDevice()) {
-                include("rafka timebomb z klawiatura.html");
+                include("ViewBombInterface.blade.html");
                 exit();
             };
             //if device is not registered  
@@ -217,11 +217,15 @@ class OneFileLoginApplication
             // this is where bomb registration or  displaying bombstatuses takes place
             // if userAdmin is logged in and device is not registered
             if ($this->getUserLoginStatus() && !$this->device_is_logged_in) {
-                $this->showPageAddToDevices();
                 $this->showPageLoggedIn();
+                $this->showPageAddToDevices();
             } elseif ($this->getUserLoginStatus() && $this->device_is_logged_in) {
               //do not show table of devices here this is 
               $this->showPageLoggedIn();
+              $this->showPageAddToDevices(); // not sure whether this should be here
+                // after all admin should use separate device to add it to db
+                
+
                 $this->feedback .= "userAdmin is logged in and device is logged in ,
                 probably here user should have an option to logout";
 
@@ -237,21 +241,11 @@ $this->showPageLoginForm();
 
     private function showPageAddToDevices()
     {
-    //     CREATE TABLE IF NOT EXISTS device (
-    //         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-    //         'device_name' TEXT NOT NULL,
-    //         'device_description' TEXT,
-    //         'device_ip' TEXT NOT NULL,
-    //         'device_http_user_agent' TEXT NOT NULL, 
-    //         'device_password' TEXT NOT NULL ,
-    //         'device_status' TEXT,
-    //         'time_set' INTEGER,
-    //         'time_last_uppdated' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-    //                 );
-    
-    // CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
-    // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
-        include("addToDevices.blade.php");
+        if ($this->feedback) {
+            echo $this->feedback . "<br/><br/>";
+        }
+
+        include("ViewAddToDevices.blade.php");
         }
 
     /**
@@ -661,11 +655,11 @@ private function createNewDevice()
                 
             $sql = 'INSERT INTO device 
             (device_id,device_name, device_password, 
-             device_ip, device_http_user_agent
+             device_ip, device_http_user_agent,
             device_description, device_status,time_set)
                     VALUES
-             null ,:device_name, :device_password, 
-             :device_ip, :device_http_user_agent
+             (null ,:device_name, :device_password, 
+             :device_ip, :device_http_user_agent,
             :device_description, :device_status,:time_set)';
             $query = $this->db_connection->prepare($sql);
             $query->bindValue(':device_name', $device_name);
@@ -702,6 +696,15 @@ private function createNewDevice()
         return $this->user_is_logged_in;
     }
 
+      /**
+     * Simply returns the current status of the device's login
+     * @return bool device's login status
+     */
+    public function getDeviceLoginStatus()
+    {
+        return $this->device_is_logged_in;
+    }
+
     /**
      * Simple demo-"page" that will be shown when the user is logged in.
      * In a real application you would probably include an html-template here, but for this extremely simple
@@ -717,8 +720,7 @@ private function createNewDevice()
         echo 'Hello ' . $_SESSION['user_name'] . ', you are logged in.<br/><br/>';
         echo '<a href="' . $_SERVER['SCRIPT_NAME'] . '?action=logout">Log out</a>';
 
-
-        include('showAllDEvices.blade.php');
+        include('ViewAllDEvices.blade.php');
     }
 
     /**

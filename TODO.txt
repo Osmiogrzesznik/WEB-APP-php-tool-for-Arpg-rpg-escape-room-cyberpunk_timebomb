@@ -1,3 +1,34 @@
+ - every Time somebody sees a table with all devices status 
+active inactive should be treated as ARmed , disarmed
+ find some way to address these cells and update them in inline js.
+maybe try dataset in conjuction with class=" updateAbledate"
+
+TODO:
+
+ctive as understood by "being recently touched" should be
+ calculated automatically based on the last
+ updated date. already in js showalldevices could actively
+poll every minute or 30 sec to fetch lastUpdated 
+Timestamp 
+    js would constantly calculate difference between Date.now
+    and value in table to show how long ago somebody was touching
+    the bomb
+    
+TODO: on each touch listener should remember 
+the two timestamps, one get from db , and one registered
+ on each touch of window. 
+setInterval function should be active: 
+    check if lasttouchtimestamp 
+    is not null and if it is different from currently 
+    hold in js memory DBtimestamp(not fetched from DB)    
+
+
+try not to do $result->fetch 
+call method on QUERY pdo object
+maybe execute returns just bool
+
+
+
 DONE:- modified index.php to react to action=registerDevice POST and 
 	to add device to DB checking all input.
 

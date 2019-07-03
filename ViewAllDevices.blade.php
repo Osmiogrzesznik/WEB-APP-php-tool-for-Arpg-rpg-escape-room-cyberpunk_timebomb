@@ -5,15 +5,16 @@ $sql = "SELECT * FROM device";// WHERE class = '$class'"; later  -> WHERE user_c
 
 
 $query = $conn->prepare($sql);
-$result = $query->execute();
-$result->setFetchMode(PDO::FETCH_ASSOC);
+
+$query->setFetchMode(PDO::FETCH_ASSOC);
+$query->execute();
 
 
 $columns = array();
 $resultset = array();
 
 # Set columns and results array
-while($row = $result->fetch()) {
+while($row = $query->fetch()) {
 	if (empty($columns)) {
 		$columns = array_keys($row);
 	}
@@ -23,7 +24,7 @@ while($row = $result->fetch()) {
 
 
 # If records found
-if( count($resultset > 0 )) {
+if( count($resultset) > 0 ) {
 ?>
 	<table class="table table-bordered" >
 		<thead>
@@ -51,6 +52,12 @@ if( count($resultset > 0 )) {
 		</tbody>
 	</table>
 
-<?php }else{ ?>
+<button onclick="document.location.reload(true)">Refresh</button>
+
+<?php 
+
+
+
+}else{ ?>
 <h4> Information Not Available </h4>
 <?php } ?>
