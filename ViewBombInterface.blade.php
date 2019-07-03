@@ -283,12 +283,21 @@
     not suoported
 </audio>
 <script>
-
-
+    <?php
+    //$this->getdeviceLoginStatus() this will allways show error need to fix it in index.php
+if ($this->getdeviceLoginStatus()) {
+                echo "jsdataFromServer = " . json_encode($_SESSION,JSON_PRETTY_PRINT);
+                //TODO here i should output not whole session but only timeset device name and so on
+               // $this->showAppriopriatePage();
+            } else {
+               // not admin, not logged in, no path variable
+               echo "jsdataFromServer = {error:'device not in db' , device_ip: '". $this->ip . "'};";
+               // $this->showPageLoginForm();
+            }
+?>
 
 
 </script>
-    <script type="text/javascript" src="timebombsettings.php"></script>
     <script type="text/javascript" src="clockController.js"></script>
     <script type="text/javascript" src="touchKeyboard.js"></script>
     <script type="text/javascript" src="timebomb.js"></script>
