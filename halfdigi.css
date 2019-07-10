@@ -1,7 +1,8 @@
-
+a,
 body,
 input,
-button {
+button,
+select {
     --fg: #20f86c;
     --rd: red;
     --bg: #000;
@@ -11,20 +12,48 @@ button {
     font-size: 100%;
 }
 
+
+
+.hud {
+    background-color: rgba(0, 0, 0, .5);
+
+}
+
 btn,
 input,
-td, a{
+td,
+a {
     border: 1px solid;
     /* padding: 0.5em; */
     background-color: rgba(0, 0, 0, .7);
     text-align: center;
 }
 
-td{
+.big {
+    width: 20vw;
+    height: 20vh;
+    background-color: rgba(0, 70, 0, .7);
+    /* border-color: rgba(0, 70, 0, .7); */
+}
+
+form {
+    /* margin: 1vh; */
+    /* display:block; */
+    flex-direction: column;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+td {
     word-wrap: break-word;
 }
 
-btn:active, td:active, th {
+btn:active,
+td:active,
+th,
+a {
     background-color: var(--fg);
     color: var(--bg);
     border: 1px solid (--bg);
@@ -32,6 +61,13 @@ btn:active, td:active, th {
 
 btn {
     margin: 0.5em;
+}
+
+input[type=submit] {
+    margin: 5px;
+    background-color: rgba(0, 70, 0, .7);
+    border-color: rgba(0, 70, 0, .7);
+    border: 1px solid;
 }
 
 
@@ -45,11 +81,11 @@ btn {
 }
 
 table {
-  /*position: absolute;*/
+    /*position: absolute;*/
     margin: 1vh;
     width: 50vw;
     /* border-collapse: collapse; */
- /* in this css file no need for floating keyboard */
+    /* in this css file no need for floating keyboard */
     /* height: 80vh; */
 }
 
@@ -61,13 +97,35 @@ table {
 }
 
 .counterCNT {
-    position: relative;
+    /* position: fixed; */
+    top: 0px;
+    /* z-index: -1; */
     /*         font-family: digitalix; */
+}
+
+.counter {
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    justify-items: center;
+    /* width: 100vw; */
+}
+
+
+
+.flex-row {
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    justify-items: center;
+    /* width: 100vw; */
 }
 
 .counterScreen {
     text-align: center;
-    line-height: 100vw;   
+    line-height: 100vw;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -77,14 +135,18 @@ table {
 .digits {
     font-family: digit;
     color: red;
-    font-size: 20vw;
+    font-size: 5vw;
     text-align: center;
-    line-height: 100vw;
-    height: 100vh;
+    /* line-height: 100vw; */
+    /* height: 100vh;  */
     display: flex;
     justify-content: center;
     align-items: center;
     text-shadow: 0px 0px 10px red;
+}
+
+.digits-small {
+    font-size: 20px;
 }
 
 .cyber {
@@ -131,44 +193,42 @@ table {
     animation-timing-function: cubic-bezier(0.190, 1.000, 0.220, 1.000);
     color: green;
     border-color: green;
-    
-    }
-
-.circle{
-  margin:15px;
-width:10px;
-height:10px;
-padding:10px;
-border-radius:100%;
 
 }
 
-.flash{
- animation-name: flash;
-animation-duration: 1s;
-animation-iteration-count: infinite;
-animation-timing-function: cubic-bezier(0.190, 1.000, 0.220, 1.000);
+.circle {
+    margin: 15px;
+    width: 10px;
+    height: 10px;
+    padding: 10px;
+    border-radius: 100%;
+
 }
 
-.steppy{
-/* animation-timing-function: step(1,start) */
+.flash {
+    animation-name: flash;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: cubic-bezier(0.190, 1.000, 0.220, 1.000);
 }
 
-.redglow{
-background-color: var(--rd);
-box-shadow: 0px 0px 10px var(--rd);
+.redglow {
+    background-color: var(--rd);
+    box-shadow: 0px 0px 10px var(--rd);
 }
 
-.greenglow{
-background-color: var(--fg);
-box-shadow: 0px 0px 10px var(--fg);
+.greenglow {
+    background-color: var(--fg);
+    box-shadow: 0px 0px 10px var(--fg);
 }
 
-   @keyframes flash {
+@keyframes flash {
+
     0%,
     80% {
         opacity: 1;
     }
+
     /*         50% {
 opacity: .5;
       transform: scaleX(4) scaleY(0.1);
@@ -186,6 +246,7 @@ opacity: .5;
         /*  color:red; */
         transform: scaleX(1) scaleY(1);
     }
+
     /*         50% {
 opacity: .5;
       transform: scaleX(4) scaleY(0.1);
@@ -198,17 +259,53 @@ opacity: .5;
 }
 
 @keyframes shake {
+
     0%,
     100% {
         /*             opacity: 0; */
         transform: translateX(0);
     }
+
     50% {
         /*             opacity: 1; */
         transform: translateX(-40px);
     }
 }
 
-.timeElapsed{
-    font-size:5vw;
+.timeElapsed {
+    font-size: 5vw;
+}
+
+.field-editable {
+    background-color: rgba(0, 20, 0, .7);
+    border-color: rgba(0, 20, 0, .7);
+}
+
+.field-non-editable {
+    background-color: rgba(50, 50, 50, .7);
+    border-color: #666666;
+    color: #666666;
+}
+
+
+
+input,
+label {
+    display: block;
+}
+
+input:invalid {
+    color: red;
+    border-color: red;
+}
+
+input:invalid+span:after {
+    content: 'value NOT OK';
+    padding-left: 5px;
+    color: red;
+}
+
+input:valid+span:after {
+    content: 'value OK';
+    padding-left: 5px;
 }

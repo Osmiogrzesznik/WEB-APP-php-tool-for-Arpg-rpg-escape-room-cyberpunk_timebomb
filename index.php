@@ -1,9 +1,11 @@
 <?php
-date_default_timezone_set('Europe/London');
+
 // constants to determine if user just logged in or was active on this device
 define("JUST_LOGGING_IN", 2);
 define("LOGGED_WITH_SESSION", 3);
 define("DEBUG_MODE", 1);
+define("DEFAULT_TIMEZONE_NAME_LONDON", "Europe/London");
+
 /**
  * Class OneFileLoginApplication
  *
@@ -52,7 +54,7 @@ class OneFileLoginApplication
      *
      * @var int
      */
-    public $time = 0;
+    public $script_start_time = 0;
     /**
      * ip of user that just accessed page
      *
@@ -73,14 +75,26 @@ class OneFileLoginApplication
      */
     public $user_logged_with = 0;
     public $scriptName = null;
+    public $dev = null;
+    public $timezones = null;
+    public $timezone = null;
+    public $timezoneName = null;
     /**
      * Does necessary checks for PHP version and PHP password compatibility library and runs the application
      */
     public function __construct()
     {
-        $this->time = time();
-        $this->scriptName = $_SERVER['SCRIPT_NAME'];
+        ///removeXXX move to usercreation
+        //$this->timezone = new DateTimeZone(DEFAULT_TIMEZONE_NAME_LONDON);//** ? */  
+        
+        $this->script_start_time= time();
+        $this->scriptName = $_SERVER['SCRIPT_NAME'];//TODO: globalreplace to property scriptName
         $this->feedback = "";
+    }
+
+    public function addFeedback($msg)
+    {
+        $this->feedback .= $msg . "\n";
     }
 
     /**
@@ -93,7 +107,7 @@ class OneFileLoginApplication
     public function performMinimumRequirementsCheck()
     {
         if (version_compare(PHP_VERSION, '5.3.7', '<')) {
-            echo "Sorry, Simple PHP Login does not run on a PHP version older than 5.3.7 !";
+            $this->addFeedback("Sorry, Simple PHP Login does not run on a PHP version older than 5.3.7 !");
         } elseif (version_compare(PHP_VERSION, '5.5.0', '<')) {
             require_once("libraries/password_compatibility_library.php");
             return true;
@@ -101,6 +115,7 @@ class OneFileLoginApplication
             return true;
         }
         // default return
+        include("ViewStartHTML.blade.php");
         return false;
     }
 
@@ -130,16 +145,42 @@ class OneFileLoginApplication
         return $this->ip;
     }
 
+
+
+    /**
+     * lazy getter , checks first value device_is_logged_in,
+     * then $_SESSION, and finally Database. Sideeffect - updates the time_last_active
+     *  
+     *
+     * @return bool is device currently connected a registered in db user device
+     */
     public function IsRegisteredDevice()
     {
-        //IF ip is in database display bomb/device interface with time counting down
+        if ($this->device_is_logged_in) {
+            return true;
+        }
+
+        // had to remove it because when user deletes the device refreshing leads to device unaware of being deleted
+        // elseif (isset($_SESSION['device_id'])) {
+        //     $this->device_is_logged_in = true;
+        //     return true;
+        // }
+
+
+        $ip = $this->getIP(DEBUG_MODE);
+
+        // you could check first for session vars here and for cookie, then  compare them against the db
+
         if ($this->createDatabaseConnection()) {
-            $sql = 'SELECT *
-                FROM device
-                WHERE device_ip = :connection_ip;
-                ';
+            $sql = 'SELECT 
+            device_id,device_ip,device_name,device_status,
+            device_password,time_set,user_timezone 
+            FROM device
+            INNER jOIN user ON registered_by_user = user_id 
+            WHERE device_ip = :connection_ip;    
+            ';
             $query = $this->db_connection->prepare($sql);
-            $query->bindValue(':connection_ip', $this->getIP(DEBUG_MODE));
+            $query->bindValue(':connection_ip', $ip);
             $query->execute();
 
             // Btw that's the weird way to get num_rows in PDO with SQLite:
@@ -149,27 +190,89 @@ class OneFileLoginApplication
             // As there is no numRows() in SQLite/PDO (!!) we have to do it this way:
             // If you meet the inventor of PDO, punch him. Seriously.
             $result_row = $query->fetchObject();
+
             if ($result_row) {
                 // using PHP 5.5's password_verify() function to check password
                 //if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
                 // write user data into PHP SESSION [a file on your server]
-                $_SESSION['device_id'] = $result_row->device_ip;
+                $_SESSION['device_id'] = $result_row->device_id;
+                $_SESSION['device_ip'] = $result_row->device_ip;
                 $_SESSION['device_name'] = $result_row->device_name;
                 $_SESSION['device_status'] = $result_row->device_status;
                 $_SESSION['time_set'] = $result_row->time_set;
+                $_SESSION['device_password'] = $result_row->device_password;
+                $_SESSION['timezone'] = $result_row->user_timezone;
+                $this->timezoneName = $result_row->user_timezone;
+                $this->timezone = new DateTimeZone($this->timezoneName);
                 $this->device_is_logged_in = true;
+                $this->device_password = $result_row->device_password;
                 $this->device_time_set = $result_row->time_set;
+                //$this->dev = $query->fetchAll(PDO::FETCH_ASSOC);
+
+                $sql = 'UPDATE device
+                SET time_last_active = :date_now, device_status = :device_status
+                WHERE device_ip = :connection_ip;
+                ';
+                $date_now = date('Y-m-d\TH:i:s');
+                $query = $this->db_connection->prepare($sql);
+                $query->bindValue(':date_now', $date_now);
+                $query->bindValue(':device_status', 'active');
+                $query->bindValue(':connection_ip', $ip);
+                $query->execute();
                 return true;
-                //} else {
-                //    $this->feedback .="Wrong password.";
-                //}
             } else {
-                $this->feedback .= "This device is not registered yet in db.";
+                $this->addFeedback("Device you are using now ($ip) is not registered yet in db.");
             }
             // default return
             return false;
         }
         return false; //connection not established
+    }
+
+
+
+    public function checkDevicePasswordCorrectness()
+    {
+        // you could check first for session vars here and for cookie, then  compare them against the db
+
+        //IF ip is in database display bomb/device interface with time counting down
+
+        //  should check first for session and cookie to not block db
+        try {
+            if ($this->IsRegisteredDevice()) {
+                //if ($_SESSION['device_password'] === $_GET["password"]) {
+                if ($this->device_password === $_GET["password"]) {
+                    $this->addFeedback("password correct");
+                    // TODO: should check if its too late , even when device already 
+                    // detonated, just to make sure nobody will fool admins
+                    if ($this->createDatabaseConnection()) {
+                        $sql = 'UPDATE device
+                            SET device_status = :new_status
+                            WHERE device_ip = :connection_ip;
+                            ';
+                        $ip = $this->getIP(DEBUG_MODE);
+                        $query = $this->db_connection->prepare($sql);
+                        $query->bindValue(':new_status', "disarmed");
+                        $query->bindValue(':connection_ip', $ip);
+                        $query->execute();
+                        $_SESSION['device_status'] = "disarmed";
+                        $this->addFeedback("device disarmed");
+                        return true;
+                    }
+                    $this->addFeedback("db CONNECTION PROBLEM");
+                    return false;
+                }
+                $this->addFeedback("password incorrect");
+                return false;
+            }
+            $this->addFeedback("dEVICE IS NOT REGISTERED?");
+            return false;
+        } catch (Exception $e) {
+            $this->addFeedback($e->getMessage());
+            return false;
+        }
+        $this->addFeedback("no error have no idea");
+        return false;
     }
     /**
      * This is basically the controller that handles the entire flow of the application.
@@ -179,74 +282,330 @@ class OneFileLoginApplication
         //first check ip
         $this->getIP(DEBUG_MODE);
         $this->http_user_agent = getenv('HTTP_USER_AGENT');
-        $this->info = $this->time . " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
+        $this->info = $this->script_start_time. " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
         file_put_contents('visitors.txt', "\n" . $this->info, FILE_APPEND);
+        $this->doStartSession();
+
+        if (isset($_GET["action"])) {
+            //both ofbthese cases check agst db for regstd dev
+            //factor out isRegistteredDevice()
+            switch ($_GET["action"]): case ("getsettings"):
+                    include("JSsettings.php");
+                    exit();
+                    break;
+
+                case ("password"):
+                    $password_ok = $this->checkDevicePasswordCorrectness();
+                    $_ARR_response = array(
+                        'password_ok' => $password_ok,
+                        'feedback' => $this->feedback
+                    );
+                    echo json_encode($_ARR_response);
+                    exit();
+
+                    break;
 
 
+                case ("registerForm"):
 
+                    $this->showPageRegistration();
+                    exit();
+                    //$this->doRegistration();
+                    break;
+            // dont show nothing yet, it will be taken care of later down in the code
+            // if user is logged in and device was registered showpageloggedin will show all db
+            endswitch;
+        }
 
+        //if device is not registered  
+        // check for possible userADmin interactions (login with session/post data or logout)
+        $this->performUserLoginAction();
 
+        if ($this->getUserLoginStatus()) {
 
-        // check is user wants to see register page (etc.)
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //this is the backdoor everybody who will write register 
-        // can backdoor into admin
-        if (isset($_GET["action"]) && $_GET["action"] == "register") {
-            $this->doRegistration();
-            $this->showPageLoginForm();
-        } else {
-            // start the session, always needed!
-            $this->doStartSession();
-            //check first if device is Being registered
-            if (isset($_GET["action"]) && $_GET["action"] == "registerDevice") {
-                $this->doDeviceRegistration();
-                // $this->showPageLoginForm();
-                
-                // dont show nothing yet, it will be taken care of later down in the code
-                // if user is logged in and device was registered showpageloggedin will show all db
-            }
-            //check second if device is registered
-            elseif ($this->IsRegisteredDevice()) {
-                include("ViewBombInterface.blade.html");
+            if (isset($_POST["updatedevice"])) {
+                $this->updateDevice();
+                echo "updating device by POST feedback: " . $this->feedback;
                 exit();
-            };
-            //if device is not registered  
-            // check for possible userADmin interactions (login with session/post data or logout)
-            $this->performUserLoginAction();
-            // show "page", according to user's login status
-            // this is where bomb registration or  displaying bombstatuses takes place
-            // if userAdmin is logged in and device is not registered
-            if ($this->getUserLoginStatus() && !$this->device_is_logged_in) {
+            } elseif (isset($_GET["action"])) {
+
+                switch ($_GET["action"]): case ("registerDevice"):
+
+                        $this->doDeviceRegistration();
+
+                        break;
+
+                    case ("delete"):
+                        $this->deleteDevice();
+                        $this->showPageLoggedIn();
+                        $this->showPageAddToDevices();
+                        //   include("JSsettings.php");
+                        exit();
+                        break;
+
+                    case ("deleteme"):
+                        $this->deleteMeUser();
+                        $this->doLogout();
+                        $this->showPageRegistration();
+                        //   include("JSsettings.php");
+                        exit();
+                        break;
+                endswitch;
+            }
+
+
+            if ($this->device_is_logged_in) {
+                //this means usrr just added device 
+                $this->addFeedback("userAdmin is logged in and device is logged in ,
+                probably here user should have an option to logout");
+
+                $this->showPageLoggedIn();
+                $this->showPageAddToDevices(); //for Adding More? Maybe bomb interface instead?
+
+            } elseif (!$this->device_is_logged_in) {
+                //do not show table of devices here this is 
                 $this->showPageLoggedIn();
                 $this->showPageAddToDevices();
-            } elseif ($this->getUserLoginStatus() && $this->device_is_logged_in) {
-              //do not show table of devices here this is 
-              $this->showPageLoggedIn();
-              $this->showPageAddToDevices(); // not sure whether this should be here
                 // after all admin should use separate device to add it to db
-                
 
-                $this->feedback .= "userAdmin is logged in and device is logged in ,
-                probably here user should have an option to logout";
 
-                }
-                else{
-                // not admin, not logged in, no path variable
-$this->showPageLoginForm();
+
+
             }
-            
-            
+        } //end of if user is $user_is_logged_in
+
+        else {
+
+            //user not logged in
+            if ($this->IsRegisteredDevice()) {
+                include("ViewBombInterface.html"); // no feedback
+            }
+            // below cannot register new user if user loggedout 
+            //and device  is a bomb already to prevent circumventions
+            elseif (isset($_POST["register"] ,$_GET['action'])) {
+                // print_r($_POST);
+                // exit();
+                switch ($_GET["action"]): case ("registerUser"):
+                    // echo "<pre>";
+                    // print_r($_POST);
+                    // echo "</pre>";
+                    // $this->showPageRegistration();
+                    // exit();
+
+                        $this->doRegistration();
+                        $this->showPageLoginForm();
+                        // not admin, not logged in, no path variable
+
+                        break;
+                endswitch;
+            } else {
+                $this->showPageLoginForm();
+            }
+        }
+
+        //    echo "<br>reached end of logic on the server";
+
+    }
+
+    private function deleteMeUser(){
+        if (!$this->user_is_logged_in ){
+            // Hacker?
+            $this->addFeedback("You need to be logged in in order to delete your account");
+            return false;
+        } else{
+            if ($this->createDatabaseConnection()) {
+                $sql = 'DELETE
+                FROM user
+                WHERE user_id = :user_id;
+                ';
+                $id = $_SESSION["user_id"];
+                $query = $this->db_connection->prepare($sql);
+                $query->bindValue(':user_id', $id);
+                $query->execute();
+                $amnt = $query->rowCount();
+                if ($amnt > 0) {
+                    $this->addFeedback("\n $amnt user deleted successfully");
+                } else {
+                    $this->addFeedback("Deleting user with id: $id impossible. No such device");
+                }
+            } else {
+                $this->addFeedback("Could not establish db connection");
+            }
+        }
+    }
+    /**
+     * Deletes device with GET id
+     *
+     * @return void
+     */
+    private function deleteDevice()
+    {
+        if (!$this->user_is_logged_in ){
+            // Hacker?
+            $this->addFeedback("You need to be logged in in order to delete your devices");
+            return false;
+        }
+
+        if ($this->createDatabaseConnection()) {
+
+            if (!isset($_GET["id"]) || empty($_GET["id"])) {
+                $this->addFeedback(print_r($_GET, true) . "device id not chosen");
+            } else {
+
+                $sql = 'DELETE
+                FROM device
+                WHERE device_id = :selected_id;
+                ';
+                $id = $_GET["id"];
+                $query = $this->db_connection->prepare($sql);
+                $query->bindValue(':selected_id', $id);
+                $query->execute();
+                $amnt = $query->rowCount();
+                if ($amnt > 0) {
+                    $this->addFeedback("\n $amnt Device(s) deleted successfully");
+                } else {
+                    $this->addFeedback("Deleting device with id: $id impossible. No such device");
+                }
+            }
+        } else {
+            $this->addFeedback("Could not establish db connection");
+        }
+    }
+
+    private function updateDevice()
+    {
+        if (!$this->checkDeviceUpdateData( )){
+            echo "bad data : " . $this->feedback;
+            print_r($_POST);
+            exit();
+        }
+        if ($this->createDatabaseConnection()) {
+
+            if (!isset($_POST["device_id"])) {
+                $this->addFeedback("device id not chosen");
+            } else {
+
+                $sql = 'UPDATE
+                device
+                SET 
+                device_name = :device_name,
+                device_description = :device_description,
+                device_http_user_agent = :device_http_user_agent,
+                device_password = :device_password,
+                device_status = :device_status,
+                time_set = :time_set
+                WHERE device_id = :selected_id;
+                ';
+
+                $selected_id = $_POST["device_id"];
+                $device_name = $_POST["device_name"];
+                $device_name = $_POST["device_name"];
+                $device_description = $_POST["device_description"];
+                $device_http_user_agent = $_POST["device_http_user_agent"];
+                $device_password = $_POST["device_password"];
+                $device_status = $_POST["device_status"];
+                $time_set = $_POST["time_set"];
+                $query = $this->db_connection->prepare($sql);
+                $query->bindValue(':selected_id', $selected_id);
+                $query->bindValue(':device_name',$device_name);
+                $query->bindValue(':device_description',$device_description);
+                $query->bindValue(':device_http_user_agent',$device_http_user_agent);
+                $query->bindValue(':device_password',$device_password);
+                $query->bindValue(':device_status',$device_status);
+                $query->bindValue(':time_set',$time_set);
+
+
+
+
+
+
+                $query->execute();
+                $amnt = $query->rowCount();
+                if ($amnt > 0) {
+                    $this->addFeedback("\n $amnt Device(s) updated successfully");
+                } else {
+                    $this->addFeedback("updating device with id: $selected_id impossible. No such device");
+                }
+            }
+        } else {
+            $this->addFeedback("Could not establish db connection");
+        }
+    }
+
+    /**
+     * Validates the device's registration input
+     * @return bool Success status of device's registration data validation
+     */
+    private function checkDeviceUpdateData()
+    {
+        // TODO: set timezone for strtotime below
+        // if no registration form submitted: exit the method
+        if (isset($_POST["updatedevice"])) {
+            // validating the input
+            if (
+                !empty($_POST['device_name'])
+                && strlen($_POST['device_name']) <= 24
+                && strlen($_POST['device_name']) >= 2
+                && preg_match('/^[a-z\d]{2,24}$/i', $_POST['device_name'])
+                && !empty($_POST['device_password'])
+                && strlen($_POST['device_password']) >= 4
+                && strlen($_POST['device_password']) <= 24
+                && preg_match('/^[a-z\d]{2,24}$/i', $_POST['device_password'])
+                && !empty($_POST['device_ip'])
+                && !empty($_POST['time_set'])
+                && strtotime($_POST['time_set']) > time() //!!!! checks if works date time set is later than now
+            ) {
+                // only this case return true, only this case is valid
+                return true;
+                //     CREATE TABLE IF NOT EXISTS device (
+                // -----------//         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                // -----------//         'device_name' TEXT NOT NULL,
+                // -----------//         'device_description' TEXT,
+                // -----------//         'device_ip' TEXT NOT NULL,
+                // //         'device_http_user_agent' TEXT NOT NULL, 
+                // -----------//         'device_password' TEXT NOT NULL ,
+                // -----------//         'device_status' TEXT,
+                // //         'time_set' INTEGER,
+                // -----------//         'time_last_active' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                //                 );
+
+                // CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
+                // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
+            } elseif (empty($_POST['device_name'])) {
+                $this->addFeedback("Empty device name");
+            } elseif (empty($_POST['device_password' ])){
+                $this->addFeedback("Empty device Password");
+            } elseif (strlen($_POST['device_password']) < 4) {
+                $this->addFeedback("Password has a minimum length of 4 characters");
+            } elseif (!preg_match('/^[a-z\d]{4,24}$/', $_POST['device_password'])) {
+                $this->addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 4 to 24 characters");
+            } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
+                $this->addFeedback("devicename cannot be shorter than 2 or longer than 64 characters");
+            } elseif (!preg_match('/^[a-z\d]{2,64}$/', $_POST['device_name'])) {
+                $this->addFeedback("device name does not fit the name scheme: only a-z and numbers are allowed, 2 to 64 characters");
+            } elseif (empty($_POST['device_ip'])) {
+                $this->addFeedback("device ip cannot be empty");
+            } elseif (empty($_POST['time_set'])) {
+                $this->addFeedback("time_set cannot be empty");
+            } elseif (strtotime($_POST['time_set']) <= time()) {
+                $this->addFeedback("time_set cannot be in the past");
+            } else {
+                $this->addFeedback("An unknown error occurred.");
+            }
+        } else {
+            $this->addFeedback("no updatedevice POST\n");
+
+            $this->addFeedback("\n");
+            // default return
+            return false;
         }
     }
 
     private function showPageAddToDevices()
     {
-        if ($this->feedback) {
-            echo $this->feedback . "<br/><br/>";
-        }
-
+        include_once("ViewStartHTML.blade.php");
         include("ViewAddToDevices.blade.php");
-        }
+    }
 
     /**
      * Creates a PDO database connection (in this case to a SQLite flat-file database)
@@ -266,12 +625,10 @@ $this->showPageLoginForm();
             //     file_put_contents('PDOErrors.txt', $e->getMessage(), FILE_APPEND);
             return true;
         } catch (PDOException $e) {
-            $this->feedback .="PDO database connection problem: " . $e->getMessage();
-            echo "\nSorry Bo , opening db went wrong- " . $e->getMessage();
+            $this->addFeedback("PDO database connection problem: " . $e->getMessage());
             file_put_contents('PDOErrors.txt', "\n" . $e->getMessage(), FILE_APPEND);
         } catch (Exception $e) {
-            $this->feedback .="General problem: " . $e->getMessage();
-            echo "\nSorry Bo , opening db went wrong- " . $e->getMessage();
+            $this->addFeedback("General problem: " . $e->getMessage());
             file_put_contents('PDOErrors.txt', "\n" . $e->getMessage(), FILE_APPEND);
         }
         return false;
@@ -334,7 +691,7 @@ $this->showPageLoginForm();
         $_SESSION = array();
         session_destroy();
         $this->user_is_logged_in = false;
-        $this->feedback .= "You were just logged out.\n";
+        $this->addFeedback("You were just logged out.\n");
     }
 
     /**
@@ -343,17 +700,20 @@ $this->showPageLoginForm();
      */
     private function doRegistration()
     {
+       
         if ($this->checkRegistrationData()) {
             if ($this->createDatabaseConnection()) {
                 $this->createNewUser();
+                $this->addFeedback("database connection ok ");
             } else {
-                $this->feedback .= "problem with db connection \n";
-               }
+                $this->addFeedback("problem with db connection \n");
+            }
         } else {
-            $this->feedback .= "registration data not ok ? \n";
-               
+            $this->addFeedback("registration data not ok ? \n");
+
             return false;
         }
+
     }
 
     /**
@@ -364,13 +724,13 @@ $this->showPageLoginForm();
     {
         if ($this->checkDeviceRegistrationData()) {
             if ($this->createDatabaseConnection()) {
-                $this->createNewDevice();// TODO implement
+                $this->createNewDevice();
             } else {
-                $this->feedback .= "problem with db connection \n";
-               }
+                $this->addFeedback("Problem with db connection \n");
+            }
         } else {
-            $this->feedback .= "registration data not ok ? \n";
-               
+            $this->addFeedback("Device registration data not ok ? \n");
+
             return false;
         }
     }
@@ -384,9 +744,9 @@ $this->showPageLoginForm();
         if (!empty($_POST['user_name']) && !empty($_POST['user_password'])) {
             return true;
         } elseif (empty($_POST['user_name'])) {
-            $this->feedback .="Username field was empty.";
+            $this->addFeedback("Username field was empty.");
         } elseif (empty($_POST['user_password'])) {
-            $this->feedback .="Password field was empty.";
+            $this->addFeedback("Password field was empty.");
         }
         // default return
         return false;
@@ -399,9 +759,9 @@ $this->showPageLoginForm();
     private function checkPasswordCorrectnessAndLogin()
     {
         // remember: the user can log in with username or email address
-        $sql = 'SELECT user_name, user_email, user_password_hash
+        $sql = 'SELECT user_id, user_name, user_password_hash, user_timezone
                 FROM user
-                WHERE user_name = :user_name OR user_email = :user_name
+                WHERE user_name = :user_name
                 LIMIT 1';
         $query = $this->db_connection->prepare($sql);
         $query->bindValue(':user_name', $_POST['user_name']);
@@ -418,20 +778,24 @@ $this->showPageLoginForm();
             // using PHP 5.5's password_verify() function to check password
             if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
                 // write user data into PHP SESSION [a file on your server]
+                $_SESSION['user_id'] = $result_row->user_id;
                 $_SESSION['user_name'] = $result_row->user_name;
-                $_SESSION['user_email'] = $result_row->user_email;
+                $_SESSION['user_timezone'] = $result_row->user_timezone;
                 $_SESSION['user_is_logged_in'] = true;
+                $this->timezoneName = $result_row->user_timezone;
+                $this->timezone = new DateTimeZone($this->timezoneName);
                 $this->user_is_logged_in = true;
                 return true;
             } else {
-                $this->feedback .="Wrong password.";
+                $this->addFeedback("Wrong password.");
             }
         } else {
-            $this->feedback .="This user does not exist.";
+            $this->addFeedback("This user does not exist.");
         }
         // default return
         return false;
     }
+
 
     /**
      * Validates the user's registration input
@@ -441,6 +805,7 @@ $this->showPageLoginForm();
     {
         // if no registration form submitted: exit the method
         if (!isset($_POST["register"])) {
+            $this->addFeedback("\n no POST used");
             return false;
         }
 
@@ -450,75 +815,71 @@ $this->showPageLoginForm();
             && strlen($_POST['user_name']) <= 64
             && strlen($_POST['user_name']) >= 2
             && preg_match('/^[a-z\d]{2,64}$/i', $_POST['user_name'])
-            && !empty($_POST['user_email'])
-            && strlen($_POST['user_email']) <= 64
-            && filter_var($_POST['user_email'], FILTER_VALIDATE_EMAIL)
             && !empty($_POST['user_password_new'])
             && strlen($_POST['user_password_new']) >= 6
             && !empty($_POST['user_password_repeat'])
             && ($_POST['user_password_new'] === $_POST['user_password_repeat'])
+            && !empty($_POST['timezone'])
+            && in_array($_POST['timezone'],timezone_identifiers_list())
         ) {
             // only this case return true, only this case is valid
             return true;
         } elseif (empty($_POST['user_name'])) {
-            $this->feedback .="Empty Username";
+            $this->addFeedback("Empty Username");
         } elseif (empty($_POST['user_password_new']) || empty($_POST['user_password_repeat'])) {
-            $this->feedback .="Empty Password";
+            $this->addFeedback("Empty Password");
+        } elseif (empty($_POST['timezone'])) {
+            $this->addFeedback("Empty timezone");
+        } elseif (!in_array($_POST['timezone'],timezone_identifiers_list())) {
+            $this->addFeedback("Timezone not valid");
         } elseif ($_POST['user_password_new'] !== $_POST['user_password_repeat']) {
-            $this->feedback .="Password and password repeat are not the same";
+            $this->addFeedback("Password and password repeat are not the same");
         } elseif (strlen($_POST['user_password_new']) < 6) {
-            $this->feedback .="Password has a minimum length of 6 characters";
+            $this->addFeedback("Password has a minimum length of 6 characters");
         } elseif (strlen($_POST['user_name']) > 64 || strlen($_POST['user_name']) < 2) {
-            $this->feedback .="Username cannot be shorter than 2 or longer than 64 characters";
+            $this->addFeedback("Username cannot be shorter than 2 or longer than 64 characters");
         } elseif (!preg_match('/^[a-z\d]{2,64}$/i', $_POST['user_name'])) {
-            $this->feedback .="Username does not fit the name scheme: only a-Z and numbers are allowed, 2 to 64 characters";
-        } elseif (empty($_POST['user_email'])) {
-            $this->feedback .="Email cannot be empty";
-        } elseif (strlen($_POST['user_email']) > 64) {
-            $this->feedback .="Email cannot be longer than 64 characters";
-        } elseif (!filter_var($_POST['user_email'], FILTER_VALIDATE_EMAIL)) {
-            $this->feedback .="Your email address is not in a valid email format";
+            $this->addFeedback("Username does not fit the name scheme: only a-Z and numbers are allowed, 2 to 64 characters");
         } else {
-            $this->feedback .="An unknown error occurred.";
+            $this->addFeedback("An unknown error occurred.");
         }
 
         // default return
         return false;
     }
 
-      /**
+    /**
      * Validates the device's registration input
      * @return bool Success status of device's registration data validation
      */
     private function checkDeviceRegistrationData()
     {
+        // TODO: here as well timezone has to be set to use strtotime
         // if no registration form submitted: exit the method
-        if (!isset($_POST["register"])) {
-            return false;
-        }
+        if (isset($_POST["register"])) {
 
-        // validating the input
-        if (
-            !empty($_POST['device_name'])
-            && strlen($_POST['device_name']) <= 24
-            && strlen($_POST['device_name']) >= 2
-            && preg_match('/^[a-z\d]{2,24}$/i', $_POST['device_name'])
-            // && !empty($_POST['user_email'])
-            // && strlen($_POST['user_email']) <= 64
-            // && filter_var($_POST['user_email'], FILTER_VALIDATE_EMAIL)
-            && !empty($_POST['device_password_new'])
-            && strlen($_POST['device_password_new']) >= 4
-            && strlen($_POST['device_password_new']) <= 24
-            && !empty($_POST['device_password_repeat'])
-            && ($_POST['device_password_new'] === $_POST['device_password_repeat'])
 
-            && !empty($_POST['device_ip'])
-            && !empty($_POST['time_set'])
-           && strtotime($_POST['time_set']) > time() //!!!! check if works date time set is later than now
-        
-        ) {
-            // only this case return true, only this case is valid
-            return true;
+
+
+            // validating the input
+            if (
+                !empty($_POST['device_name'])
+                && strlen($_POST['device_name']) <= 24
+                && strlen($_POST['device_name']) >= 2
+                && preg_match('/^[a-z\d]{2,24}$/i', $_POST['device_name'])
+                && !empty($_POST['device_password_new'])
+                && strlen($_POST['device_password_new']) >= 4
+                && strlen($_POST['device_password_new']) <= 24
+                && !empty($_POST['device_password_repeat'])
+                && ($_POST['device_password_new'] === $_POST['device_password_repeat'])
+
+                && !empty($_POST['device_ip'])
+                && !empty($_POST['time_set'])
+                && strtotime($_POST['time_set']) > time() //!!!! check if works date time set is later than now
+
+            ) {
+                // only this case return true, only this case is valid
+                return true;
                 //     CREATE TABLE IF NOT EXISTS device (
                 // -----------//         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
                 // -----------//         'device_name' TEXT NOT NULL,
@@ -528,37 +889,41 @@ $this->showPageLoginForm();
                 // -----------//         'device_password' TEXT NOT NULL ,
                 // -----------//         'device_status' TEXT,
                 // //         'time_set' INTEGER,
-                // -----------//         'time_last_uppdated' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                // -----------//         'time_last_active' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
                 //                 );
-                
+
                 // CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
                 // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
-        } elseif (empty($_POST['device_name'])) {
-            $this->feedback .="Empty device name";
-        } elseif (empty($_POST['device_password_new']) || empty($_POST['device_password_repeat'])) {
-            $this->feedback .="Empty device Password";
-        } elseif ($_POST['device_password_new'] !== $_POST['device_password_repeat']) {
-            $this->feedback .="Password and password repeat are not the same";
-        } elseif (strlen($_POST['device_password_new']) < 4) {
-            $this->feedback .="Password has a minimum length of 6 characters";
-        } elseif (!preg_match('/^[a-z\d]{4,24}$/', $_POST['device_password_new'])) {
-            $this->feedback .="passwordd does not fit the scheme: only a-z and numbers are allowed, 4 to 24 characters";
-        } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
-            $this->feedback .="devicename cannot be shorter than 2 or longer than 64 characters";
-        } elseif (!preg_match('/^[a-z\d]{2,64}$/', $_POST['device_name'])) {
-            $this->feedback .="device name does not fit the name scheme: only a-z and numbers are allowed, 2 to 64 characters";
-        } elseif (empty($_POST['device_ip'])) {
-            $this->feedback .="device ip cannot be empty";
-        } elseif (empty($_POST['time_set'])) {
-           $this->feedback .="time_set cannot be empty";
-        } elseif (strtotime($_POST['time_set']) <= time()) {
-           $this->feedback .="time_set cannot be in the past";
+            } elseif (empty($_POST['device_name'])) {
+                $this->addFeedback("Empty device name");
+            } elseif (empty($_POST['device_password_new']) || empty($_POST['device_password_repeat'])) {
+                $this->addFeedback("Empty device Password");
+            } elseif ($_POST['device_password_new'] !== $_POST['device_password_repeat']) {
+                $this->addFeedback("Password and password repeat are not the same");
+            } elseif (strlen($_POST['device_password_new']) < 4) {
+                $this->addFeedback("Password has a minimum length of 6 characters");
+            } elseif (!preg_match('/^[a-z\d]{4,24}$/', $_POST['device_password_new'])) {
+                $this->addFeedback("passwordd does not fit the scheme: only a-z and numbers are allowed, 4 to 24 characters");
+            } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
+                $this->addFeedback("devicename cannot be shorter than 2 or longer than 64 characters");
+            } elseif (!preg_match('/^[a-z\d]{2,64}$/', $_POST['device_name'])) {
+                $this->addFeedback("device name does not fit the name scheme: only a-z and numbers are allowed, 2 to 64 characters");
+            } elseif (empty($_POST['device_ip'])) {
+                $this->addFeedback("device ip cannot be empty");
+            } elseif (empty($_POST['time_set'])) {
+                $this->addFeedback("time_set cannot be empty");
+            } elseif (strtotime($_POST['time_set']) <= time()) {
+                $this->addFeedback("time_set cannot be in the past");
+            } else {
+                $this->addFeedback("An unknown error occurred.");
+            }
         } else {
-            $this->feedback .="An unknown error occurred.";
+            $this->addFeedback("no register POST or no update POST\n");
+
+            $this->addFeedback("\n");
+            // default return
+            return false;
         }
-        $this->feedback .="\n";
-        // default return
-        return false;
     }
 
 
@@ -571,60 +936,76 @@ $this->showPageLoginForm();
     {
         // remove html code etc. from username and email
         $user_name = htmlentities($_POST['user_name'], ENT_QUOTES);
-        $user_email = htmlentities($_POST['user_email'], ENT_QUOTES);
         $user_password = $_POST['user_password_new'];
+        $user_ip = $this->getIP(DEBUG_MODE);
+        $user_timezone = $_POST['timezone'];
         // crypt the user's password with the PHP 5.5's password_hash() function, results in a 60 char hash string.
         // the constant PASSWORD_DEFAULT comes from PHP 5.5 or the password_compatibility_library
         $user_password_hash = password_hash($user_password, PASSWORD_DEFAULT);
 
-        $sql = 'SELECT * FROM user WHERE user_name = :user_name OR user_email = :user_email';
+        $sql = 'SELECT user_name, device_ip FROM user
+        cross join device on user_name = :user_name or device_ip = :user_ip;
+        '; // check if current ip is registered in devices or name is registered in users
+
+       
         $dbcon = $this->db_connection;
         $query = $dbcon->prepare($sql);
         $query->bindValue(':user_name', $user_name);
-        $query->bindValue(':user_email', $user_email);
+        $query->bindValue(':user_ip', $user_ip);
         $query->execute();
 
         // As there is no numRows() in SQLite/PDO (!!) we have to do it this way:
         // If you meet the inventor of PDO, punch him. Seriously.
         $result_row = $query->fetchObject();
         if ($result_row) {
-            $this->feedback .="Sorry, that username / email is already taken. Please choose another one.";
+            $this->addFeedback("Sorry, that username or there exists a user on this ip. only devices should be checked aginst the ip 
+            and only user-device linked should be shown
+            s already taken. Please choose another one.\n");
         } else {
-            $sql = 'INSERT INTO user (user_name, user_password_hash, user_email,user_ip, http_user_agent)
-                    VALUES(:user_name, :user_password_hash, :user_email,:user_ip,:http_user_agent)';
+             
+            $sql = 'INSERT INTO user (user_name, user_password_hash ,user_ip, http_user_agent,user_timezone)
+                    VALUES(:user_name, :user_password_hash,:user_ip,:http_user_agent,:user_timezone)';
             $query = $this->db_connection->prepare($sql);
             $query->bindValue(':user_name', $user_name);
             $query->bindValue(':user_password_hash', $user_password_hash);
-            $query->bindValue(':user_email', $user_email);
             $query->bindValue(':http_user_agent', $_SERVER['HTTP_USER_AGENT']);
-            $query->bindValue(':user_ip', $this->getIP(true)); // false means get real IP 
-
+            $query->bindValue(':user_ip', $user_ip); 
+            $query->bindValue(':user_timezone', $user_timezone);
             // PDO's execute() gives back TRUE when successful, FALSE when not
             // @link http://stackoverflow.com/q/1661863/1114320
             $registration_success_state = $query->execute();
 
             if ($registration_success_state) {
-                $this->feedback .="Your account has been created successfully. You can now log in.";
+                $this->addFeedback("Your account has been created successfully. You can now log in.");
                 return true;
             } else {
-                $this->feedback .="Sorry, your registration failed. Please go back and try again.";
+                $this->addFeedback("Sorry, your registration failed. Please go back and try again.");
             }
         }
         // default return
+        $this->addFeedback("Sorry, your registration failed. I don't know why.");
+
         return false;
     }
 
-private function createNewDevice()
+    private function createNewDevice()
     {
         // remove html code etc. from username and email
         $device_name = htmlentities($_POST['device_name'], ENT_QUOTES);
         $device_ip = htmlentities($_POST['device_ip'], ENT_QUOTES);
         $device_description = htmlentities($_POST['device_description'], ENT_QUOTES);
-        $device_password = $_POST['device_password_new'];
+        $device_password = htmlentities($_POST['device_password_new'], ENT_QUOTES);
         $device_http_user_agent = $_SERVER['HTTP_USER_AGENT'];
         $time_set = $_POST['time_set'];
+        $this->addFeedback(
+            print_r($this,true)
+        );
+        date_default_timezone_set($this->timezoneName);
+        $date_now = date('Y-m-d\TH:i:s'); // add seconds to datetime-locale provided value
+        $registered_by_user = $_SESSION['user_id'];
 
-        
+
+
         // crypt the user's password with the PHP 5.5's password_hash() function, results in a 60 char hash string.
         // the constant PASSWORD_DEFAULT comes from PHP 5.5 or the password_compatibility_library
         // maybe later do the hash  version
@@ -641,53 +1022,55 @@ private function createNewDevice()
         // If you meet the inventor of PDO, punch him. Seriously.
         $result_row = $query->fetchObject();
         if ($result_row) {
-            $this->feedback .="Sorry, that device name / ip is already taken. Please choose another one.";
+            $this->addFeedback("Sorry, that device name / ip is already taken. Please choose another one.");
         } else {
             // -----------//         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-                // -----------//         'device_name' TEXT NOT NULL,
-                // -----------//         'device_description' TEXT,
-                // -----------//         'device_ip' TEXT NOT NULL,
-                // //         'device_http_user_agent' TEXT NOT NULL, 
-                // -----------//         'device_password' TEXT NOT NULL ,
-                // -----------//         'device_status' TEXT,
-                // //         'time_set' INTEGER,
-                // -----------//         'time_last_uppdated' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-                
+            // -----------//         'device_name' TEXT NOT NULL,
+            // -----------//         'device_description' TEXT,
+            // -----------//         'device_ip' TEXT NOT NULL,
+            // //         'device_http_user_agent' TEXT NOT NULL, 
+            // -----------//         'device_password' TEXT NOT NULL ,
+            // -----------//         'device_status' TEXT,
+            // //         'time_set' INTEGER,
+            // -----------//         'time_last_active' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+
             $sql = 'INSERT INTO device 
             (device_id,device_name, device_password, 
              device_ip, device_http_user_agent,
-            device_description, device_status,time_set)
+            device_description, device_status,time_set, registered_by_user, time_last_active)
                     VALUES
              (null ,:device_name, :device_password, 
              :device_ip, :device_http_user_agent,
-            :device_description, :device_status,:time_set)';
+            :device_description, :device_status,:time_set,:registered_by_user, :time_last_active)';
             $query = $this->db_connection->prepare($sql);
+
             $query->bindValue(':device_name', $device_name);
             $query->bindValue(':device_password', $device_password);
             $query->bindValue(':device_ip', $device_ip);
             $query->bindValue(':device_http_user_agent', $_SERVER['HTTP_USER_AGENT']);
             $query->bindValue(':device_description', $device_description);
-            $query->bindValue(':device_status', 'active');
+            $query->bindValue(':device_status', 'created');
             $query->bindValue(':time_set', $time_set);
-            
-            
-            
+            $query->bindValue(':registered_by_user', $registered_by_user);
+            $query->bindValue(':time_last_active', $date_now);
+
+
             // PDO's execute() gives back TRUE when successful, FALSE when not
             // @link http://stackoverflow.com/q/1661863/1114320
             $registration_success_state = $query->execute();
 
             if ($registration_success_state) {
-                $this->feedback .="Device has been registered successfully. You can now request device page.";
+                $this->addFeedback("Device has been registered successfully. You can now log out to see device page.");
                 return true;
             } else {
-                $this->feedback .="Sorry, your registration failed. Please go back and try again.";
+                $this->addFeedback("Sorry, your registration failed. Please go back and try again.");
             }
         }
         // default return
         return false;
     }
 
-        /**
+    /**
      * Simply returns the current status of the user's login
      * @return bool User's login status
      */
@@ -696,7 +1079,7 @@ private function createNewDevice()
         return $this->user_is_logged_in;
     }
 
-      /**
+    /**
      * Simply returns the current status of the device's login
      * @return bool device's login status
      */
@@ -712,15 +1095,15 @@ private function createNewDevice()
      */
     private function showPageLoggedIn()
     {
-        if ($this->feedback) {
-            
-            echo "<pre>FEEDBACK : \n" . $this->feedback . "</pre><br/>";
+        if ($this->createDatabaseConnection()) {
+
+            include("ViewStartHTML.blade.php");
+            echo 'Hello ' . $_SESSION['user_name'] . ', you are logged in.<br/><br/>';
+            include('ViewAllDEvices.blade.php');
+        } else {
+            $this->addFeedback("\nsorry cannot display all your devices due to db conn problem");
+            include("ViewStartHTML.blade.php");
         }
-
-        echo 'Hello ' . $_SESSION['user_name'] . ', you are logged in.<br/><br/>';
-        echo '<a href="' . $_SERVER['SCRIPT_NAME'] . '?action=logout">Log out</a>';
-
-        include('ViewAllDEvices.blade.php');
     }
 
     /**
@@ -730,20 +1113,8 @@ private function createNewDevice()
      */
     private function showPageLoginForm()
     {
-        if ($this->feedback) {
-            echo $this->feedback . "<br/><br/>";
-        }
-
-        echo '<h2>Login</h2>';
-        echo '<form method="post" action="' . $_SERVER['SCRIPT_NAME'] . '" name="loginform">';
-        echo '<label for="login_input_username">Username (or email)</label> ';
-        echo '<input id="login_input_username" type="text" name="user_name" required /> ';
-        echo '<label for="login_input_password">Password</label> ';
-        echo '<input id="login_input_password" type="password" name="user_password" required /> ';
-        echo '<input type="submit"  name="login" value="Log in" />';
-        echo '</form>';
-
-        echo '<a href="' . $_SERVER['SCRIPT_NAME'] . '?action=register">Register new account</a>';
+        include("ViewStartHTML.blade.php");
+        include("ViewLoginForm.blade.php");
     }
 
     /**
@@ -753,25 +1124,9 @@ private function createNewDevice()
      */
     private function showPageRegistration()
     {
-        if ($this->feedback) {
-            echo $this->feedback . "<br/><br/>";
-        }
 
-        echo '<h2>Registration</h2>';
-
-        echo '<form method="post" action="' . $_SERVER['SCRIPT_NAME'] . '?action=register" name="registerform">';
-        echo '<label for="login_input_username">Username (only letters and numbers, 2 to 64 characters)</label>';
-        echo '<input id="login_input_username" type="text" pattern="[a-zA-Z0-9]{2,64}" name="user_name" required />';
-        echo '<label for="login_input_email">User\'s email</label>';
-        echo '<input id="login_input_email" type="email" name="user_email" required />';
-        echo '<label for="login_input_password_new">Password (min. 6 characters)</label>';
-        echo '<input id="login_input_password_new" class="login_input" type="password" name="user_password_new" pattern=".{6,}" required autocomplete="off" />';
-        echo '<label for="login_input_password_repeat">Repeat password</label>';
-        echo '<input id="login_input_password_repeat" class="login_input" type="password" name="user_password_repeat" pattern=".{6,}" required autocomplete="off" />';
-        echo '<input type="submit" name="register" value="Register" />';
-        echo '</form>';
-
-        echo '<a href="' . $_SERVER['SCRIPT_NAME'] . '">Homepage</a>';
+        include("ViewStartHTML.blade.php");
+        include("ViewRegisterUserForm.blade.php");
     }
 }
 

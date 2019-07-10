@@ -85,17 +85,26 @@ const NUM = {
 /**
      * Pseudoclass quasi class let keywords allow each object have its own methods
      *
-     * @param {string} pswd password
+     * @param {string OR pswd object} pswd password
      * @returns kbCtrl keyboard Controller object
      */
     function CodeKeyboard(pswd,settingsTemplate = false) {
         let customKeyboard = {};
         if (pswd.length > 24) throw new Error("Password too long, will make display unreadable")
         if (!settingsTemplate){
-            settingsTemplate = /^[0-9]+$/.test(pswd) ? NUM : QWERTY;
+            if(pswd.hasOwnProperty("isNumericOnly")){
+                settingsTemplate = pswd.isNumericOnly ? NUM : QWERTY; 
+            }
+            else if(typeof pswd === "string"){
+            //cool regex auto checker
+                settingsTemplate = /^[0-9]+$/.test(pswd) ? NUM : QWERTY;
             //careful - if password will contain other signs, there is no 
             //proper settingTemplate
             //think about auto adding buttons for symbols that pswd contains
+            }
+            else{
+                throw new Error("MyError : CodeKeyboard - pswd argument must be either a string or pswd object {length,isNumericOnly}")
+            }
         }
 
 
@@ -111,7 +120,7 @@ const NUM = {
                 this.kbds = customKeyboard.KBDHTML.style;
                 this.disp = customKeyboard.disp;
             },
-            pswd: pswd,
+            pswd: "0".repeat(pswd.length), //do not save password just length is needed
             kbd: null,
             kbds: null,
             numDisp: null,
@@ -171,30 +180,37 @@ const NUM = {
             // these are to be replaced by user
             onCorrectPassword() { },
             onIncorrectPassword() { },
+            onPasswordEntered() { },
             clear(){
                 this.inpBuf = "";
             },
             finishInp() {
-                this.enternumber(this.inpBuf);
+                str = this.inpBuf;
+                this.onPasswordEntered(this,str);
                 this.clear();
                 this.blockInp();
+            },
+            enterPassword(str) {
+                //if user handler does return anything else than true
+                // user handler must return true if you want kbd to handle password
+            },
+            correctPasswordAnimation(){
+                this.kbd.classList.add("CorrectAnswer");
+                this.kbd.classList.remove("WrongAnswer");
                 setTimeout(x => {
                     this.toggle(0);
                     this.kbd.classList.remove("CorrectAnswer");
                     this.kbd.classList.remove("WrongAnswer");
-                }, 1000);
+                }, 900);
             },
-            enternumber(str) {
-                console.log(str);
-                if (this.pswd.toUpperCase() === str) {
-                    this.kbd.classList.add("CorrectAnswer");
-                    this.kbd.classList.remove("WrongAnswer");
-                    this.onCorrectPassword(this,str);
-                } else {
-                    this.kbd.classList.add("WrongAnswer");
+            incorrectPasswordAnimation(){
+                this.kbd.classList.add("WrongAnswer");
+                this.kbd.classList.remove("CorrectAnswer");
+                setTimeout(x => {
+                    this.toggle(0);
                     this.kbd.classList.remove("CorrectAnswer");
-                    this.onIncorrectPassword(this);
-                }
+                    this.kbd.classList.remove("WrongAnswer");
+                }, 900);
             },
             blockInp() {
                 this.inp = this.inpfuncWhenOff;

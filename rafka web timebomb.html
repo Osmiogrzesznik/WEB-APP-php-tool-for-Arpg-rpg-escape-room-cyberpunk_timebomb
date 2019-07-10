@@ -1,191 +1,308 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width" />
-  <title>Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width" />
+    <title>Test</title>
 </head>
-<style>
-@font-face {
-    font-family: "digitalix";
-    src: url("fonts/digitalix.ttf") format("truetype");
-}
-html,body,button{
-	--fg:#20f86c;
-	background-color:#000;
-	color:#20f86c;
-	font-family:digitalix;
-	font-size:100%;
-}
-btn{
-	border:1px solid;
-	color:var(--fg);
-	padding:0.5em;
-	margin:0.5em;
-}
-.btnCNT{
-	position: absolute;
-	top:5px;
-	left:5px;
-}
-.counterCNT{
-/* 	position:relative; */
-	font-family:digitalix;
-}
+<style type="text/css">
+    body,
+    button {
+        --fg: #20f86c;
+        --rd: red;
+        --bg: rgba(0, 0, 0, .7);
+        background-color: #000;
+        color: #20f86c;
+        font-family: digitalix;
+        font-size: 3vw;
+    }
+    
+    btn,
+    td {
+        border: 1px solid;
+        padding: 2vw;
+        background-color: rgba(0, 0, 0, .7);
+        text-align: center;
+        transition: all 0.2s;
+    }
 
-.counter{
-	text-align:center;
-	line-height:310%;
-/* 	text-align-last:center; */
-	color:red;
+    .transitionable{
+        transition: all 1s;
+    }
 
-	font-size:270%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-	font-family:digitalix;
-/*	position:absolute;
-	left:0; right:0;
-	top:0; bottom:0;
-	margin:auto;
-	max-width:100%;
-	max-height:100%;
-	overflow:auto;*/
-}
-.cyber{
-	font-family:digitalix;
-}
+    .boom{
+        background-color: #ffffff;
+        color:#ffffff;
+        
+        text-shadow: 0px 0px 10vw #fff;
+        opacity:0;
+    }
+    
+    btn {
+        margin: 0.5em;
+    }
 
+    /* this makes clickables flash*/
+    btn:active, td:active, {
+        background-color: var(--fg);
+        color: var(--bg);
+    }
+    
+    .KBdisplay {
+        border: 1px solid;
+        /*         padding: 0.5em; */
+        /*         margin: 0.5em; */
+        background-color: rgba(0, 0, 0, .7);
+        /*                              max-height:10vh; */
+    }
+    
+    table {
+        position: absolute;
+        margin: 10vh;
+        width: 80vw;
+        height: 80vh;
+    }
+    
+    .btnCNT {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+    }
+    
+    .counterCNT {
+        position: relative;
+        /*         font-family: digitalix; */
+    }
+    
+    .counterScreen {
+        text-align: center;
+        line-height: 100vw;   
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .digits {
+        font-family: digit;
+        color: red;
+        font-size: 20vw;
+        text-align: center;
+        line-height: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-shadow: 0px 0px 10px red;
+    }
+    
+    .cyber {
+        font-family: digitalix;
+    }
+    
+    @font-face {
+        font-family: "digitalix";
+        src: url("fonts/digitalix.ttf") format("truetype");
+    }
+    
+    @font-face {
+        font-family: "digit";
+        src: url("fonts/Digit.ttf") format("truetype");
+    }
+    
+    @font-face {
+        font-family: "taximeter";
+        src: url("fonts/taximeter.ttf") format("truetype");
+    }
+    
+    @font-face {
+        font-family: "alarm clock";
+        src: url("fonts/alarm clock.ttf") format("truetype");
+    }
+    
+    @font-face {
+        font-family: "Computerfont";
+        src: url("fonts/Computerfont.ttf") format("truetype");
+    }
+    
+    .WrongAnswer {
+        animation-name: shake;
+        animation-duration: 0.1s;
+        animation-iteration-count: 4;
+        color: var(--rd);
+        border-color: var(--rd);
+    }
+    
+    .CorrectAnswer {
+        animation-name: shine;
+        animation-duration: 1s;
+        animation-iteration-count: 1;
+        animation-timing-function: cubic-bezier(0.190, 1.000, 0.220, 1.000);
+        color: green;
+        border-color: green;
+        
+        }
+    
+    .circle{
+      margin:2vw;
+    width:2vw;
+    height:2vw;
+    padding:2vw;
+    border-radius:100%;
+    
+    }
+    
+    .flash{
+     animation-name: flash;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: cubic-bezier(0.190, 1.000, 0.220, 1.000);
+    }
+    
+    .steppy{
+    /* animation-timing-function: step(1,start) */
+    }
+    
+    .redglow{
+    background-color: var(--rd);
+    box-shadow: 0px 0px 2vw var(--rd);
+    }
+    
+    .greenglow{
+    background-color: var(--fg);
+    box-shadow: 0px 0px 2vw var(--fg);
+    }
+    
+       @keyframes flash {
+        0%,
+        80% {
+            opacity: 1;
+        }
+        /*         50% {
+  opacity: .5;
+          transform: scaleX(4) scaleY(0.1);
+  } */
+        100% {
+            opacity: 0.2;
+        }
+    }
+    
+    
+    
+    @keyframes shine {
+        0% {
+            opacity: 1;
+            /*  color:red; */
+            transform: scaleX(1) scaleY(1);
+        }
+        /*         50% {
+  opacity: .5;
+          transform: scaleX(4) scaleY(0.1);
+  } */
+        100% {
+            opacity: 0;
+            transform: scaleX(16) scaleY(0);
+            /*  color:red; */
+        }
+    }
+    
+    @keyframes shake {
+        0%,
+        100% {
+            /*             opacity: 0; */
+            transform: translateX(0);
+        }
+        50% {
+            /*             opacity: 1; */
+            transform: translateX(-40px);
+        }
+    }
+    
+    .timeElapsed{
+        font-size:5vw;
+    }
+    
 </style>
+
 <body>
 
-	<div class="counterCNT">
-  <div id="counter" class="cyber counter">00:00:00</div>
-  <div id="btnCNT" class="btnCNT">	
-	<btn id="str" onclick="cx.start()">
-		ST
-	</btn>
-	<btn id="stp" onclick="cx.stop()">
-		SP
-	</btn>
-</div>
-	<div id="tt">
-		
-	</div>
-	</div>
+    <div id="counterCNT" class="counterCNT">
+        <div id="counterMeas" class="counter">
+            <span id="counter" class="digits">
+            
+   <span id="counter_hour">00</span>
+  <span id="counter_colon1">:</span>
+  <span id="counter_min">00</span>
+  <span id="counter_colon2" class="flash">:</span>
+  <span id="counter_sec">00</span>
+</span>
+<div id="counter_timeElapsed" class="timeElapsed">00000000000</div>
 	
-
-  <script>
-
-
-  	
-cx = {
-	s:0,
-	m:0,
-	h:0,
-	d:0,
-	frm00:new Intl.NumberFormat(undefined,{
-		minimumIntegerDigits:2,
-		maximumFractionDigits:0
-		}),
-	frm0:new Intl.NumberFormat(undefined,{
-		minimumIntegerDigits:1,
-		maximumFractionDigits:0
-		}),
-	ct:counter,
-	mBase:Date.now(),
-	tLim:64000,
-	isPaused:false,
-	isRunning:false,
-	timeElapsed:0,
-	IID:null,
-	onTick(){},
-	showTime(h,m,s){
-		let st="",f=this.frm00.format;
-		this.ct.innerText=""+f(h)+":"+f(m)+":"+f(s)
-	},
-	start(){
-		if (this.isRunning){
-			return;
-		}
-		if (!this.isPaused){
-		this.mBase=Date.now();
-		//uwaga !!!
-		//WTEDY PAUZUJE TYLKO WYSWIETLANIE!!!!
-		//zaczyna ponownie ale dalej pamieta kiedy 
-		}
-		this.IID = window.setInterval(x=>{this.update()},1000);
-		this.isRunning=true;
-	},
-	stop(){
-		if (!this.isRunning){
-			return;
-		}
-		window.clearInterval(this.IID);
-		this.isRunning = false;
-	},
-	reset(){
-		if (this.isRunning){
-			this.stop();
-		}
-	this.mBase=Date.now();
-  	this.isPaused = false;
-	this.isRunning = false;
-	},
-	pause(){
-		if (!this.isRunning || this.isPaused){
-			return;
-		}
-		this.stop()
-		this.isPaused=true;
-		window.clearInterval(this.IID);
-		this.isRunning = false;
-	},
-	update(){
-		this.onTick(this);
-		if (this.timeElapsed < 0){
-			this.onFinished(this);
-		}
-		let te = this.tLim - (Date.now() - this.mBase);
-		this.timeElapsed=te;
-    let d, h, m, s, r;
-    h = ~~(te / (3600 * 1000));
-  	r = ~~(te % (3600 * 1000));
-    m = ~~(r / (60 * 1000));
-    r = ~~(r % (60 * 1000));
-    s = ~~(r / 1000);
-    r = ~~(r % 1000);
-   //  s = Math.floor(te / 1000);
-   //  m = Math.floor(s / 60);
-   //  s = s % 60;
-   //  h = Math.floor(m / 60);
-   //  m = m % 60;
-   //  d = Math.floor(h / 24);
-   // // h = h % 24;
-    
-		this.s=s;
-		this.m=m;
-		this.h=h;
-		// hours still contain days!!!
-		this.showTime(h,m,s);
-	}
-	
-	}
+        </div>
+        <div id="btnCNT" class="btnCNT">
+            <!-- <btn id="str" onclick="cx.start()">
+                ST
+            </btn>
+            <btn id="stp" onclick="cx.nxfnt()">
+                nxfnt
+            </btn>
+            <btn id="boominf" onclick="togglenumkeyb()">
+                numkeyb
+            </btn> -->
+            <div class="circle redglow flash"> </div>
+            <div class="circle greenglow "> </div>
+            
+            </div>
+            
+        </div>
+    </div>
 
 
-	
 
 
-	cx.tLim = 64000;
-	cx.start();
-	var n=-0.1; 
-	/*
-	new Intl.NumberFormat(undefined, { minimumIntegerDigits: 4, minimumFractionDigits: 2, useGrouping: false }).format(n);
-	*/
+    <table id="customKeybTMPLT" class="btnCNT" style="display:none">
+        <tr>
+            <td colspan="9" class="KBdisplay" style="  ">
+                ____
+            </td>
+        </tr>
+        <tr id="rowTMPLT" style="display:none">
+        </tr>
+        <tr style="display:none">
+            <td id="keyTMPLT" style="display:none">
+            </td>
+        </tr>
+    </table>
 
-	
-	
-	
-	</script>
+
+<audio id="ticksound" src="sounds/beep.mp3">
+    not suoported
+</audio>
+<audio id="wrongSound" src="sounds/invalidAnswer.mp3">
+    not suoported
+</audio>
+<script>
+</script>
+
+    <?php
+    //$this->getdeviceLoginStatus() this will allways show error need to fix it in index.php
+if ($this->getdeviceLoginStatus()) {
+                echo "jsdataFromServer = " . json_encode($_SESSION,JSON_PRETTY_PRINT);
+                //TODO here i should output not whole session but only timeset device name and so on
+               // $this->showAppriopriatePage();
+            } else {
+               // not admin, not logged in, no path variable
+               echo "jsdataFromServer = {error:'device not in db' , device_ip: '". $this->ip . "'};";
+               // $this->showPageLoginForm();
+            }
+?>
+<script type="text/javascript" src="index.php?action=getsettings"></script>
+
+
+    <script type="text/javascript" src="clockController.js"></script>
+    <script type="text/javascript" src="touchKeyboard.js"></script>
+    <script type="text/javascript" src="timebomb.js"></script>
 </body>
+
 </html>

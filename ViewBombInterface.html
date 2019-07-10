@@ -38,13 +38,17 @@
         text-shadow: 0px 0px 10vw #fff;
         opacity:0;
     }
+
+    pre{
+        font-size: 1vw;
+    }
     
     btn {
         margin: 0.5em;
     }
 
     /* this makes clickables flash*/
-    btn:active, td:active, {
+    btn:active, td:active {
         background-color: var(--fg);
         color: var(--bg);
     }
@@ -71,9 +75,18 @@
     }
     
     .counterCNT {
-        position: relative;
-        /*         font-family: digitalix; */
-    }
+    /* position: fixed; */
+    margin: auto;
+    top: 0px;
+    z-index: -1;
+    /*         font-family: digitalix; */
+}
+
+.counter{
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+}
     
     .counterScreen {
         text-align: center;
@@ -160,9 +173,7 @@
     animation-timing-function: cubic-bezier(0.190, 1.000, 0.220, 1.000);
     }
     
-    .steppy{
-    /* animation-timing-function: step(1,start) */
-    }
+   
     
     .redglow{
     background-color: var(--rd);
@@ -219,9 +230,6 @@
         }
     }
     
-    .timeElapsed{
-        font-size:5vw;
-    }
     
 </style>
 
@@ -237,10 +245,7 @@
   <span id="counter_colon2" class="flash">:</span>
   <span id="counter_sec">00</span>
 </span>
-<div id="counter_timeElapsed" class="timeElapsed">00000000000</div>
-	
-        </div>
-        <div id="btnCNT" class="btnCNT">
+    <div id="btnCNT" class="btnCNT">
             <!-- <btn id="str" onclick="cx.start()">
                 ST
             </btn>
@@ -250,6 +255,7 @@
             <btn id="boominf" onclick="togglenumkeyb()">
                 numkeyb
             </btn> -->
+            
             <div class="circle redglow flash"> </div>
             <div class="circle greenglow "> </div>
             
@@ -262,8 +268,16 @@
 
 
     <table id="customKeybTMPLT" class="btnCNT" style="display:none">
+    <!-- THIS IS REMAINING ATTEMPTS FIELD 
         <tr>
-            <td colspan="9" class="KBdisplay" style="  ">
+    <td colspan = "9" rowspan="1" class="">
+    <btn id="remainingAttemptsField" >
+            Tries: <span id="remainingAttemptsV">N/A</span>
+           </btn>
+        </td>
+        </tr> -->
+        <tr>
+            <td colspan="9" class="KBdisplay">
                 ____
             </td>
         </tr>
@@ -274,30 +288,20 @@
             </td>
         </tr>
     </table>
-
+    <pre id="feedback"></pre>
 
 <audio id="ticksound" src="sounds/beep.mp3">
-    not suoported
+    sounds not suoported
 </audio>
 <audio id="wrongSound" src="sounds/invalidAnswer.mp3">
-    not suoported
+    sounds not supported
 </audio>
 <script>
-    <?php
-    //$this->getdeviceLoginStatus() this will allways show error need to fix it in index.php
-if ($this->getdeviceLoginStatus()) {
-                echo "jsdataFromServer = " . json_encode($_SESSION,JSON_PRETTY_PRINT);
-                //TODO here i should output not whole session but only timeset device name and so on
-               // $this->showAppriopriatePage();
-            } else {
-               // not admin, not logged in, no path variable
-               echo "jsdataFromServer = {error:'device not in db' , device_ip: '". $this->ip . "'};";
-               // $this->showPageLoginForm();
-            }
-?>
-
-
 </script>
+<script>
+</script>
+
+
     <script type="text/javascript" src="clockController.js"></script>
     <script type="text/javascript" src="touchKeyboard.js"></script>
     <script type="text/javascript" src="timebomb.js"></script>

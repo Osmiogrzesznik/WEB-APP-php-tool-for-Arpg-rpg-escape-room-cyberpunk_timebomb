@@ -1,3 +1,140 @@
+
+TODO: user timezone is saved to db now make it retrieved for user and devices eachtime
+ //********* change to not null in db and install.sql */
+        // echo "<pre>";
+        //             print_r($_POST);
+        //             echo "</pre>";
+        //             $this->showPageRegistration();
+        //             exit();
+
+
+DONE TODO: create instance of clock for each digits-small
+
+	
+TODO: user have to choose timezone
+	register - auto-dropdown timezones on user register
+	index.php - set timezone to user selected timezone 
+
+
+TODO: remaining attempts?
+TODO: what if two users try to register the same ip address as their bombs?
+TODO: deviceregistration should allow to set time "from now" (just minutes)
+	ViewAddTODEvics.php input field and js calculation to set the date in the form each time (just minutes)
+	TODO: device update
+    this one may be a bit dodgy. Cannot use CHeckDeviceRegistrationData as  it is? 
+    need to be done in POST and if reuse it POST will need to provide:
+             newPassword, repeat password and so on
+       if update would use its own function/method:
+        again same problem a lot of code to check if any value differs / either on js side or php-wise
+    TODO - make clock beep faster at the end PROBLEM:SOUNDS ARE LOST)
+TODO:display feedback in red border
+       
+TODO: on each touch ? NO - PASSWORD ATTEMPT
+ listener should remember 
+the two timestamps, one get from db , and one registered
+ on each touch of window. 
+setInterval function should be active: 
+    check if lasttouchtimestamp 
+    is not null and if it is different from currently 
+    hold in js memory DBtimestamp(not fetched from DB)    
+
+TODO modify scripts so they are proper js classes or constructor functions
+	DONE ClockController.js
+	TODO touchKeyboard.js
+
+TODO - clock controller should create its components on its own
+user just creates counterCNT'ainer
+
+
+________________________________________________________________________________________________________
+________________________________________________________________________________________________________
+________________________________________________________________________________________________________
+________________________________________________________________________________________________________
+________________________________________________________________________________________________________
+________________________________________________________________________________________________________
+________________________________________________________________________________________________________
+________________________________________________________________________________________________________
+________________________________________________________________________________________________________
+________________________________________________________________________________________________________
+
+
+DONE : change time_last uppdated to time last updated in whole project needs db restart
+
+DONE !!!!registered_by_user is NULL ?!!
+DONE      $_Session has no user id check index.php
+
+
+
+DONE cannot register user on the device that has been 
+marked as a bomb
+
+
+PROBLEM: REMOVED POST registration access 
+
+DONE user_device relation needed 
+install.sql DONE
+INDEX.PHP DONE
+
+
+viewalldevcies 
+not sure-  make some fields invisible?
+
+and when
+ registering check only against the devices ip 
+DONE not users (there may be few users on the same computer)
+
+
+
+
+DONE in php Todo:: device deletion in VoewAll
+    DONE TODO: provide UI element in HTML for deletion and secure with confirmation
+   TODO: checl session destroy on deletion?
+     if device doesnt exist in db when requesting password or sending update status js should react
+    
+
+    
+TODO: if device will move or its IP will change you need
+     to keep cookies and update ip
+    
+
+                
+
+        
+
+
+
+
+dodaj do sql ilosc prob i max ilosc , zrob w php update do tego 
+w createnewdevice  i reszcie method
+potem zrob link userId to device
+
+
+if user logged in and action= allDevices
+   adchuj tyljko tabelke w htmlu albo jsonie w htmlu
+ NIE zapomnij zabronic dostepu do pla.php przed produkcja
+
+onclick w tabeli all devices
+action=delete or update i parametry w post albo get bo latwiej
+
+to samo tylko postem z wewnatrz timebomb.js fetfhem
+jesli chodzi o hasla zrob  zapisywanie ilosci bledntch hasel
+limit ich 
+
+
+
+
+
+
+zrob mozliwosc specjalnego zalogowania sie za pomoca GET 
+
+
+admin cannot log back in on the device that was registered as a bomb
+    is it ok ? I think it is  another layer of security. try action=Register (user)q)
+register register Słoń Trąbalski nie działa r
+egulacja rejestracja działa rejestracja nie daziala z urzadzen 
+ktore sajuz zapisane w bazie
+
+
  - every Time somebody sees a table with all devices status 
 active inactive should be treated as ARmed , disarmed
  find some way to address these cells and update them in inline js.
@@ -14,14 +151,6 @@ Timestamp
     and value in table to show how long ago somebody was touching
     the bomb
     
-TODO: on each touch listener should remember 
-the two timestamps, one get from db , and one registered
- on each touch of window. 
-setInterval function should be active: 
-    check if lasttouchtimestamp 
-    is not null and if it is different from currently 
-    hold in js memory DBtimestamp(not fetched from DB)    
-
 
 try not to do $result->fetch 
 call method on QUERY pdo object
@@ -32,7 +161,7 @@ maybe execute returns just bool
 DONE:- modified index.php to react to action=registerDevice POST and 
 	to add device to DB checking all input.
 
-TODO:  display all devices in a table if user is logged in
+DONE  display all devices in a table if user is logged in
 	-when device just added (show logged in)
 	 later  -> WHERE user_creator_id = :logged_user_id in showalldevices to allow many users to have separate bombsets
 
@@ -40,16 +169,12 @@ TODO:  display all devices in a table if user is logged in
 Done TODO : rewrite mechanism of clock to be interested only in showing countdown to given date
       
 
-- make clock beep faster at the end PROBLEM:SOUNDS ARE LOST)
-todo:display feedback in red border
 
-- modify scripts so they are proper js classes 
-- clock controller should create its components on its own
-user just creates counterCNT'ainer
+
         
 
 
--create registration of device
+DONE -create registration of device
 	try to copy user registration mechanism but with ip's instead of username password
 	if device not registered 2 options: give your admin cred's and device
 	DO not save ip in db if user-(Admin) is not logged in 
@@ -77,3 +202,16 @@ user just creates counterCNT'ainer
 		user chooses in db which to activate
 		PROBLEMS: polling needed  and maybe a lot of problems with separate paths for all this ajax post requests 
 
+DONE: !!!!TODO: deactivate device if correct password entered, do not activate if disarmed;
+DONE Javascript in add to devices still shows 2hours for bomb set in 1 hour ROUNDING ERROR !!!
+DONE: TODO: display time last active as 5 min ago 
+DONE: DISPLAY clock in the background when registering
+DONE`****TODO: remove email - not needed
+DONE**TODO: user can delete his account with all devices with it
+DONE TODO: not possible for admin to login in any way whe device is set even changing ip in get (possible action=logout&ip=differentthananyregistereddevice)
+DONE TODO: now register post doesnt work ?
+DONE TODO: display confirmation dialog when user clicks deleteme
+DONE TODO : tidy up - do not display everything doubled and so on views
+DONe TODO: do not use js script requested as fiel
+	instead fetch it as JSON object no password just length
+	and isNumerical
