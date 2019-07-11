@@ -1,3 +1,29 @@
+
+.edit-td .edit-area {
+    border: none;
+    margin: 0;
+    padding: 0;
+    display: block;
+  
+    /* remove resizing handle in Firefox */
+    resize: none;
+  
+    /* remove outline on focus in Chrome */
+    outline: none;
+  
+    /* remove scrollbar in IE */
+    overflow: auto;
+  }
+  
+  .edit-controls {
+    position: absolute;
+  }
+  
+  .edit-td {
+    position: relative;
+    padding: 0;
+  }
+
 a,
 body,
 input,
@@ -33,7 +59,15 @@ a {
     width: 20vw;
     height: 20vh;
     background-color: rgba(0, 70, 0, .7);
+    color: white;
+    font-size: 3vh;
     /* border-color: rgba(0, 70, 0, .7); */
+}
+
+.link{
+    background-color: rgba(0, 70, 0, .7);
+    color: white;
+    font-size: initial;
 }
 
 form {
@@ -272,8 +306,8 @@ opacity: .5;
     }
 }
 
-.timeElapsed {
-    font-size: 5vw;
+.time_last_active {
+    font-size:initial;
 }
 
 .field-editable {

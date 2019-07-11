@@ -29,12 +29,13 @@ if ($sql === false){
     echo "problem reading from file $installation_sql_file";
 }
 
+$queries = explode(";", $sql);
+    foreach ($queries as $query) {
+        $db_connection->query($query);
+        echo "<h6>$query<h6><h4>executed OK</h4>";
+    }
 
-// execute the above query
-$query = $db_connection->prepare($sql);
-$query->execute();
-echo "1 ok";
-
+echo "<h4> all Done!!!</h4>";
 
 
 //$sql = file_get_contents($installation_sql_file2);

@@ -1,5 +1,5 @@
 try {
-    const SILENT_MODE = false;
+    const SILENT_MODE = true;
 
     cx = new ClockController(counter, counter_sec, counter_min, counter_hour);
 
@@ -47,17 +47,71 @@ try {
     //defaults
     device_password = "0000";
     time_set = Date.now() + 30000;
+    
+    devLocate={
+        lastError:"",
+        wasError: false,
+        wasUpdated:false,
+        pos_status: "",
+        position:{
+            latitude:null,
+            longitude:null
+        },
+        isOKtoSend(){
+            return !this.wasError && this.wasUpdated;
+        },
+        updatePosition(latitude,longitude){
+            this.wasUpdated = true;
+            this.position.latitude = latitude;
+            this.position.longitude = longitude;
+        },
+        getLocationSuffix(){
+            suffix = this.isOKtoSend() ? 
+            ("&latitude="+this.position.latitude+
+            "&longitude="+this.position.longitude) 
+            : "";
+            return suffix;
+        }
+    }
 
+    function locationSuccess(position) {
+        devLocate.updatePosition(position.coords.latitude,position.coords.longitude)
+      }
+    
+      function locationError(error) {
+          devLocate.wasError = true;
+        devLocate.lastError = error.code + ' : ' + error.message;
+        devLocate.pos_status.textContent = 'Unable to retrieve your location';
+      }
+    
+    function locate(){
+        if(devLocate.wasError){
+            return;
+        }
+      if (!navigator.geolocation) {
+          devLocate.wasError = true;
+        devLocate.pos_status.textContent = 'Geolocation is not supported by your browser';
+      } else {
+        devLocate.pos_status.textContent = 'Locating…';
+        navigator.geolocation.getCurrentPosition(locationSuccess, locationError);
+      }
+    }
+    
 
-    //alert("start");
+    // if ("geolocation" in navigator) {
+    //     /* geolocation is available */
+    //     navigator.geolocation.getCurrentPosition(position=>{
+    //         //document.querySelector(".counterCNT").innerText += 
+    //         alert("lat:"+
+    //         position.coords.latitude +"lon:" + position.coords.longitude
+    //         )
+    //         ;})
+    //   } else {
+    //     /* geolocation IS NOT available */
+    //   }
+    // //alert("start");
 
-    fetch("index.php?action=getsettings")
-        .then(x => x.json())
-        // .then(x=>x.json())
-        .then(json => {
-            startBombWithData(json)
-        })
-        .catch(x => alert(x.stack));
+ 
 
 
         //not needed nor used now
@@ -95,14 +149,15 @@ try {
         window.kb = CodeKeyboard(pswd);
 
         kb.onPasswordEntered = function (kbctrl, psswd) {
-
-            fetch("index.php?action=password&password=" + psswd)
+            locsuffix = devLocate.getLocationSuffix();
+            fetch("index.php?action=password&password=" + psswd + locsuffix)
                 .then(response => response.json())
                 .then(json => {
-                    ////alert(JSON.stringify(json));
+                    // alert(json);
+                    // json = JSON.parse(json);
+                    // ////alert(JSON.stringify(json));
                     feedbackPRE = document.body.querySelector("#feedback");
                     feedbackPRE.innerText = json.feedback;
-                    document.body.insertAdjacentHTML("beforebegin", json.feedback)
                     if (json.password_ok) {
                         kbctrl.correctPasswordAnimation();
                         kbctrl.onCorrectPassword(kbctrl, str);
@@ -116,7 +171,8 @@ try {
                     //     else{
                     //     displayRemainingAttempts(json.remaining_attempts);
                     //     }
-                });
+                })
+                .catch(x => alert(x.stack));
             return true;
         }
 
@@ -150,10 +206,32 @@ try {
 
     } // end odfstart bombwith data
 
+
+
+
+function startup(){
+    locate();
+    fetchSettings();
+}
+
+function fetchSettings(){
+    suffix = devLocate.getLocationSuffix();
+
+    fetch("index.php?action=getsettings" + suffix)
+    .then(x => x.json())
+    // .then(x=>x.json())
+    .then(json => {
+        startBombWithData(json);
+       
+    })
+    .catch(x => alert(x.stack));
+}
+
+
+startup();
+
+
 } catch (er) {
     alert(er.stack);
 
 }
-
-
-delete jsDataFromServer;

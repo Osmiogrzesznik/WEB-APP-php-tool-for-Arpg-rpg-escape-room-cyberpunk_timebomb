@@ -1,5 +1,5 @@
 
-TODO: user timezone is saved to db now make it retrieved for user and devices eachtime
+WIP --- TODO: user timezone is saved to db now make it retrieved for user and devices eachtime
  //********* change to not null in db and install.sql */
         // echo "<pre>";
         //             print_r($_POST);
@@ -8,7 +8,6 @@ TODO: user timezone is saved to db now make it retrieved for user and devices ea
         //             exit();
 
 
-DONE TODO: create instance of clock for each digits-small
 
 	
 TODO: user have to choose timezone
@@ -215,3 +214,4 @@ DONE TODO : tidy up - do not display everything doubled and so on views
 DONe TODO: do not use js script requested as fiel
 	instead fetch it as JSON object no password just length
 	and isNumerical
+DONE TODO: create instance of clock for each digits-small

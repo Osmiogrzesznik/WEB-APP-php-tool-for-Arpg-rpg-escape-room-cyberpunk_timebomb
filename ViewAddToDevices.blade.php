@@ -8,21 +8,23 @@
         <label for="device_name">
             device_name:
         </label>
-        <input id="device_name" type="text" pattern="[a-zA-Z0-9]{2,64}" name="device_name" required />
+        <input id="device_name" type="text" pattern="^.{2,64}$" name="device_name" required />
         <span class="validity">* required</span>
         <label for="device_description">
             device_description:
         </label>
         <input id="device_description" type="text" name="device_description" />
         <label for="device_password_new">
-            Device Password (4-24 characters, a-z 0-9) stops/unlocks the device
+            Device Password (3-24 characters, a-z 0-9) stops/unlocks the device
         </label>
-        <input id="device_password_new" class="login_input" type="password" name="device_password_new" pattern="[a-z0-9]{4,32}" required autocomplete="off" />
+        <input id="device_password_new" class="login_input" type="password" name="device_password_new" 
+        pattern="[a-z0-9]{3,32}" required autocomplete="off" />
         <span class="validity">* required </span>
         <label for="device_password_repeat">
             Repeat password
         </label>
-        <input id="device_password_repeat" class="login_input" type="password" name="device_password_repeat" pattern="[a-z0-9]{4,32}" required autocomplete="off" />
+        <input id="device_password_repeat" class="login_input" type="password" name="device_password_repeat" 
+        pattern="[a-z0-9]{3,32}" required autocomplete="off" />
         <span class="validity">* required</span>
         <label for="device_ip">
             Device IP(default this one):
@@ -39,7 +41,8 @@
         name="time_set" 
         pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
         <?php
-$datenow = date('Y-m-d\TH:i:s', time()+60*30);
+        date_default_timezone_set($this->timezoneName);
+$datenow = date('Y-m-d\TH:i:s', time()+60*30);//in 30 minutes
 echo 'min="' . $datenow . '" value="' . $datenow . '"' ?> required>
                 <span class="validity"></span>
 
@@ -63,10 +66,10 @@ echo 'min="' . $datenow . '" value="' . $datenow . '"' ?> required>
 </div>
 Minimal Date ( NOW ):
 <input id="time_setMIN" style="display:block" type="datetime-local" <?php
-                                                                    $datenow = date('Y-m-d\TH:i', time());
+                                                                    $datenow = date('Y-m-d\TH:i:s', time());
                                                                     echo 'value="' . $datenow . '"' ?> />
 <input id="time_setMINtext" style="display:block" type="text" <?php
-                                                                $datenow = date('Y-m-d\TH:i', time());
+                                                                $datenow = date('Y-m-d\TH:i:s', time());
                                                                 echo 'value="' . $datenow . '"' ?> />
 
 <a href="<?php echo $_SERVER['SCRIPT_NAME'] ?>">Homepage</a>
@@ -132,23 +135,124 @@ Minimal Date ( NOW ):
 
     }
 
-
+    //if there is many counters fps would be an array 
+    //otherwise (when user didn't add any devices yet) its one flatpicker
     fps = flatpickr(time_setsNL, stngs);
+    is_many_flatpickers = fps.hasOwnProperty("length");
+    units = [
+     'year',
+     'month',
+     'week',
+     'day',
+     'hour',
+     'minute',
+     'second'];
+    
+    //prepare for refreshing here to not burden cpu
+    time_last_active_tds = document.querySelectorAll(".time_last_active");
+    tlaObjs = [];
+    for (let i= 0;i<time_last_active_tds.length;i++){
+          let ob={};
+          ob.td = time_last_active_tds[i];
+          ob.datesrv = ob.td.querySelector(".my_date_format").innerText;
+          ob.agospan = ob.td.querySelector(".ago");
+          tlaObjs.push(ob);
+    }
+//     time_last_active.forEach(te=>{
+//         datasetvalues = units.map(unitname=>{
+//             ob={};
+//             ob[unitname]=te.dataset[unitname];
+//             return ob;
+//             });//object with propertiies names and values
+//         console.log(datasetvalues);
 
+// });
+    //this interval is only for minimum and displaying ago's so can be refreshed each 5s
     setInterval(x => {
-        //to nie dziala
         timeZoneOffset = new Date().getTimezoneOffset() * 60000;
-        let d = Date.now() - timeZoneOffset;
-        let dstr = toISOStrCut(new Date(d));
-
-        //time_set.setAttribute('valueAsNumber',d.getTime()); 
-        fps.forEach(fp => {
+        timestampNOWwOffs = Date.now() - timeZoneOffset;
+        dateNOWwOffs = new Date(timestampNOWwOffs);
+        let dstr = toISOStrCut(dateNOWwOffs);
+        //refresh time ago's
+        tlaObjs.forEach(ob=>{
+          ob.agospan.innerText = time_ago(ob.datesrv);
+        })
+        //if there is many counters fps would be an array 
+        //otherwise (when user didn't add any devices yet) its one flatpicker
+        if(is_many_flatpickers){
+            fps.forEach(fp => {
             fp.config.minDate = dstr;
         })
-        // time_setMIN.valueAsNumber = ~~(d / 60000) * 60000;
+        }else{
+            fps.config.minDate = dstr;
+        }
+        // time_setMIN.valueAsNumber = ~~(timestampNOWwOffs / 60000) * 60000;
         // time_setMINtext.value = dstr;
         // time_set.min = dstr;
-    }, 1000);
+    }, 5000);
+
+
+
+
+
+
+function time_ago(time) {
+
+switch (typeof time) {
+  case 'number':
+    break;
+  case 'string':
+    time = +new Date(time);
+    break;
+  case 'object':
+    if (time.constructor === Date) time = time.getTime();
+    break;
+  default:
+    time = +new Date();
+}
+var time_formats = [
+  [60, 'seconds', 1], // 60
+  [120, '1 minute ago', '1 minute from now'], // 60*2
+  [3600, 'minutes', 60], // 60*60, 60
+  [7200, '1 hour ago', '1 hour from now'], // 60*60*2
+  [86400, 'hours', 3600], // 60*60*24, 60*60
+  [172800, 'Yesterday', 'Tomorrow'], // 60*60*24*2
+  [604800, 'days', 86400], // 60*60*24*7, 60*60*24
+  [1209600, 'Last week', 'Next week'], // 60*60*24*7*4*2
+  [2419200, 'weeks', 604800], // 60*60*24*7*4, 60*60*24*7
+  [4838400, 'Last month', 'Next month'], // 60*60*24*7*4*2
+  [29030400, 'months', 2419200], // 60*60*24*7*4*12, 60*60*24*7*4
+  [58060800, 'Last year', 'Next year'], // 60*60*24*7*4*12*2
+  [2903040000, 'years', 29030400], // 60*60*24*7*4*12*100, 60*60*24*7*4*12
+  [5806080000, 'Last century', 'Next century'], // 60*60*24*7*4*12*100*2
+  [58060800000, 'centuries', 2903040000] // 60*60*24*7*4*12*100*20, 60*60*24*7*4*12*100
+];
+
+var seconds = ~~(+new Date() - time) / 1000,
+  token = 'ago',
+  list_choice = 1;
+
+if (seconds == 0) {
+  return 'Just now'
+}
+if (seconds < 0) {
+  seconds = Math.abs(seconds);
+  token = 'from now';
+  list_choice = 2;
+}
+var i = 0,
+  format;
+while (format = time_formats[i++])
+  if (seconds < format[0]) {
+    if (typeof format[2] == 'string')
+      return format[list_choice];
+    else
+      return ~~(seconds / format[2]) + ' ' + format[1] + ' ' + token;
+  }
+return time;
+}
+
+
 
     
 </script>

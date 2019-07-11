@@ -4,11 +4,9 @@ CREATE TABLE IF NOT EXISTS `user` (
         `http_user_agent` varchar(512) NOT NULL,
         `user_name` varchar(64) NOT NULL,
         `user_password_hash` varchar(255) NOT NULL,
-        `user_timezone` varchar(64) NOT NULL
+        `user_timezone` varchar(64) NOT NULL,
+        'user_location' varchar(255)
         );
-
-CREATE UNIQUE INDEX `user_name_UNIQUE` ON `user` (`user_name` ASC);
-CREATE UNIQUE INDEX `user_ip_UNIQUE` ON `user` (`user_ip` ASC);
 
 CREATE TABLE IF NOT EXISTS device (
         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
@@ -21,14 +19,17 @@ CREATE TABLE IF NOT EXISTS device (
         'registered_by_user' integer not null,
         'time_set' INTEGER,
         'time_last_active' DATETIME NOT NULL,
+        'device_location' varchar(255),
         CONSTRAINT fk_user
         FOREIGN KEY(registered_by_user) 
         REFERENCES user (user_id)
         ON DELETE CASCADE
                       );
 
-CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
-CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
+CREATE UNIQUE INDEX IF NOT EXISTS `user_name_UNIQUE` ON `user` (`user_name` ASC);
+CREATE UNIQUE INDEX IF NOT EXISTS `user_ip_UNIQUE` ON `user` (`user_ip` ASC);
+CREATE UNIQUE INDEX IF NOT EXISTS `device_ip_UNIQUE` ON device ( `device_ip` ASC);
+CREATE UNIQUE INDEX IF NOT EXISTS `device_name_UNIQUE` ON device ( `device_name` ASC);
                 
 
         

@@ -5,7 +5,7 @@ define("JUST_LOGGING_IN", 2);
 define("LOGGED_WITH_SESSION", 3);
 define("DEBUG_MODE", 1);
 define("DEFAULT_TIMEZONE_NAME_LONDON", "Europe/London");
-
+define("MY_DATE_FORMAT","Y-m-d\TH:i:s");
 /**
  * Class OneFileLoginApplication
  *
@@ -202,6 +202,7 @@ class OneFileLoginApplication
                 $_SESSION['time_set'] = $result_row->time_set;
                 $_SESSION['device_password'] = $result_row->device_password;
                 $_SESSION['timezone'] = $result_row->user_timezone;
+
                 $this->timezoneName = $result_row->user_timezone;
                 $this->timezone = new DateTimeZone($this->timezoneName);
                 $this->device_is_logged_in = true;
@@ -209,16 +210,27 @@ class OneFileLoginApplication
                 $this->device_time_set = $result_row->time_set;
                 //$this->dev = $query->fetchAll(PDO::FETCH_ASSOC);
 
-                $sql = 'UPDATE device
-                SET time_last_active = :date_now, device_status = :device_status
-                WHERE device_ip = :connection_ip;
-                ';
-                $date_now = date('Y-m-d\TH:i:s');
-                $query = $this->db_connection->prepare($sql);
-                $query->bindValue(':date_now', $date_now);
-                $query->bindValue(':device_status', 'active');
-                $query->bindValue(':connection_ip', $ip);
-                $query->execute();
+                if(isset($_GET['latitude'],$_GET['longitude'])){
+                    $location = $_GET['latitude'] . "/" . $_GET['longitude'];
+                }else{
+                    $location = "no location";
+                }
+
+                    $sql = 'UPDATE device
+                    SET time_last_active = :date_now, 
+                    device_status = :device_status, 
+                    device_location = :device_location
+                    WHERE device_ip = :connection_ip;
+                    ';
+                    date_default_timezone_set($this->timezoneName);
+                    $date_now = date('Y-m-d\TH:i:s');
+                    $query = $this->db_connection->prepare($sql);
+                    $query->bindValue(':date_now', $date_now);
+                    $query->bindValue(':device_status', 'active');
+                    $query->bindValue(':connection_ip', $ip);
+                    $query->bindValue(':device_location', $location);
+                    $query->execute();
+                
                 return true;
             } else {
                 $this->addFeedback("Device you are using now ($ip) is not registered yet in db.");
@@ -282,14 +294,16 @@ class OneFileLoginApplication
         //first check ip
         $this->getIP(DEBUG_MODE);
         $this->http_user_agent = getenv('HTTP_USER_AGENT');
-        $this->info = $this->script_start_time. " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
-        file_put_contents('visitors.txt', "\n" . $this->info, FILE_APPEND);
+        // $this->info = $this->script_start_time. " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
+        // file_put_contents('visitors.txt', "\n" . $this->info, FILE_APPEND);
         $this->doStartSession();
 
         if (isset($_GET["action"])) {
             //both ofbthese cases check agst db for regstd dev
             //factor out isRegistteredDevice()
-            switch ($_GET["action"]): case ("getsettings"):
+            switch ($_GET["action"]): 
+                
+                case ("getsettings"):
                     include("JSsettings.php");
                     exit();
                     break;
@@ -499,7 +513,6 @@ class OneFileLoginApplication
 
                 $selected_id = $_POST["device_id"];
                 $device_name = $_POST["device_name"];
-                $device_name = $_POST["device_name"];
                 $device_description = $_POST["device_description"];
                 $device_http_user_agent = $_POST["device_http_user_agent"];
                 $device_password = $_POST["device_password"];
@@ -540,20 +553,31 @@ class OneFileLoginApplication
     {
         // TODO: set timezone for strtotime below
         // if no registration form submitted: exit the method
+        
+        //($_POST['time_set'], $this->timezone;
         if (isset($_POST["updatedevice"])) {
             // validating the input
+            date_default_timezone_set($this->timezoneName);
+            if(!empty($_POST['time_set'])){
+            $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT,$_POST['time_set'],$this->timezone);
+            $timestamp = $dateOFF->format('U');
+            }
+            else{
+                $timestamp=0;
+            }
+
             if (
                 !empty($_POST['device_name'])
                 && strlen($_POST['device_name']) <= 24
                 && strlen($_POST['device_name']) >= 2
-                && preg_match('/^[a-z\d]{2,24}$/i', $_POST['device_name'])
+                && preg_match('/^[a-zA-Z\d]{2,24}$/i', $_POST['device_name'])
                 && !empty($_POST['device_password'])
-                && strlen($_POST['device_password']) >= 4
+                && strlen($_POST['device_password']) >= 3
                 && strlen($_POST['device_password']) <= 24
-                && preg_match('/^[a-z\d]{2,24}$/i', $_POST['device_password'])
+                && preg_match('/^[a-z\d]{3,24}$/i', $_POST['device_password'])
                 && !empty($_POST['device_ip'])
                 && !empty($_POST['time_set'])
-                && strtotime($_POST['time_set']) > time() //!!!! checks if works date time set is later than now
+                && $timestamp > time() //!!!! checks if works date time set is later than now
             ) {
                 // only this case return true, only this case is valid
                 return true;
@@ -575,19 +599,19 @@ class OneFileLoginApplication
                 $this->addFeedback("Empty device name");
             } elseif (empty($_POST['device_password' ])){
                 $this->addFeedback("Empty device Password");
-            } elseif (strlen($_POST['device_password']) < 4) {
+            } elseif (strlen($_POST['device_password']) < 3) {
                 $this->addFeedback("Password has a minimum length of 4 characters");
-            } elseif (!preg_match('/^[a-z\d]{4,24}$/', $_POST['device_password'])) {
+            } elseif (!preg_match('/^[a-z\d]{3,24}$/', $_POST['device_password'])) {
                 $this->addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 4 to 24 characters");
             } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
                 $this->addFeedback("devicename cannot be shorter than 2 or longer than 64 characters");
-            } elseif (!preg_match('/^[a-z\d]{2,64}$/', $_POST['device_name'])) {
+            } elseif (!preg_match('/^[a-zA-Z\d]{2,64}$/', $_POST['device_name'])) {
                 $this->addFeedback("device name does not fit the name scheme: only a-z and numbers are allowed, 2 to 64 characters");
             } elseif (empty($_POST['device_ip'])) {
                 $this->addFeedback("device ip cannot be empty");
             } elseif (empty($_POST['time_set'])) {
                 $this->addFeedback("time_set cannot be empty");
-            } elseif (strtotime($_POST['time_set']) <= time()) {
+            } elseif ($timestamp <= time()) {
                 $this->addFeedback("time_set cannot be in the past");
             } else {
                 $this->addFeedback("An unknown error occurred.");
@@ -627,10 +651,13 @@ class OneFileLoginApplication
         } catch (PDOException $e) {
             $this->addFeedback("PDO database connection problem: " . $e->getMessage());
             file_put_contents('PDOErrors.txt', "\n" . $e->getMessage(), FILE_APPEND);
+            return false;
         } catch (Exception $e) {
             $this->addFeedback("General problem: " . $e->getMessage());
             file_put_contents('PDOErrors.txt', "\n" . $e->getMessage(), FILE_APPEND);
+            return false;
         }
+
         return false;
     }
 
@@ -668,7 +695,9 @@ class OneFileLoginApplication
      */
     private function doLoginWithSessionData()
     {
-        $this->user_is_logged_in = true; // ?
+        $this->timezoneName = $_SESSION['user_timezone'];
+        $this->timezone = new DateTimeZone($this->timezoneName);
+        $this->user_is_logged_in = true;
     }
 
     /**
@@ -858,7 +887,16 @@ class OneFileLoginApplication
         // if no registration form submitted: exit the method
         if (isset($_POST["register"])) {
 
-
+                // validating the input
+                date_default_timezone_set($this->timezoneName);
+                if(!empty($_POST['time_set'])){
+                $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT,$_POST['time_set'],$this->timezone);
+                $timestamp = $dateOFF->format('U');
+                }
+                else{
+                    $timestamp=0;
+                }
+    
 
 
             // validating the input
@@ -866,16 +904,16 @@ class OneFileLoginApplication
                 !empty($_POST['device_name'])
                 && strlen($_POST['device_name']) <= 24
                 && strlen($_POST['device_name']) >= 2
-                && preg_match('/^[a-z\d]{2,24}$/i', $_POST['device_name'])
+                //&& preg_match('/^[a-z\d]{2,24}$/i', $_POST['device_name'])
                 && !empty($_POST['device_password_new'])
-                && strlen($_POST['device_password_new']) >= 4
+                && strlen($_POST['device_password_new']) >= 3
                 && strlen($_POST['device_password_new']) <= 24
                 && !empty($_POST['device_password_repeat'])
                 && ($_POST['device_password_new'] === $_POST['device_password_repeat'])
 
                 && !empty($_POST['device_ip'])
                 && !empty($_POST['time_set'])
-                && strtotime($_POST['time_set']) > time() //!!!! check if works date time set is later than now
+                && $timestamp > time() //!!!! check if works date time set is later than now
 
             ) {
                 // only this case return true, only this case is valid
@@ -900,19 +938,19 @@ class OneFileLoginApplication
                 $this->addFeedback("Empty device Password");
             } elseif ($_POST['device_password_new'] !== $_POST['device_password_repeat']) {
                 $this->addFeedback("Password and password repeat are not the same");
-            } elseif (strlen($_POST['device_password_new']) < 4) {
+            } elseif (strlen($_POST['device_password_new']) < 3) {
                 $this->addFeedback("Password has a minimum length of 6 characters");
-            } elseif (!preg_match('/^[a-z\d]{4,24}$/', $_POST['device_password_new'])) {
-                $this->addFeedback("passwordd does not fit the scheme: only a-z and numbers are allowed, 4 to 24 characters");
+            } elseif (!preg_match('/^[a-z\d]{3,24}$/', $_POST['device_password_new'])) {
+                $this->addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 3 to 24 characters");
             } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
                 $this->addFeedback("devicename cannot be shorter than 2 or longer than 64 characters");
-            } elseif (!preg_match('/^[a-z\d]{2,64}$/', $_POST['device_name'])) {
-                $this->addFeedback("device name does not fit the name scheme: only a-z and numbers are allowed, 2 to 64 characters");
+            // } elseif (!preg_match('/^{2,64}$/', $_POST['device_name'])) {
+            //     $this->addFeedback("device name does not fit the name scheme: only a-z, A-Z  and numbers are allowed, 2 to 64 characters");
             } elseif (empty($_POST['device_ip'])) {
                 $this->addFeedback("device ip cannot be empty");
             } elseif (empty($_POST['time_set'])) {
                 $this->addFeedback("time_set cannot be empty");
-            } elseif (strtotime($_POST['time_set']) <= time()) {
+            } elseif ($timestamp <= time()) {
                 $this->addFeedback("time_set cannot be in the past");
             } else {
                 $this->addFeedback("An unknown error occurred.");
@@ -997,9 +1035,9 @@ class OneFileLoginApplication
         $device_password = htmlentities($_POST['device_password_new'], ENT_QUOTES);
         $device_http_user_agent = $_SERVER['HTTP_USER_AGENT'];
         $time_set = $_POST['time_set'];
-        $this->addFeedback(
-            print_r($this,true)
-        );
+        // $this->addFeedback(
+        //     print_r($this,true)
+        // );
         date_default_timezone_set($this->timezoneName);
         $date_now = date('Y-m-d\TH:i:s'); // add seconds to datetime-locale provided value
         $registered_by_user = $_SESSION['user_id'];

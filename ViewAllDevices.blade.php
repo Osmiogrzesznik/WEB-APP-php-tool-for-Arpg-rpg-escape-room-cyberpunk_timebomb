@@ -1,39 +1,4 @@
 <?php
-
-function time_elapsed_string($format, $datetime, $timezone, $full = false)
-{
-    $now = new DateTime('now', $timezone);
-    //$ago = new DateTime($datetime,$timezone);
-    $ago = DateTime::createFromFormat($format, $datetime, $timezone);
-    $diff = $now->diff($ago);
-    $diff->w = floor($diff->d / 7);
-    $diff->d -= $diff->w * 7;
-
-    $string = array(
-        'y' => 'year',
-        'm' => 'month',
-        'w' => 'week',
-        'd' => 'day',
-        'h' => 'hour',
-        'i' => 'minute',
-        's' => 'second',
-    );
-    foreach ($string as $k => &$v) {
-        if ($diff->$k) {
-            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
-        } else {
-            unset($string[$k]);
-        }
-    }
-
-    if (!$full) $string = array_slice($string, 0, 1);
-    return $string ? implode(', ', $string) . ' ago' : 'just now';
-}
-
-
-
-
-
 $user_id = $_SESSION['user_id'];
 $conn = $this->db_connection;
 $sql = "SELECT * FROM device WHERE registered_by_user = :user_id";// WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
@@ -49,7 +14,7 @@ $query->execute();
 $columns = array();
 $resultset = array();
 $column_name_prefix = "device_";
-$nonEditables = array("device_id","registered_by_user","time_last_active");
+$nonEditables = array("device_id","registered_by_user","time_last_active","device_location");
 
 # Set columns and results array
 while($row = $query->fetch()) {
@@ -81,30 +46,6 @@ if( count($resultset) > 0 ) {
 
 
 
-.edit-td .edit-area {
-  border: none;
-  margin: 0;
-  padding: 0;
-  display: block;
-
-  /* remove resizing handle in Firefox */
-  resize: none;
-
-  /* remove outline on focus in Chrome */
-  outline: none;
-
-  /* remove scrollbar in IE */
-  overflow: auto;
-}
-
-.edit-controls {
-  position: absolute;
-}
-
-.edit-td {
-  position: relative;
-  padding: 0;
-}
 </style>
 
 
@@ -137,9 +78,34 @@ if( count($resultset) > 0 ) {
 		<tr id="<?php echo 'r' . $row['device_id'] ?>">
       <?php for ($i=0; $i < count($columns); $i++):
       $column_name = $columns[$column_counter];
-			if (in_array($column_name,$nonEditables)){ ?>
-			<td class="field-non-editable" data-column-name="<?php echo $column_name ?>">
-			<?php 
+      if (in_array($column_name,$nonEditables)){ 
+        if ($column_name == "time_last_active"){
+        
+        date_default_timezone_set(DEFAULT_TIMEZONE_NAME_LONDON);
+        $time_last_active = $row[$column_name];
+
+        // $time_elapsed_span = time_elapsed_HTMLelement("Y-m-d\TH:i:s",$time_last_active,$this->timezone,true);
+        // echo "<br>(" . $time_elapsed_span . ")";
+     ?>
+        <td class="field-non-editable time_last_active" data-column-name="time_last_active">	
+      <span class="my_date_format"><?=$time_last_active ?></span>
+<br>
+      <span class="ago"></span>
+      <?php
+      }elseif($column_name == "device_location"){ // any other noneditable
+        ?>
+    <td class="field-non-editable" data-column-name="<?= $column_name ?>">
+     <a class="link" href="https://www.openstreetmap.org/#map=18/<?=$row[$column_name];?>" 
+     target="_blank">open map for<br><?=$row[$column_name];?>
+      </a>
+      
+     <?php 
+        }else{ // any other noneditable
+          ?>
+			<td class="field-non-editable" data-column-name="<?= $column_name ?>">
+			<?php  echo $row[$column_name];
+        }
+         
       }elseif ($column_name == "time_set") {
         ?>
       <td class="uuu" >
@@ -156,21 +122,17 @@ if( count($resultset) > 0 ) {
       name="time_set" 
       class="field-editable time_set" 
       data-column-name="time_set"
-      value="<?php echo $row["time_set"]; ?>">	
-      Current:<br>
-      <?php 
+      value="<?= $row["time_set"]; ?>">	
+      Current:<br><?= $row[$column_name] ?>
+      <?php
       }else{
         ?>
 			<td class="field-editable" data-column-name="<?php echo $column_name ?>">	
-      <?php }; echo $row[$column_name];
+      <?php
+      echo $row[$column_name]; 
+    }; 
       //IF COLUMN IS TIME UPDATED DISPLAY ADDITIONALY TIME IN AGO FORMAT
       // echo $column_name;
-      if($column_name === "time_last_active"){
-        date_default_timezone_set(DEFAULT_TIMEZONE_NAME_LONDON);
-        $time_last_active = $row[$column_name];
-        $display_time_since = time_elapsed_string("Y-m-d\TH:i:s",$time_last_active,$this->timezone,true);
-        echo "<br>(" . $display_time_since . ")";
-     }
       ?>
 			</td>
       <?php 
@@ -220,6 +182,17 @@ function DataField(name,value){
   this.value = value;
 }
 
+timeoutID = null;
+isAutoReloadOn = false;
+
+function ToggleAutoReloading(turniton = false){
+  
+if(isAutoReloadOn && turniton){
+  return;
+}
+  setTimeout(x=>document.location.reload(true),10000);
+
+}
 
 function sendUpdate(id, tr_row){
   var FD  = new FormData();
@@ -262,6 +235,7 @@ function sendUpdate(id, tr_row){
       feedbackPRE = document.querySelector("#feedback");
       if (feedbackPRE){
         feedbackPRE.innerText = t;
+        setTimeout(x=>document.location.reload(true),1000)
       }
       else{
         alert(t)
