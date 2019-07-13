@@ -192,25 +192,28 @@ table {
     src: url("fonts/digitalix.ttf") format("truetype");
 }
 
+
 @font-face {
-    font-family: "digit";
-    src: url("fonts/Digit.ttf") format("truetype");
+    font-family: "alarmclock";
+    src: url("fonts/alarm clock.ttf") format("truetype");
 }
 
+ @font-face {
+    font-family: "digit";
+    src: url("fonts/digit.TTF") format("truetype");
+}
+
+/*
 @font-face {
     font-family: "taximeter";
     src: url("fonts/taximeter.ttf") format("truetype");
 }
 
-@font-face {
-    font-family: "alarm clock";
-    src: url("fonts/alarm clock.ttf") format("truetype");
-}
 
 @font-face {
     font-family: "Computerfont";
     src: url("fonts/Computerfont.ttf") format("truetype");
-}
+} */
 
 .WrongAnswer {
     animation-name: shake;

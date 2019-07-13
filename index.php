@@ -1137,7 +1137,7 @@ class OneFileLoginApplication
 
             include("ViewStartHTML.blade.php");
             echo 'Hello ' . $_SESSION['user_name'] . ', you are logged in.<br/><br/>';
-            include('ViewAllDEvices.blade.php');
+            include('ViewAllDevices.blade.php');
         } else {
             $this->addFeedback("\nsorry cannot display all your devices due to db conn problem");
             include("ViewStartHTML.blade.php");

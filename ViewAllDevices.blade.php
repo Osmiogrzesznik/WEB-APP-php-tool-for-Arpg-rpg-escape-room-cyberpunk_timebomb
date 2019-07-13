@@ -44,7 +44,15 @@ if( count($resultset) > 0 ) {
 ?>
 <style>
 
+@font-face {
+    font-family: "digitalix";
+    src: url("fonts/digitalix.ttf") format("truetype");
+}
 
+@font-face {
+    font-family: "digit";
+    src: url("fonts/Digit.ttf") format("truetype");
+}
 
 </style>
 
