@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS `user` (
         );
 
 CREATE TABLE IF NOT EXISTS device (
-        'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+        'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        'device_session_id' TEXT NOT NULL,
         'device_name' TEXT NOT NULL,
         'device_description' TEXT,
         'device_ip' TEXT NOT NULL,
@@ -29,7 +30,7 @@ CREATE TABLE IF NOT EXISTS device (
 CREATE UNIQUE INDEX IF NOT EXISTS `user_name_UNIQUE` ON `user` (`user_name` ASC);
 CREATE UNIQUE INDEX IF NOT EXISTS `user_ip_UNIQUE` ON `user` (`user_ip` ASC);
 CREATE UNIQUE INDEX IF NOT EXISTS `device_ip_UNIQUE` ON device ( `device_ip` ASC);
-CREATE UNIQUE INDEX IF NOT EXISTS `device_name_UNIQUE` ON device ( `device_name` ASC);
+CREATE UNIQUE INDEX IF NOT EXISTS `device_session_id_UNIQUE` ON device ( `device_session_id` ASC);
                 
 
         

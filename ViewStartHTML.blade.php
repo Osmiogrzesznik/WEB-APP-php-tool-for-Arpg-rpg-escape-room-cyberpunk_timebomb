@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="halfdigi.css">
 </head>
 <body>
+<a href="<?php echo $_SERVER['SCRIPT_NAME'] ?>">Homepage</a>
     <pre id="feedback">
 <?php
 if ($this->feedback) {          

@@ -6,6 +6,19 @@ define("LOGGED_WITH_SESSION", 3);
 define("DEBUG_MODE", 1);
 define("DEFAULT_TIMEZONE_NAME_LONDON", "Europe/London");
 define("MY_DATE_FORMAT","Y-m-d\TH:i:s");
+define("NO_COOKIE","NOCOOKIE_MEH");
+
+
+function print_me($var,$return=false){
+    if(!$return){
+    echo "<pre>";
+    print_r($var,$return);
+    echo "</pre>";
+    }
+    else{
+        return "<pre>".print_r($_var,true)."</pre>";
+    }
+}
 /**
  * Class OneFileLoginApplication
  *
@@ -73,12 +86,15 @@ class OneFileLoginApplication
      * whether he is session active or just logged on a new device
      * @var int
      */
-    public $user_logged_with = 0;
-    public $scriptName = null;
-    public $dev = null;
+    public $user_logged_with = 0;//not used anymore
+    public $scriptName = null;//start using it
+    public $dev = null;// ????
     public $timezones = null;
     public $timezone = null;
     public $timezoneName = null;
+    public $time_set_timestamp = null; // used only when device was chcked for being registered
+	public $device_session_id = null; //used to identify device through cookie even if IP changed(updates IP )
+	public $device_id = null; // used only when device was chcked for being registered
     /**
      * Does necessary checks for PHP version and PHP password compatibility library and runs the application
      */
@@ -161,27 +177,56 @@ class OneFileLoginApplication
         }
 
         // had to remove it because when user deletes the device refreshing leads to device unaware of being deleted
-        // elseif (isset($_SESSION['device_id'])) {
+        // BUT !!!!!!
+        // MAYBE JUST SANITY CHECK : IF DEVICE HAS SESSION AND IS NOT PRESENT IN DB JUST DESTROY SESSION?
+        // CHECK IF USABLE IN device_session_id process
+        //elseif (isset($_SESSION['device_id'])) {
         //     $this->device_is_logged_in = true;
         //     return true;
         // }
-
-
+        
         $ip = $this->getIP(DEBUG_MODE);
 
+        //what if no cookie on the device but it is registered(e.g.different browser opened)
+            // set cookie when retrieved device by using ip?
+            if (isset($_COOKIE['device_session_id'])){
+                $this->addFeedback("you either not have cookies enabled or your cookie expired?");
+                $sess_token_from_cookie = $_COOKIE['device_session_id'];
+            }
+            else{
+        $sess_token_from_cookie = "NOCOOKIE_MEH"; //WHAT ELSE SHOULD I DO ? dont want to match anything wrong in queries below
+            }
+            
         // you could check first for session vars here and for cookie, then  compare them against the db
 
         if ($this->createDatabaseConnection()) {
             $sql = 'SELECT 
             device_id,device_ip,device_name,device_status,
-            device_password,time_set,user_timezone 
+            device_password,time_set,user_timezone,device_session_id,device_location
             FROM device
             INNER jOIN user ON registered_by_user = user_id 
-            WHERE device_ip = :connection_ip;    
-            ';
+            WHERE device_ip = :connection_ip OR device_session_id = :sess_token_from_cookie
+            LIMIT 1;';   
+            
+            /***bookmark
+             * 
+             * I was trying to add searching by device session id 
+             * but i dont want doubled results
+             * 
+             * 
+             * if no limit
+             * then IF there are two rows returned 
+             *          it immediately means that device had changed its ip
+             *      ELSE 
+             *          everything is fine
+             * 
+             *   */
             $query = $this->db_connection->prepare($sql);
             $query->bindValue(':connection_ip', $ip);
+            $query->bindValue(':sess_token_from_cookie', $sess_token_from_cookie);
             $query->execute();
+
+
 
             // Btw that's the weird way to get num_rows in PDO with SQLite:
             // if (count($query->fetchAll(PDO::FETCH_NUM)) == 1) {
@@ -196,44 +241,64 @@ class OneFileLoginApplication
                 //if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
                 // write user data into PHP SESSION [a file on your server]
                 $_SESSION['device_id'] = $result_row->device_id;
-                $_SESSION['device_ip'] = $result_row->device_ip;
+                $_SESSION['device_session_id'] = $result_row->device_session_id;
+                $_SESSION['device_ip'] = $ip;
                 $_SESSION['device_name'] = $result_row->device_name;
                 $_SESSION['device_status'] = $result_row->device_status;
                 $_SESSION['time_set'] = $result_row->time_set;
                 $_SESSION['device_password'] = $result_row->device_password;
                 $_SESSION['timezone'] = $result_row->user_timezone;
 
+                $this->device_session_id = $result_row->device_session_id;
                 $this->timezoneName = $result_row->user_timezone;
                 $this->timezone = new DateTimeZone($this->timezoneName);
                 $this->device_is_logged_in = true;
+                $this->device_id = $result_row->device_id;
                 $this->device_password = $result_row->device_password;
                 $this->device_time_set = $result_row->time_set;
-                //$this->dev = $query->fetchAll(PDO::FETCH_ASSOC);
+                $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT,$result_row->time_set,$this->timezone);
+                $this->time_set_timestamp = $dateOFF->format('U'); 
+                //REFRESH COOKIE   
+                $COOKIESETTINGS =array(
+                    "expires" => $this->time_set_timestamp,//instead this use one calculated from db
+                    "httponly" => true
+                );
+                setcookie("device_session_id",
+                        $this->device_session_id,$COOKIESETTINGS);    
 
+                //UPDATE LOCATION IF Different and not no location       
                 if(isset($_GET['latitude'],$_GET['longitude'])){
                     $location = $_GET['latitude'] . "/" . $_GET['longitude'];
                 }else{
+                    if($result_row->device_location === "no location"){
                     $location = "no location";
+                    }
+                    else{
+                        $location = $result_row->device_location;
+                    }
                 }
 
                     $sql = 'UPDATE device
                     SET time_last_active = :date_now, 
                     device_status = :device_status, 
-                    device_location = :device_location
-                    WHERE device_ip = :connection_ip;
+                    device_location = :device_location,
+                    device_ip = :connection_ip
+                    WHERE device_id = :device_id;
                     ';
+
                     date_default_timezone_set($this->timezoneName);
                     $date_now = date('Y-m-d\TH:i:s');
                     $query = $this->db_connection->prepare($sql);
                     $query->bindValue(':date_now', $date_now);
                     $query->bindValue(':device_status', 'active');
+                    $query->bindValue(':device_id', $this->device_id);                    
                     $query->bindValue(':connection_ip', $ip);
                     $query->bindValue(':device_location', $location);
                     $query->execute();
                 
                 return true;
             } else {
-                $this->addFeedback("Device you are using now ($ip) is not registered yet in db.");
+                $this->addFeedback("($ip) is not registered yet in db.");
             }
             // default return
             return false;
@@ -253,19 +318,19 @@ class OneFileLoginApplication
         try {
             if ($this->IsRegisteredDevice()) {
                 //if ($_SESSION['device_password'] === $_GET["password"]) {
-                if ($this->device_password === $_GET["password"]) {
+                if ($_GET["password"] === $this->device_password) {
                     $this->addFeedback("password correct");
                     // TODO: should check if its too late , even when device already 
                     // detonated, just to make sure nobody will fool admins
                     if ($this->createDatabaseConnection()) {
                         $sql = 'UPDATE device
                             SET device_status = :new_status
-                            WHERE device_ip = :connection_ip;
+                            WHERE device_id = :already_checked_and_found_id;
                             ';
                         $ip = $this->getIP(DEBUG_MODE);
                         $query = $this->db_connection->prepare($sql);
                         $query->bindValue(':new_status', "disarmed");
-                        $query->bindValue(':connection_ip', $ip);
+                        $query->bindValue(':already_checked_and_found_id', $this->device_id);
                         $query->execute();
                         $_SESSION['device_status'] = "disarmed";
                         $this->addFeedback("device disarmed");
@@ -292,16 +357,27 @@ class OneFileLoginApplication
     public function runApplication()
     {
         //first check ip
+
+
         $this->getIP(DEBUG_MODE);
         $this->http_user_agent = getenv('HTTP_USER_AGENT');
         // $this->info = $this->script_start_time. " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
         // file_put_contents('visitors.txt', "\n" . $this->info, FILE_APPEND);
-        $this->doStartSession();
 
+
+        $this->doStartSession();
+        // print_me($_COOKIE);
+        // exit;
+        
         if (isset($_GET["action"])) {
             //both ofbthese cases check agst db for regstd dev
             //factor out isRegistteredDevice()
             switch ($_GET["action"]): 
+
+                case ("superuser"):
+                    $this->showPageLoginForm();
+                    exit();
+                    break;
                 
                 case ("getsettings"):
                     include("JSsettings.php");
@@ -326,6 +402,15 @@ class OneFileLoginApplication
                     exit();
                     //$this->doRegistration();
                     break;
+
+                case ("registerUser"):
+                    if (isset($_POST["register"])){
+                        // print_r($_POST);
+                        // exit();        
+                        $this->doRegistration();
+                    }
+                break;
+ 
             // dont show nothing yet, it will be taken care of later down in the code
             // if user is logged in and device was registered showpageloggedin will show all db
             endswitch;
@@ -343,10 +428,10 @@ class OneFileLoginApplication
                 exit();
             } elseif (isset($_GET["action"])) {
 
-                switch ($_GET["action"]): case ("registerDevice"):
+                switch ($_GET["action"]): 
 
+                    case ("registerDevice"):
                         $this->doDeviceRegistration();
-
                         break;
 
                     case ("delete"):
@@ -390,29 +475,14 @@ class OneFileLoginApplication
 
         else {
 
-            //user not logged in
+            //user not logged in and no interesting action get was provided(so it is browser request mainly)
             if ($this->IsRegisteredDevice()) {
                 include("ViewBombInterface.html"); // no feedback
             }
             // below cannot register new user if user loggedout 
             //and device  is a bomb already to prevent circumventions
-            elseif (isset($_POST["register"] ,$_GET['action'])) {
-                // print_r($_POST);
-                // exit();
-                switch ($_GET["action"]): case ("registerUser"):
-                    // echo "<pre>";
-                    // print_r($_POST);
-                    // echo "</pre>";
-                    // $this->showPageRegistration();
-                    // exit();
-
-                        $this->doRegistration();
-                        $this->showPageLoginForm();
-                        // not admin, not logged in, no path variable
-
-                        break;
-                endswitch;
-            } else {
+            
+            else {
                 $this->showPageLoginForm();
             }
         }
@@ -526,12 +596,6 @@ class OneFileLoginApplication
                 $query->bindValue(':device_password',$device_password);
                 $query->bindValue(':device_status',$device_status);
                 $query->bindValue(':time_set',$time_set);
-
-
-
-
-
-
                 $query->execute();
                 $amnt = $query->rowCount();
                 if ($amnt > 0) {
@@ -565,7 +629,8 @@ class OneFileLoginApplication
             else{
                 $timestamp=0;
             }
-
+            $this->time_set_timestamp = $timestamp;
+            
             if (
                 !empty($_POST['device_name'])
                 && strlen($_POST['device_name']) <= 24
@@ -896,7 +961,7 @@ class OneFileLoginApplication
                 else{
                     $timestamp=0;
                 }
-    
+                $this->time_set_timestamp = $timestamp;
 
 
             // validating the input
@@ -1035,6 +1100,7 @@ class OneFileLoginApplication
         $device_password = htmlentities($_POST['device_password_new'], ENT_QUOTES);
         $device_http_user_agent = $_SERVER['HTTP_USER_AGENT'];
         $time_set = $_POST['time_set'];
+        $device_session_id_from_logged_user_cookie_modified = $_COOKIE['PHPSESSID']."_device_name_".$device_name;
         // $this->addFeedback(
         //     print_r($this,true)
         // );
@@ -1049,10 +1115,14 @@ class OneFileLoginApplication
         // maybe later do the hash  version
         //$user_password_hash = password_hash($user_password, PASSWORD_DEFAULT);
 
-        $sql = 'SELECT * FROM device WHERE device_name = :device_name OR device_ip = :device_ip';
+        $sql = 'SELECT device_session_id,device_ip,device_name FROM device
+         WHERE device_name = :device_name 
+         OR device_ip = :device_ip
+         OR device_session_id = :device_session_id';
         $dbcon = $this->db_connection;
         $query = $dbcon->prepare($sql);
         $query->bindValue(':device_name', $device_name);
+        $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
         $query->bindValue(':device_ip', $device_ip);
         $query->execute();
 
@@ -1060,7 +1130,11 @@ class OneFileLoginApplication
         // If you meet the inventor of PDO, punch him. Seriously.
         $result_row = $query->fetchObject();
         if ($result_row) {
-            $this->addFeedback("Sorry, that device name / ip is already taken. Please choose another one.");
+            $this->addFeedback("Sorry, some property is already taken:
+             \n\t$result_row->device_name as device name
+             \n\t/ $result_row->$device_ip as ip (your ip = ".$this->getIP(DEBUG_MODE)."/
+             \n\t  $result_row->device_session_id as session_id is already taken. (your sessid = $device_session_id_from_logged_user_cookie_modified)
+             \n\t Please choose another one. ");
         } else {
             // -----------//         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
             // -----------//         'device_name' TEXT NOT NULL,
@@ -1075,13 +1149,24 @@ class OneFileLoginApplication
             $sql = 'INSERT INTO device 
             (device_id,device_name, device_password, 
              device_ip, device_http_user_agent,
-            device_description, device_status,time_set, registered_by_user, time_last_active)
+            device_description, device_status,time_set, 
+            registered_by_user, time_last_active,
+             device_session_id, device_location)
                     VALUES
              (null ,:device_name, :device_password, 
              :device_ip, :device_http_user_agent,
-            :device_description, :device_status,:time_set,:registered_by_user, :time_last_active)';
+            :device_description, :device_status,:time_set,
+            :registered_by_user, :time_last_active,
+             :device_session_id, :device_location)';
             $query = $this->db_connection->prepare($sql);
 
+            if(isset($_POST['latitude'],$_POST['longitude'])){
+                $location = $_POST['latitude'] . "/" . $_POST['longitude'];
+            }else{
+                $location = "no location";
+            }
+
+            $query->bindValue(':device_location', $location);
             $query->bindValue(':device_name', $device_name);
             $query->bindValue(':device_password', $device_password);
             $query->bindValue(':device_ip', $device_ip);
@@ -1091,7 +1176,16 @@ class OneFileLoginApplication
             $query->bindValue(':time_set', $time_set);
             $query->bindValue(':registered_by_user', $registered_by_user);
             $query->bindValue(':time_last_active', $date_now);
+            $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
+            
 
+            $_SESSION['device_session_id'] = $device_session_id_from_logged_user_cookie_modified;
+            $COOKIESETTINGS =array(
+                "expires" => $this->time_set_timestamp,
+                "httponly" => true
+            );
+            setcookie("device_session_id",
+                 $device_session_id_from_logged_user_cookie_modified,$COOKIESETTINGS);
 
             // PDO's execute() gives back TRUE when successful, FALSE when not
             // @link http://stackoverflow.com/q/1661863/1114320

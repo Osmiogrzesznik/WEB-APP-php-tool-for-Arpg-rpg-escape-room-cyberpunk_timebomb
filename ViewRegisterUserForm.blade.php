@@ -1,4 +1,5 @@
-<h2>Registration</h2>
+<a href="<?= $_SERVER['SCRIPT_NAME'] ?>">Homepage</a>
+<div class = "centerpanel"><h2>Registration</h2>
 
         <form method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerUser" name="registerform">
         <label for="login_input_username">Username (only letters and numbers, 2 to 64 characters)</label>
@@ -23,5 +24,9 @@ $timezones = timezone_list();
         <input type="submit" name="register" value="Register" />
        
         </form>
+        <div class="centerpanel">
+<h2>OR</h2>
+        <a href="<?= $_SERVER['SCRIPT_NAME'] ?>"><button>Log in</button></a>
+</div>
 
-        <a href="<?php echo $_SERVER['SCRIPT_NAME'] ?>">Homepage</a>
+        </div>

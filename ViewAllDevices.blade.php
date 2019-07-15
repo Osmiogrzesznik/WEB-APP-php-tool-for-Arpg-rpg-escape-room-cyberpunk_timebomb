@@ -14,7 +14,7 @@ $query->execute();
 $columns = array();
 $resultset = array();
 $column_name_prefix = "device_";
-$nonEditables = array("device_id","registered_by_user","time_last_active","device_location");
+$nonEditables = array("device_id","registered_by_user","time_last_active","device_location","device_session_id");
 
 # Set columns and results array
 while($row = $query->fetch()) {
@@ -38,10 +38,6 @@ while($row = $query->fetch()) {
   {event.stopPropagation();event.preventDefault()}else{}">
  <button>Delete Account</button></a>
 <br>
-<?php
-# If records found
-if( count($resultset) > 0 ) {
-?>
 <style>
 
 @font-face {
@@ -55,6 +51,11 @@ if( count($resultset) > 0 ) {
 }
 
 </style>
+<?php
+# If records found
+if( count($resultset) > 0 ) {
+?>
+
 
 
 <h1>All Devices Registered By You</h1>
@@ -164,7 +165,9 @@ if( count($resultset) > 0 ) {
 
 	</tbody>
 </table>
+<div id="mapDIV" class="centerpanel">
 
+</div>
 <button onclick="document.location.reload(true)">Refresh</button>
 
 <?php 
@@ -179,8 +182,168 @@ if( count($resultset) > 0 ) {
 ) </h4>
 
 </div>
+<script src="v4-6-5_build_ol.js" type="text/javascript"></script>
 <script>
-url = "<?php echo $_SERVER['SCRIPT_NAME'] ?>";
+tableData = <?= json_encode($resultset,JSON_PRETTY_PRINT); ?>;
+
+var map;
+var mapDefaultZoom = 10;
+var vectorLayer;
+var atomIcons = {};
+
+        function NuMap(mapLat,mapLng,mapDefaultZoom) {
+            return new ol.Map({
+                target: "map",
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM({
+                            url: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        })
+                    })
+                ],
+                view: new ol.View({
+                    center: ol.proj.fromLonLat([parseFloat(mapLng), parseFloat(mapLat)]),
+                    zoom: mapDefaultZoom
+                })
+            });
+        }
+
+
+    
+
+        function NuLayer(arrayOfFeatures,style=null) {
+            return new ol.layer.Vector({
+                source: new ol.source.Vector({
+                    features: arrayOfFeatures
+                }),
+                style: null
+            });
+        }
+
+
+
+        function NuFeature(id,status, lat, lng) {
+            let f = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.transform([parseFloat(lng),
+                    parseFloat(lat)
+                ], 'EPSG:4326', 'EPSG:3857')),
+                id: id,
+            });
+            
+            f.setStyle(NuStyle(id,status));
+            return f;
+        }
+
+        function NuStyle(text,imagename){
+            return new ol.style.Style({
+                    image: atomIcons[imagename],
+                    text: new ol.style.Text({
+                        text:text,
+                        offsetY: 20,
+                        font: "bold 20px sans-serif",
+                        stroke: new ol.style.Stroke({
+                            width: 3,
+                            color: "#ffffff"
+                        })
+                    })
+                })
+        }
+
+        function NuIcon(imagename){
+            return new ol.style.Icon({
+                        anchor: [0.5, 0.5],
+                        anchorXUnits: "fraction",
+                        anchorYUnits: "fraction",
+                        src: "img/" + imagename + ".png"
+                    })
+        }
+
+
+        function showDevices(devices) {
+          if (devices.length<1){
+            return;
+          }
+          isThereAnyDeviceWithLocation = false;
+          for(let i = 0; i<devices.length; i++){
+            let dv = devices[i];
+            //alert(dv.device_location);
+            doesDvHaveLocation = ![null,"no location",undefined].includes(dv.device_location);
+           isThereAnyDeviceWithLocation = isThereAnyDeviceWithLocation || doesDvHaveLocation;
+            
+          }
+          if(!isThereAnyDeviceWithLocation){
+            return; //dont make map
+          }
+
+          devicesWithLocation = [];
+          for(let i = 0; i<devices.length; i++){
+            let dv = devices[i];
+            doesDvHaveLocation = ![null,"no location",undefined].includes(dv.device_location);
+            
+            if(doesDvHaveLocation){
+              locOb = {};
+                locArr = dv.device_location.split("/");
+              locOb.latitude = locArr[0];
+              locOb.longitude = locArr[1];
+              dv.location = locOb; 
+            devicesWithLocation.push(dv);
+            }
+          }
+
+
+
+
+            atomIcons = {
+                disarmed: NuIcon("disarmed"),
+                created: NuIcon("created"),
+                active: NuIcon("active")
+            }
+
+            window.map = NuMap(devicesWithLocation[0].location.latitude, devicesWithLocation[0].location.longitude,mapDefaultZoom);
+            arrayOfFeaturesAll = devicesWithLocation.map(dv=>{
+              return NuFeature(dv.device_name,dv.device_status,dv.location.latitude,dv.location.longitude)
+            })
+
+            allLayer = NuLayer(arrayOfFeaturesAll);
+            map.addLayer(allLayer);
+        }
+
+
+        if (tableData.length>0 ){
+          isThereAnyDeviceWithLocation = false;
+          for(let i = 0; i<tableData.length; i++){
+            let dv = tableData[i];
+            //alert(dv.device_location);
+            doesDvHaveLocation = ![null,"no location",undefined].includes(dv.device_location);
+           isThereAnyDeviceWithLocation = isThereAnyDeviceWithLocation || doesDvHaveLocation;
+          }
+
+          if(isThereAnyDeviceWithLocation){
+
+            document.querySelector("#mapDIV").innerHTML = '<div id="map" style="width: 70vw; height: 70vh;"></div>';
+  window.addEventListener("load",function(){showDevices(tableData)});
+          }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+url = "<?=$_SERVER['SCRIPT_NAME'] ?>";
 feedbackPRE = document.querySelector("#feedback");
 function logfdb(msg){
   feedbackPRE.innerText += "\n" + msg
@@ -221,6 +384,8 @@ function sendUpdate(id, tr_row){
       fields.push(datafield)
       FD.append(name,val);
    }
+
+
   //  alert(JSON.stringify(fields));
   //  return;
 

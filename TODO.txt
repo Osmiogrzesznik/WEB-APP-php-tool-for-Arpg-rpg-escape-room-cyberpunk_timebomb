@@ -1,12 +1,19 @@
-****TODO: what if mobile device will move and its address wil change? 
-	Save cookie with device ID or session ID or random 
-		generated string saved in db or for now just device name 
-	in ONEFILEAPPLICATion::IsDeviceRegistered():
-		query db Select ... where device_ip = :connection_ip OR device_name = :device_name_from_cookie
-		 if ip doesnt match but the ID or device name above do
-		 	update ip in DB and proceed
-	-> above will result in access to login by GET setting ip=123 removed 
-***		implement action=superuser which will simply redirect to login page;
+TODO: tick send location in registration form
+
+
+
+
+TODO:  during registration - if real connection ip is different than 
+	ip being registered - save location. Admin being in the field setting up a device
+	would already take care of clicking prompt ,
+	allowing device to share it's location 
+	and would already  provide its first location point 
+
+
+TODO: checking for $session existing piror to checking if is registered device
+	MAYBE JUST SANITY CHECK : IF DEVICE HAS SESSION AND IS NOT PRESENT IN DB JUST DESTROY SESSION?
+        // CHECK IF USABLE IN device_session_id process
+
 TODO: ask tomek to test
 
 TODO: remaining attempts?
@@ -222,3 +229,32 @@ DONE TODO: user have to choose timezone
 	index.php - set timezone to user selected timezone 
 
 
+DONE ***		implement action=superuser which will simply redirect to login page;
+Made login and registration look nicer
+DONE valid location doesnt change back to no location if there was no location in get during checkups 
+	now always last location remains if it was valid only new digits will be updated
+DONE what if mobile device will move and its address wil change? 
+	Save cookie with device ID or session ID or random 
+		generated string saved in db or for now just device name 
+		DONE save cookie on create
+			what if no cookie on the device but it is registered(e.g.different browser opened)
+			set cookie when retrieved device by using ip?
+	in ONEFILEAPPLICATion::IsDeviceRegistered():
+		query db Select ... where device_ip = :connection_ip OR device_name = :device_name_from_cookie
+		 if ip doesnt match but the ID or device name above do
+		 	update ip in DB and proceed
+	-> above will result in access to login by GET setting ip=123 removed 
+	notes: don not forget to class declare 
+	$time_set_timestamp
+	$device_session_id
+	$device_id
+	do not forgetto check db queries - they where made as if ip was more important 
+		SEARCHFILE device_ip or ip
+DONE added map OpenStreemap to show every device on the map simply said
+
+DONE: 
+TODO: implement map with pointers it is possible
+https://www.openstreetmap.org/?mlat=52.44255&mlon=-1.49471#map=19/52.44255/-1.49471
+where mlat and mlon stand for marker position
+OR
+https://mediarealm.com.au/articles/openstreetmap-openlayers-map-markers/

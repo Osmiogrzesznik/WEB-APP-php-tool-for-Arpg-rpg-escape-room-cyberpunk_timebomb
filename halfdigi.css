@@ -70,7 +70,7 @@ a {
     font-size: initial;
 }
 
-form {
+form,.centerpanel {
     /* margin: 1vh; */
     /* display:block; */
     flex-direction: column;
@@ -78,6 +78,12 @@ form {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+form{
+    width: min-content;
+    border: 2px solid;
+    padding: 10px;
 }
 
 td {

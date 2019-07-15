@@ -1,10 +1,10 @@
-<div class="hud">
-    <h2>Device Registration</h2>
+<div class="centerpanel">
+    <h2>New Device Registration</h2>
     <style>
         
     </style>
-
-    <form method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerDevice" name="registerform">
+  <!--  method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerDevice" -->
+    <form id="new_device_form" name="registerform">
         <label for="device_name">
             device_name:
         </label>
@@ -14,6 +14,12 @@
             device_description:
         </label>
         <input id="device_description" type="text" name="device_description" />
+        <label for="is_sending_device_location">
+            track this device location:
+        </label>
+        <input id="is_sending_device_location" 
+        type="checkbox" name="is_sending_device_location" 
+        onclick="checkLocation(event)" />
         <label for="device_password_new">
             Device Password (3-24 characters, a-z 0-9) stops/unlocks the device
         </label>
@@ -46,7 +52,9 @@ $datenow = date('Y-m-d\TH:i:s', time()+60*30);//in 30 minutes
 echo 'min="' . $datenow . '" value="' . $datenow . '"' ?> required>
                 <span class="validity"></span>
 
-        <input type="submit" name="register" value="Register" />
+        <!-- <input type="submit" name="register" value="Register" onclick="sendNewDevice()"/> -->
+        <button onclick="sendNewDevice()">Register</button>
+
         <div id="counterCNT" class="counterCNT">
             <div id="counterMeas" class="counter">
                 <span id="counter" class="digits">
@@ -58,21 +66,15 @@ echo 'min="' . $datenow . '" value="' . $datenow . '"' ?> required>
                     <span id="counter_sec">00</span>
                 </span>
             </div>
-    </form>
+    </form onsubmit="return submitHandler();">
 
 
 </div>
 
 </div>
 Minimal Date ( NOW ):
-<input id="time_setMIN" style="display:block" type="datetime-local" <?php
-                                                                    $datenow = date('Y-m-d\TH:i:s', time());
-                                                                    echo 'value="' . $datenow . '"' ?> />
-<input id="time_setMINtext" style="display:block" type="text" <?php
-                                                                $datenow = date('Y-m-d\TH:i:s', time());
-                                                                echo 'value="' . $datenow . '"' ?> />
-
-<a href="<?php echo $_SERVER['SCRIPT_NAME'] ?>">Homepage</a>
+<pre id="time_setMIN" style="display:block">
+<?= date(MY_DATE_FORMAT, time());?></pre>
 
 </div>
 <link rel="stylesheet" href="flatpickr.css">
@@ -81,6 +83,152 @@ Minimal Date ( NOW ):
 <script type="text/javascript" src="touchKeyboard.js"></script>
 <!-- <script type="text/javascript" src="timebomb.js"></script> -->
 <script>
+function checkEnter(e){
+ e = e || event;
+ var CHK = ["checkbox"].includes((e.target || e.srcElement).type);
+ return CHK || (e.keyCode || e.which || e.charCode || 0) !== 13;
+}
+document.querySelector('form').onkeypress = checkEnter;
+
+newDeviceUrl = "<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerDevice";
+
+devLocate={
+        lastError:"",
+        wasError: false,
+        wasUpdated:false,
+        approved:false,
+        pos_status: "",
+        position:{
+            latitude:"",
+            longitude:""
+        },
+        setApproved(appr){
+          this.approved = appr;
+        },
+        isOKtoSend(){
+            return !this.wasError && this.wasUpdated && this.approved;
+        },
+        updatePosition(latitude,longitude){
+            this.wasUpdated = true;
+            this.position.latitude = latitude;
+            this.position.longitude = longitude;
+            
+        },
+        getLocationSuffix(){
+            suffix = this.isOKtoSend() ? 
+            ("&latitude="+this.position.latitude+
+            "&longitude="+this.position.longitude) 
+            : "";
+            return suffix;
+        },
+        getLocationObject(){
+            if(!this.isOKtoSend()){
+              return {latitude:"",longitude:""};
+            } 
+            return {latitude:this.position.latitude,longitude:this.position.longitude};
+        },
+        onUpdate(){
+          alert("latitude="+this.position.latitude+
+            " longitude="+this.position.longitude)
+        }
+    }
+
+    function locationSuccess(position) {
+        devLocate.updatePosition(position.coords.latitude,position.coords.longitude)
+        devLocate.onUpdate();
+      }
+    
+      function locationError(error) {
+          devLocate.wasError = true;
+        devLocate.lastError = error.code + ' : ' + error.message;
+        devLocate.pos_status.textContent = 'Unable to retrieve your location';
+        devLocate.onUpdate();
+      }
+    
+    function locate(){
+        if(devLocate.wasError){
+            return;
+        }
+      if (!navigator.geolocation) {
+          devLocate.wasError = true;
+        devLocate.pos_status.textContent = 'Geolocation is not supported by your browser';
+      } else {
+        devLocate.pos_status.textContent = 'Locating…';
+        navigator.geolocation.getCurrentPosition(locationSuccess, locationError);
+      }
+    }
+
+
+function checkLocation(ev){
+  
+    if(ev.target.checked) {
+        // Checkbox is checked..
+        locate();
+        devLocate.setApproved(true)
+    } else {
+        // Checkbox is not checked..
+        devLocate.setApproved(false)
+    }
+
+  
+}
+
+function sendNewDevice(id, tr_row){
+  var FD  = new FormData(document.querySelector("#new_device_form"));
+  let fields = [];
+
+  FD.append("register","Register");
+
+
+DEV_LOCATION = devLocate.getLocationObject();
+alert(JSON.stringify(DEV_LOCATION));
+FD.append("latitude",DEV_LOCATION.latitude);
+FD.append("longitude",DEV_LOCATION.longitude);
+
+
+
+  //  alert(JSON.stringify(fields));
+  //  return;
+
+
+   fetch(newDeviceUrl, {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        // mode: 'cors', // no-cors, cors, *same-origin
+        // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: 'include', // include, *same-origin, omit
+        // headers: {
+        //    // 'Content-Type': 'application/json',
+        //      'Content-Type': 'application/x-www-form-urlencoded',
+        // },
+        // redirect: 'follow', // manual, *follow, error
+        // referrer: 'no-referrer', // no-referrer, *client
+        body: FD // body data type must match "Content-Type" header
+    })
+    .then(response => response.text())
+    .then(t => {
+      feedbackPRE = document.querySelector("#feedback");
+      if (feedbackPRE){
+        feedbackPRE.innerText += t;
+       // setTimeout(x=>document.location.reload(true),1000);
+      }
+      else{
+        alert(t)
+      }
+    });
+    ; // parses JSON response into native JavaScript objects 
+}
+
+
+
+
+
+
+
+
+
+
+
+
     stngs = {
         enableTime: true,
         enableSeconds: true,
