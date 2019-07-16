@@ -1,3 +1,7 @@
+TODO: reset clocks after fetching update!!!!
+
+
+
 TODO: tick send location in registration form
 
 

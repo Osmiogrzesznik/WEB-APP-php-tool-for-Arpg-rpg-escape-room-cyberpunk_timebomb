@@ -5,18 +5,18 @@ define("JUST_LOGGING_IN", 2);
 define("LOGGED_WITH_SESSION", 3);
 define("DEBUG_MODE", 1);
 define("DEFAULT_TIMEZONE_NAME_LONDON", "Europe/London");
-define("MY_DATE_FORMAT","Y-m-d\TH:i:s");
-define("NO_COOKIE","NOCOOKIE_MEH");
+define("MY_DATE_FORMAT", "Y-m-d\TH:i:s");
+define("NO_COOKIE", "NOCOOKIE_MEH");
 
 
-function print_me($var,$return=false){
-    if(!$return){
-    echo "<pre>";
-    print_r($var,$return);
-    echo "</pre>";
-    }
-    else{
-        return "<pre>".print_r($_var,true)."</pre>";
+function print_me($var, $return = false)
+{
+    if (!$return) {
+        echo "<pre>";
+        print_r($var, $return);
+        echo "</pre>";
+    } else {
+        return "<pre>" . print_r($var, true) . "</pre>";
     }
 }
 /**
@@ -86,15 +86,15 @@ class OneFileLoginApplication
      * whether he is session active or just logged on a new device
      * @var int
      */
-    public $user_logged_with = 0;//not used anymore
-    public $scriptName = null;//start using it
-    public $dev = null;// ????
+    public $user_logged_with = 0; //not used anymore
+    public $scriptName = null; //start using it
+    public $dev = null; // ????
     public $timezones = null;
     public $timezone = null;
     public $timezoneName = null;
     public $time_set_timestamp = null; // used only when device was chcked for being registered
-	public $device_session_id = null; //used to identify device through cookie even if IP changed(updates IP )
-	public $device_id = null; // used only when device was chcked for being registered
+    public $device_session_id = null; //used to identify device through cookie even if IP changed(updates IP )
+    public $device_id = null; // used only when device was chcked for being registered
     /**
      * Does necessary checks for PHP version and PHP password compatibility library and runs the application
      */
@@ -102,9 +102,9 @@ class OneFileLoginApplication
     {
         ///removeXXX move to usercreation
         //$this->timezone = new DateTimeZone(DEFAULT_TIMEZONE_NAME_LONDON);//** ? */  
-        
-        $this->script_start_time= time();
-        $this->scriptName = $_SERVER['SCRIPT_NAME'];//TODO: globalreplace to property scriptName
+
+        $this->script_start_time = time();
+        $this->scriptName = $_SERVER['SCRIPT_NAME']; //TODO: globalreplace to property scriptName
         $this->feedback = "";
     }
 
@@ -163,6 +163,44 @@ class OneFileLoginApplication
 
 
 
+/**
+ * queries the db for all devices created by @param $user_id, and returns 
+ * easy to loop-through arrays
+ *
+ * @param [type] $user_id creatorOfDevices
+ * @return array_assoc [columnNames=>[string],rows[values]]
+ */
+    public function getAllDevices($user_id){
+       // $user_id = $_SESSION['user_id'];
+$conn = $this->db_connection;
+$sql = "SELECT * FROM device WHERE registered_by_user = :user_id";// WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
+
+$query = $conn->prepare($sql);
+$query->bindValue(':user_id',$user_id);
+            
+
+$query->setFetchMode(PDO::FETCH_ASSOC);
+$query->execute();
+
+
+$columnNames = array();
+$resultset = array();
+
+# Set columns and results array
+while($row = $query->fetch()) {
+	if (empty($columnNames)) {
+		$columnNames = array_keys($row);
+	}
+	$resultset[] = $row;
+}
+
+$ret = array("columnNames" => $columnNames,
+"rows"=>$resultset);
+
+return $ret;
+//[columnNames=>[string],rows[values]]
+    }
+
     /**
      * lazy getter , checks first value device_is_logged_in,
      * then $_SESSION, and finally Database. Sideeffect - updates the time_last_active
@@ -184,19 +222,18 @@ class OneFileLoginApplication
         //     $this->device_is_logged_in = true;
         //     return true;
         // }
-        
+
         $ip = $this->getIP(DEBUG_MODE);
 
         //what if no cookie on the device but it is registered(e.g.different browser opened)
-            // set cookie when retrieved device by using ip?
-            if (isset($_COOKIE['device_session_id'])){
-                $this->addFeedback("you either not have cookies enabled or your cookie expired?");
-                $sess_token_from_cookie = $_COOKIE['device_session_id'];
-            }
-            else{
-        $sess_token_from_cookie = "NOCOOKIE_MEH"; //WHAT ELSE SHOULD I DO ? dont want to match anything wrong in queries below
-            }
-            
+        // set cookie when retrieved device by using ip?
+        if (isset($_COOKIE['device_session_id'])) {
+            $this->addFeedback("you either not have cookies enabled or your cookie expired?");
+            $sess_token_from_cookie = $_COOKIE['device_session_id'];
+        } else {
+            $sess_token_from_cookie = "NOCOOKIE_MEH"; //WHAT ELSE SHOULD I DO ? dont want to match anything wrong in queries below
+        }
+
         // you could check first for session vars here and for cookie, then  compare them against the db
 
         if ($this->createDatabaseConnection()) {
@@ -206,8 +243,8 @@ class OneFileLoginApplication
             FROM device
             INNER jOIN user ON registered_by_user = user_id 
             WHERE device_ip = :connection_ip OR device_session_id = :sess_token_from_cookie
-            LIMIT 1;';   
-            
+            LIMIT 1;';
+
             /***bookmark
              * 
              * I was trying to add searching by device session id 
@@ -256,29 +293,32 @@ class OneFileLoginApplication
                 $this->device_id = $result_row->device_id;
                 $this->device_password = $result_row->device_password;
                 $this->device_time_set = $result_row->time_set;
-                $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT,$result_row->time_set,$this->timezone);
-                $this->time_set_timestamp = $dateOFF->format('U'); 
+                $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT, $result_row->time_set, $this->timezone);
+                $this->time_set_timestamp = $dateOFF->format('U');
                 //REFRESH COOKIE   
-                $COOKIESETTINGS =array(
-                    "expires" => $this->time_set_timestamp,//instead this use one calculated from db
-                    "httponly" => true
+                $expr = $this->time_set_timestamp;
+                setcookie(
+                    "device_session_id",
+                    $this->device_session_id,
+                    $expr,
+                    "",
+                    "",
+                    false,
+                    true
                 );
-                setcookie("device_session_id",
-                        $this->device_session_id,$COOKIESETTINGS);    
 
                 //UPDATE LOCATION IF Different and not no location       
-                if(isset($_GET['latitude'],$_GET['longitude'])){
+                if (isset($_GET['latitude'], $_GET['longitude'])) {
                     $location = $_GET['latitude'] . "/" . $_GET['longitude'];
-                }else{
-                    if($result_row->device_location === "no location"){
-                    $location = "no location";
-                    }
-                    else{
+                } else {
+                    if ($result_row->device_location === "no location") {
+                        $location = "no location";
+                    } else {
                         $location = $result_row->device_location;
                     }
                 }
 
-                    $sql = 'UPDATE device
+                $sql = 'UPDATE device
                     SET time_last_active = :date_now, 
                     device_status = :device_status, 
                     device_location = :device_location,
@@ -286,16 +326,16 @@ class OneFileLoginApplication
                     WHERE device_id = :device_id;
                     ';
 
-                    date_default_timezone_set($this->timezoneName);
-                    $date_now = date('Y-m-d\TH:i:s');
-                    $query = $this->db_connection->prepare($sql);
-                    $query->bindValue(':date_now', $date_now);
-                    $query->bindValue(':device_status', 'active');
-                    $query->bindValue(':device_id', $this->device_id);                    
-                    $query->bindValue(':connection_ip', $ip);
-                    $query->bindValue(':device_location', $location);
-                    $query->execute();
-                
+                date_default_timezone_set($this->timezoneName);
+                $date_now = date('Y-m-d\TH:i:s');
+                $query = $this->db_connection->prepare($sql);
+                $query->bindValue(':date_now', $date_now);
+                $query->bindValue(':device_status', 'active');
+                $query->bindValue(':device_id', $this->device_id);
+                $query->bindValue(':connection_ip', $ip);
+                $query->bindValue(':device_location', $location);
+                $query->execute();
+
                 return true;
             } else {
                 $this->addFeedback("($ip) is not registered yet in db.");
@@ -318,7 +358,7 @@ class OneFileLoginApplication
         try {
             if ($this->IsRegisteredDevice()) {
                 //if ($_SESSION['device_password'] === $_GET["password"]) {
-                if ($_GET["password"] === $this->device_password) {
+                if (strtolower($_GET["password"]) === strtolower($this->device_password)) {
                     $this->addFeedback("password correct");
                     // TODO: should check if its too late , even when device already 
                     // detonated, just to make sure nobody will fool admins
@@ -357,6 +397,11 @@ class OneFileLoginApplication
     public function runApplication()
     {
         //first check ip
+        // echo "post";
+        // print_me($_POST);
+        // echo "get";
+        // print_me($_GET);
+        // exit;
 
 
         $this->getIP(DEBUG_MODE);
@@ -368,17 +413,15 @@ class OneFileLoginApplication
         $this->doStartSession();
         // print_me($_COOKIE);
         // exit;
-        
+
         if (isset($_GET["action"])) {
             //both ofbthese cases check agst db for regstd dev
             //factor out isRegistteredDevice()
-            switch ($_GET["action"]): 
-
-                case ("superuser"):
+            switch ($_GET["action"]): case ("superuser"):
                     $this->showPageLoginForm();
                     exit();
                     break;
-                
+
                 case ("getsettings"):
                     include("JSsettings.php");
                     exit();
@@ -404,13 +447,13 @@ class OneFileLoginApplication
                     break;
 
                 case ("registerUser"):
-                    if (isset($_POST["register"])){
+                    if (isset($_POST["register"])) {
                         // print_r($_POST);
                         // exit();        
                         $this->doRegistration();
                     }
-                break;
- 
+                    break;
+
             // dont show nothing yet, it will be taken care of later down in the code
             // if user is logged in and device was registered showpageloggedin will show all db
             endswitch;
@@ -422,17 +465,60 @@ class OneFileLoginApplication
 
         if ($this->getUserLoginStatus()) {
 
-            if (isset($_POST["updatedevice"])) {
-                $this->updateDevice();
-                echo "updating device by POST feedback: " . $this->feedback;
-                exit();
-            } elseif (isset($_GET["action"])) {
+
+            // if (isset($_POST["updatedevice"])) {
+            //     $this->updateDevice();
+            //     echo "updating device by POST feedback: " . $this->feedback;
+            //     exit();
+            // } elseif (isset($_POST["registerdevice"])) {
+            //     $this->doDeviceRegistration();
+            //     echo "registering device by POST feedback: " . $this->feedback;
+            //     exit();
+            // } else
+            if (isset($_GET["action"])) {
 
                 switch ($_GET["action"]): 
-
-                    case ("registerDevice"):
-                        $this->doDeviceRegistration();
+                    
+                    case ("updatedevice"):
+                        if (isset($_POST["updatedevice"])) {
+                            $this->updateDevice();
+                            echo "updating device by POST feedback: " . $this->feedback;
+                        }
+                        exit();
                         break;
+
+                    case ("registerdevice"):
+                        if (isset($_POST["registerdevice"])) {
+                            $this->doDeviceRegistration();
+                            echo "registering device by POST feedback: " . $this->feedback;
+                        }
+                        else{
+                            echo "zly registerdevice post - oto ci on:";
+                            print_me($_POST);
+                        }
+                        exit();
+                        break;
+
+                    case ("js_getalldevices"):
+                    // if (isset($_POST["js_getalldevices"])) {
+                    if ($this->createDatabaseConnection()) {
+                        $allDevices = $this->getAllDevices($_SESSION['user_id']);
+                        $columns = $allDevices['columnNames'];
+                        $resultset = $allDevices['rows'];
+                       // echo "registering device by POST feedback: " . $this->feedback;
+                        $allDevices['feedback'] = $this->feedback;
+                    echo json_encode($allDevices,JSON_PRETTY_PRINT);
+                    }
+                    else{
+                        $this->addFeedback("db connection could not be open ");
+                        $rsp = array(
+                            "feedback" => $this->feedback,
+                            "POST" => $_POST
+                        );
+                        echo json_encode($rsp,JSON_PRETTY_PRINT);
+                    }
+                    exit();
+                    break;
 
                     case ("delete"):
                         $this->deleteDevice();
@@ -481,7 +567,7 @@ class OneFileLoginApplication
             }
             // below cannot register new user if user loggedout 
             //and device  is a bomb already to prevent circumventions
-            
+
             else {
                 $this->showPageLoginForm();
             }
@@ -491,12 +577,13 @@ class OneFileLoginApplication
 
     }
 
-    private function deleteMeUser(){
-        if (!$this->user_is_logged_in ){
+    private function deleteMeUser()
+    {
+        if (!$this->user_is_logged_in) {
             // Hacker?
             $this->addFeedback("You need to be logged in in order to delete your account");
             return false;
-        } else{
+        } else {
             if ($this->createDatabaseConnection()) {
                 $sql = 'DELETE
                 FROM user
@@ -524,7 +611,7 @@ class OneFileLoginApplication
      */
     private function deleteDevice()
     {
-        if (!$this->user_is_logged_in ){
+        if (!$this->user_is_logged_in) {
             // Hacker?
             $this->addFeedback("You need to be logged in in order to delete your devices");
             return false;
@@ -558,7 +645,7 @@ class OneFileLoginApplication
 
     private function updateDevice()
     {
-        if (!$this->checkDeviceUpdateData( )){
+        if (!$this->checkDeviceUpdateData()) {
             echo "bad data : " . $this->feedback;
             print_r($_POST);
             exit();
@@ -590,12 +677,12 @@ class OneFileLoginApplication
                 $time_set = $_POST["time_set"];
                 $query = $this->db_connection->prepare($sql);
                 $query->bindValue(':selected_id', $selected_id);
-                $query->bindValue(':device_name',$device_name);
-                $query->bindValue(':device_description',$device_description);
-                $query->bindValue(':device_http_user_agent',$device_http_user_agent);
-                $query->bindValue(':device_password',$device_password);
-                $query->bindValue(':device_status',$device_status);
-                $query->bindValue(':time_set',$time_set);
+                $query->bindValue(':device_name', $device_name);
+                $query->bindValue(':device_description', $device_description);
+                $query->bindValue(':device_http_user_agent', $device_http_user_agent);
+                $query->bindValue(':device_password', $device_password);
+                $query->bindValue(':device_status', $device_status);
+                $query->bindValue(':time_set', $time_set);
                 $query->execute();
                 $amnt = $query->rowCount();
                 if ($amnt > 0) {
@@ -617,20 +704,19 @@ class OneFileLoginApplication
     {
         // TODO: set timezone for strtotime below
         // if no registration form submitted: exit the method
-        
+
         //($_POST['time_set'], $this->timezone;
         if (isset($_POST["updatedevice"])) {
             // validating the input
             date_default_timezone_set($this->timezoneName);
-            if(!empty($_POST['time_set'])){
-            $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT,$_POST['time_set'],$this->timezone);
-            $timestamp = $dateOFF->format('U');
-            }
-            else{
-                $timestamp=0;
+            if (!empty($_POST['time_set'])) {
+                $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT, $_POST['time_set'], $this->timezone);
+                $timestamp = $dateOFF->format('U');
+            } else {
+                $timestamp = 0;
             }
             $this->time_set_timestamp = $timestamp;
-            
+
             if (
                 !empty($_POST['device_name'])
                 && strlen($_POST['device_name']) <= 24
@@ -662,7 +748,7 @@ class OneFileLoginApplication
                 // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
             } elseif (empty($_POST['device_name'])) {
                 $this->addFeedback("Empty device name");
-            } elseif (empty($_POST['device_password' ])){
+            } elseif (empty($_POST['device_password'])) {
                 $this->addFeedback("Empty device Password");
             } elseif (strlen($_POST['device_password']) < 3) {
                 $this->addFeedback("Password has a minimum length of 4 characters");
@@ -794,7 +880,7 @@ class OneFileLoginApplication
      */
     private function doRegistration()
     {
-       
+
         if ($this->checkRegistrationData()) {
             if ($this->createDatabaseConnection()) {
                 $this->createNewUser();
@@ -807,7 +893,6 @@ class OneFileLoginApplication
 
             return false;
         }
-
     }
 
     /**
@@ -914,7 +999,7 @@ class OneFileLoginApplication
             && !empty($_POST['user_password_repeat'])
             && ($_POST['user_password_new'] === $_POST['user_password_repeat'])
             && !empty($_POST['timezone'])
-            && in_array($_POST['timezone'],timezone_identifiers_list())
+            && in_array($_POST['timezone'], timezone_identifiers_list())
         ) {
             // only this case return true, only this case is valid
             return true;
@@ -924,7 +1009,7 @@ class OneFileLoginApplication
             $this->addFeedback("Empty Password");
         } elseif (empty($_POST['timezone'])) {
             $this->addFeedback("Empty timezone");
-        } elseif (!in_array($_POST['timezone'],timezone_identifiers_list())) {
+        } elseif (!in_array($_POST['timezone'], timezone_identifiers_list())) {
             $this->addFeedback("Timezone not valid");
         } elseif ($_POST['user_password_new'] !== $_POST['user_password_repeat']) {
             $this->addFeedback("Password and password repeat are not the same");
@@ -950,18 +1035,17 @@ class OneFileLoginApplication
     {
         // TODO: here as well timezone has to be set to use strtotime
         // if no registration form submitted: exit the method
-        if (isset($_POST["register"])) {
+        if (isset($_POST["registerdevice"])) {
 
-                // validating the input
-                date_default_timezone_set($this->timezoneName);
-                if(!empty($_POST['time_set'])){
-                $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT,$_POST['time_set'],$this->timezone);
+            // validating the input
+            date_default_timezone_set($this->timezoneName);
+            if (!empty($_POST['time_set'])) {
+                $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT, $_POST['time_set'], $this->timezone);
                 $timestamp = $dateOFF->format('U');
-                }
-                else{
-                    $timestamp=0;
-                }
-                $this->time_set_timestamp = $timestamp;
+            } else {
+                $timestamp = 0;
+            }
+            $this->time_set_timestamp = $timestamp;
 
 
             // validating the input
@@ -1009,8 +1093,8 @@ class OneFileLoginApplication
                 $this->addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 3 to 24 characters");
             } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
                 $this->addFeedback("devicename cannot be shorter than 2 or longer than 64 characters");
-            // } elseif (!preg_match('/^{2,64}$/', $_POST['device_name'])) {
-            //     $this->addFeedback("device name does not fit the name scheme: only a-z, A-Z  and numbers are allowed, 2 to 64 characters");
+                // } elseif (!preg_match('/^{2,64}$/', $_POST['device_name'])) {
+                //     $this->addFeedback("device name does not fit the name scheme: only a-z, A-Z  and numbers are allowed, 2 to 64 characters");
             } elseif (empty($_POST['device_ip'])) {
                 $this->addFeedback("device ip cannot be empty");
             } elseif (empty($_POST['time_set'])) {
@@ -1050,7 +1134,7 @@ class OneFileLoginApplication
         cross join device on user_name = :user_name or device_ip = :user_ip;
         '; // check if current ip is registered in devices or name is registered in users
 
-       
+
         $dbcon = $this->db_connection;
         $query = $dbcon->prepare($sql);
         $query->bindValue(':user_name', $user_name);
@@ -1065,14 +1149,14 @@ class OneFileLoginApplication
             and only user-device linked should be shown
             s already taken. Please choose another one.\n");
         } else {
-             
+
             $sql = 'INSERT INTO user (user_name, user_password_hash ,user_ip, http_user_agent,user_timezone)
                     VALUES(:user_name, :user_password_hash,:user_ip,:http_user_agent,:user_timezone)';
             $query = $this->db_connection->prepare($sql);
             $query->bindValue(':user_name', $user_name);
             $query->bindValue(':user_password_hash', $user_password_hash);
             $query->bindValue(':http_user_agent', $_SERVER['HTTP_USER_AGENT']);
-            $query->bindValue(':user_ip', $user_ip); 
+            $query->bindValue(':user_ip', $user_ip);
             $query->bindValue(':user_timezone', $user_timezone);
             // PDO's execute() gives back TRUE when successful, FALSE when not
             // @link http://stackoverflow.com/q/1661863/1114320
@@ -1100,7 +1184,7 @@ class OneFileLoginApplication
         $device_password = htmlentities($_POST['device_password_new'], ENT_QUOTES);
         $device_http_user_agent = $_SERVER['HTTP_USER_AGENT'];
         $time_set = $_POST['time_set'];
-        $device_session_id_from_logged_user_cookie_modified = $_COOKIE['PHPSESSID']."_device_name_".$device_name;
+        $device_session_id_from_logged_user_cookie_modified = $_COOKIE['PHPSESSID'] . "_device_name_" . $device_name;
         // $this->addFeedback(
         //     print_r($this,true)
         // );
@@ -1132,7 +1216,7 @@ class OneFileLoginApplication
         if ($result_row) {
             $this->addFeedback("Sorry, some property is already taken:
              \n\t$result_row->device_name as device name
-             \n\t/ $result_row->$device_ip as ip (your ip = ".$this->getIP(DEBUG_MODE)."/
+             \n\t/ $result_row->$device_ip as ip (your ip = " . $this->getIP(DEBUG_MODE) . "/
              \n\t  $result_row->device_session_id as session_id is already taken. (your sessid = $device_session_id_from_logged_user_cookie_modified)
              \n\t Please choose another one. ");
         } else {
@@ -1160,9 +1244,9 @@ class OneFileLoginApplication
              :device_session_id, :device_location)';
             $query = $this->db_connection->prepare($sql);
 
-            if(isset($_POST['latitude'],$_POST['longitude'])){
+            if (isset($_POST['latitude'], $_POST['longitude'])) {
                 $location = $_POST['latitude'] . "/" . $_POST['longitude'];
-            }else{
+            } else {
                 $location = "no location";
             }
 
@@ -1177,15 +1261,19 @@ class OneFileLoginApplication
             $query->bindValue(':registered_by_user', $registered_by_user);
             $query->bindValue(':time_last_active', $date_now);
             $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
-            
+
 
             $_SESSION['device_session_id'] = $device_session_id_from_logged_user_cookie_modified;
-            $COOKIESETTINGS =array(
-                "expires" => $this->time_set_timestamp,
-                "httponly" => true
+            $expr = $this->time_set_timestamp;
+            setcookie(
+                "device_session_id",
+                $this->device_session_id,
+                $expr,
+                "",
+                "",
+                false,
+                true
             );
-            setcookie("device_session_id",
-                 $device_session_id_from_logged_user_cookie_modified,$COOKIESETTINGS);
 
             // PDO's execute() gives back TRUE when successful, FALSE when not
             // @link http://stackoverflow.com/q/1661863/1114320

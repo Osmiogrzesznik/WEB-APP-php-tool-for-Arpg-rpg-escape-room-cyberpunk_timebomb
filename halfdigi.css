@@ -330,6 +330,11 @@ opacity: .5;
     color: #666666;
 }
 
+td,th{
+    word-break: break-word;
+    min-width:8vw;
+}
+
 
 
 input,

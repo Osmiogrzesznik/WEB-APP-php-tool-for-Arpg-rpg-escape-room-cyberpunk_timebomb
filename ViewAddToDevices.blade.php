@@ -4,7 +4,7 @@
         
     </style>
   <!--  method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerDevice" -->
-    <form id="new_device_form" name="registerform">
+    <form method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>" id="new_device_form" name="registerform">
         <label for="device_name">
             device_name:
         </label>
@@ -53,7 +53,7 @@ echo 'min="' . $datenow . '" value="' . $datenow . '"' ?> required>
                 <span class="validity"></span>
 
         <!-- <input type="submit" name="register" value="Register" onclick="sendNewDevice()"/> -->
-        <button onclick="sendNewDevice()">Register</button>
+        <button onclick="return sendNewDevice()">Register</button>
 
         <div id="counterCNT" class="counterCNT">
             <div id="counterMeas" class="counter">
@@ -66,7 +66,7 @@ echo 'min="' . $datenow . '" value="' . $datenow . '"' ?> required>
                     <span id="counter_sec">00</span>
                 </span>
             </div>
-    </form onsubmit="return submitHandler();">
+    </form >
 
 
 </div>
@@ -83,14 +83,14 @@ Minimal Date ( NOW ):
 <script type="text/javascript" src="touchKeyboard.js"></script>
 <!-- <script type="text/javascript" src="timebomb.js"></script> -->
 <script>
-function checkEnter(e){
- e = e || event;
- var CHK = ["checkbox"].includes((e.target || e.srcElement).type);
- return CHK || (e.keyCode || e.which || e.charCode || 0) !== 13;
-}
-document.querySelector('form').onkeypress = checkEnter;
+// function checkEnter(e){
+//  e = e || event;
+//  var CHK = ["checkbox"].includes((e.target || e.srcElement).type);
+//  return CHK || (e.keyCode || e.which || e.charCode || 0) !== 13;
+// }
+// document.querySelector('form').onkeypress = checkEnter;
 
-newDeviceUrl = "<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerDevice";
+newDeviceUrl = "<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerdevice";
 
 devLocate={
         lastError:"",
@@ -176,20 +176,11 @@ function checkLocation(ev){
 function sendNewDevice(id, tr_row){
   var FD  = new FormData(document.querySelector("#new_device_form"));
   let fields = [];
-
-  FD.append("register","Register");
-
-
 DEV_LOCATION = devLocate.getLocationObject();
 alert(JSON.stringify(DEV_LOCATION));
-FD.append("latitude",DEV_LOCATION.latitude);
-FD.append("longitude",DEV_LOCATION.longitude);
-
-
-
-  //  alert(JSON.stringify(fields));
-  //  return;
-
+FD.append("latitude",DEV_LOCATION.latitude+"");
+FD.append("longitude",DEV_LOCATION.longitude+"");
+FD.append("registerdevice","true");
 
    fetch(newDeviceUrl, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -197,10 +188,10 @@ FD.append("longitude",DEV_LOCATION.longitude);
         // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
         credentials: 'include', // include, *same-origin, omit
         // headers: {
-        //    // 'Content-Type': 'application/json',
-        //      'Content-Type': 'application/x-www-form-urlencoded',
+        // //    // 'Content-Type': 'application/json',
+        //       'Content-Type': 'application/x-www-form-urlencoded'
         // },
-        // redirect: 'follow', // manual, *follow, error
+         //redirect: 'manual', // manual, *follow, error
         // referrer: 'no-referrer', // no-referrer, *client
         body: FD // body data type must match "Content-Type" header
     })
@@ -208,6 +199,7 @@ FD.append("longitude",DEV_LOCATION.longitude);
     .then(t => {
       feedbackPRE = document.querySelector("#feedback");
       if (feedbackPRE){
+        alert(t)
         feedbackPRE.innerText += t;
        // setTimeout(x=>document.location.reload(true),1000);
       }
@@ -216,6 +208,7 @@ FD.append("longitude",DEV_LOCATION.longitude);
       }
     });
     ; // parses JSON response into native JavaScript objects 
+ return true;//false;//return false to prevent form from reloading the page   
 }
 
 

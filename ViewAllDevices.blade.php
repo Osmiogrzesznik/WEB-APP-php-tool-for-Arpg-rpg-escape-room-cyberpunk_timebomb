@@ -1,34 +1,12 @@
 <?php
 $user_id = $_SESSION['user_id'];
-$conn = $this->db_connection;
-$sql = "SELECT * FROM device WHERE registered_by_user = :user_id";// WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
-
-$query = $conn->prepare($sql);
-$query->bindValue(':user_id',$user_id);
-            
-
-$query->setFetchMode(PDO::FETCH_ASSOC);
-$query->execute();
-
-
-$columns = array();
-$resultset = array();
+$allDevices = $this->getAllDevices($_SESSION['user_id']);
+$columns = $allDevices['columnNames'];
+$resultset = $allDevices['rows'];
 $column_name_prefix = "device_";
 $nonEditables = array("device_id","registered_by_user","time_last_active","device_location","device_session_id");
-
-# Set columns and results array
-while($row = $query->fetch()) {
-	if (empty($columns)) {
-		$columns = array_keys($row);
-	}
-	$resultset[] = $row;
-}
-
-
 ?>
-   
 
-<body>
 <div class="hud">
 <a href="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=logout"><button class="big">Log out</button></a>
 <br>
@@ -38,19 +16,7 @@ while($row = $query->fetch()) {
   {event.stopPropagation();event.preventDefault()}else{}">
  <button>Delete Account</button></a>
 <br>
-<style>
 
-@font-face {
-    font-family: "digitalix";
-    src: url("fonts/digitalix.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "digit";
-    src: url("fonts/Digit.ttf") format("truetype");
-}
-
-</style>
 <?php
 # If records found
 if( count($resultset) > 0 ) {
@@ -59,7 +25,7 @@ if( count($resultset) > 0 ) {
 
 
 <h1>All Devices Registered By You</h1>
-<h3 >Click on field to Edit, press OK after editing a field, then Save to update the device in database. <br/>
+<h3 >Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br/>
       You can edit only one field at a time. If field is <span class="KBdisplay field-non-editable">greyed out</span> it is impossible to change the value. Delete the device and create new instead
 </h3>
 <table id="tableToEdit" class="table table-bordered">
@@ -97,24 +63,22 @@ if( count($resultset) > 0 ) {
         // echo "<br>(" . $time_elapsed_span . ")";
      ?>
         <td class="field-non-editable time_last_active" data-column-name="time_last_active">	
-      <span class="my_date_format"><?=$time_last_active ?></span>
+      <span id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="my_date_format"><?=$time_last_active ?></span>
 <br>
       <span class="ago"></span>
       <?php
       }elseif($column_name == "device_location"){ // any other noneditable
         ?>
-    <td class="field-non-editable" data-column-name="<?= $column_name ?>">
-     <a class="link" href="https://www.openstreetmap.org/#map=18/<?=$row[$column_name];?>" 
-     target="_blank">open map for<br><?=$row[$column_name];?>
-      </a>
-      
+    <td id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="field-non-editable" data-column-name="<?= $column_name ?>">
+     <?=$row[$column_name];?>
      <?php 
         }else{ // any other noneditable
           ?>
-			<td class="field-non-editable" data-column-name="<?= $column_name ?>">
+			<td id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="field-non-editable" data-column-name="<?= $column_name ?>">
 			<?php  echo $row[$column_name];
         }
-         
+      //now outer if's elseif: editables
+    
       }elseif ($column_name == "time_set") {
         ?>
       <td class="uuu" >
@@ -132,11 +96,11 @@ if( count($resultset) > 0 ) {
       class="field-editable time_set" 
       data-column-name="time_set"
       value="<?= $row["time_set"]; ?>">	
-      Current:<br><?= $row[$column_name] ?>
+      Current:<br><span id=<?php echo 'r' . $row['device_id'] . $column_name ?> ><?= $row[$column_name] ?><span>
       <?php
       }else{
         ?>
-			<td class="field-editable" data-column-name="<?php echo $column_name ?>">	
+			<td id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="field-editable" data-column-name="<?php echo $column_name ?>">	
       <?php
       echo $row[$column_name]; 
     }; 
@@ -165,10 +129,12 @@ if( count($resultset) > 0 ) {
 
 	</tbody>
 </table>
+<a href="<?= $_SERVER['SCRIPT_NAME'] ?>"><button onclick="">Refresh</button></a>
+<button onclick="watchmode.toggle()">Watch Mode(DO NOT edit table!)</button>
+
 <div id="mapDIV" class="centerpanel">
 
 </div>
-<button onclick="document.location.reload(true)">Refresh</button>
 
 <?php 
 
@@ -197,7 +163,8 @@ var atomIcons = {};
                 layers: [
                     new ol.layer.Tile({
                         source: new ol.source.OSM({
-                            url: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            url:"https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png",
+                            urluuu: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         })
                     })
                 ],
@@ -327,23 +294,8 @@ var atomIcons = {};
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-url = "<?=$_SERVER['SCRIPT_NAME'] ?>";
+baseurl = "<?=$_SERVER['SCRIPT_NAME'] ?>";
+UpdateUrl = "<?=$_SERVER['SCRIPT_NAME'] ?>?action=updatedevice";
 feedbackPRE = document.querySelector("#feedback");
 function logfdb(msg){
   feedbackPRE.innerText += "\n" + msg
@@ -390,7 +342,7 @@ function sendUpdate(id, tr_row){
   //  return;
 
 
-   fetch(url, {
+   fetch(UpdateUrl, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         // mode: 'cors', // no-cors, cors, *same-origin
         // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
@@ -408,7 +360,7 @@ function sendUpdate(id, tr_row){
       feedbackPRE = document.querySelector("#feedback");
       if (feedbackPRE){
         feedbackPRE.innerText = t;
-        setTimeout(x=>document.location.reload(true),1000)
+       // setTimeout(x=>open(baseurl),1000)
       }
       else{
         alert(t)
@@ -480,4 +432,51 @@ function finishTdEdit(td, isOk) {
   td.classList.remove('edit-td');
   editingTd = null;
 }
+function Watchmode(){
+  this.interval = 5000;
+  this.urlgetalldevices  =  "<?=$this->scriptName ?>?action=js_getalldevices";
+  this.isOn = false;
+  this.IID  =  null;
+  this.toggle = function(){
+    this.isOn = !this.isOn;
+    return this.isOn ? this.start():this.stop();
+  };
+  this.start = function(){
+    this.IID = setInterval(x=>this.fetchToUpdate(),this.interval);
+    this.fetchToUpdate();
+  };
+  this.stop = function(){
+    clearInterval(this.IID);
+  };
+  this.fetchToUpdate = function(){
+    fetch(this.urlgetalldevices,{credentials:"include"})
+    .then(x=>x.json())
+    .then(data=>this.update(data))
+  };
+  this.update= function(data){
+    console.log(data);
+    cols = data.columnNames;
+    rows = data.rows;
+
+    for(let i = 0; i<rows.length; i++){
+      let row = rows[i];
+      tr = tableToEdit.querySelector("#r"+row.device_id);
+      if (!tr){ // new Device was added that is not yet in table
+        open(baseurl);//just open new window - to much hassle ?
+        return;
+      }
+      // later in api you can make it so cols are not all send
+      // so only important/changeable stuff is updated
+      for(let ci= 0; ci<cols.length; ci++){
+      col = cols[ci]
+        field = tr.querySelector("#r"+row.device_id+col);
+        field.innerText = row[col];
+      }
+    }
+  };
+}
+
+watchmode = new Watchmode();
+
+
 </script>
