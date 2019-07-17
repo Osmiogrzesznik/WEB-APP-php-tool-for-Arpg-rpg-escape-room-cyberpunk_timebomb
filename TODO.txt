@@ -1,3 +1,8 @@
+!!!!! feature TODO: update the map!!!!!
+https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-geolocation-marker-in-openlayers-3
+
+iconFeature.setGeometry(new ol.geom.Point(pos));
+
 TODO: reset clocks after fetching update!!!!
 
 
