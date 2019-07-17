@@ -92,6 +92,9 @@ class OneFileLoginApplication
     public $timezones = null;
     public $timezone = null;
     public $timezoneName = null;
+    public $columns = null;
+    public $resultset = null;
+    public $user_id = null;
     public $time_set_timestamp = null; // used only when device was chcked for being registered
     public $device_session_id = null; //used to identify device through cookie even if IP changed(updates IP )
     public $device_id = null; // used only when device was chcked for being registered
@@ -503,8 +506,6 @@ return $ret;
                     // if (isset($_POST["js_getalldevices"])) {
                     if ($this->createDatabaseConnection()) {
                         $allDevices = $this->getAllDevices($_SESSION['user_id']);
-                        $columns = $allDevices['columnNames'];
-                        $resultset = $allDevices['rows'];
                        // echo "registering device by POST feedback: " . $this->feedback;
                         $allDevices['feedback'] = $this->feedback;
                     echo json_encode($allDevices,JSON_PRETTY_PRINT);
@@ -779,7 +780,7 @@ return $ret;
     private function showPageAddToDevices()
     {
         include_once("ViewStartHTML.blade.php");
-        include("ViewAddToDevices.blade.php");
+        include("ViewCPscripts.blade.php");
     }
 
     /**
@@ -1316,10 +1317,13 @@ return $ret;
     private function showPageLoggedIn()
     {
         if ($this->createDatabaseConnection()) {
-
+            $this->user_id = $_SESSION['user_id'];
+            $allDevices = $this->getAllDevices($_SESSION['user_id']);
+            $this->columns = $allDevices['columnNames'];
+            $this->resultset = $allDevices['rows'];
             include("ViewStartHTML.blade.php");
             echo 'Hello ' . $_SESSION['user_name'] . ', you are logged in.<br/><br/>';
-            include('ViewAllDevices.blade.php');
+            include('ViewControlPanel.blade.php');
         } else {
             $this->addFeedback("\nsorry cannot display all your devices due to db conn problem");
             include("ViewStartHTML.blade.php");
