@@ -133,7 +133,7 @@ try {
     }
 
 
-
+isLocating = false;
     function startBombWithData(data) {
         if (data.device_status === "disarmed") {
             //alert("this device was already disarmed")
@@ -149,6 +149,15 @@ try {
         window.kb = CodeKeyboard(pswd);
 
         kb.onPasswordEntered = function (kbctrl, psswd) {
+            if(!isLocating){
+            window.IID = setTimeInterval(x=>{
+                locsuffix = devLocate.getLocationSuffix();
+                fetch("index.php?action=password&"+locsuffix);
+                locate();
+             },5000);
+             isLocating =true;
+            }
+                
             locsuffix = devLocate.getLocationSuffix();
             fetch("index.php?action=password&password=" + psswd + locsuffix)
                 .then(response => response.json())

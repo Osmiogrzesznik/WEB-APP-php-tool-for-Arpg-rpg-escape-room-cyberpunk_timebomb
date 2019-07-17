@@ -38,6 +38,7 @@
         .then(data => this.update(data))
     };
     this.update = function(data) {
+    	
       console.log(data);
       say("fetchOK", 1);
       cols = data.columnNames;
@@ -81,7 +82,12 @@
         } //end of for
 
       } //end of for
-    }, //end of update
+      
+      
+    },
+  
+
+ //end of update
     this.onUpdate = function(watchmodeinstance,freshValue,device,columnName){};
   } //end of watchmode func
   watchmode = new Watchmode();
@@ -190,7 +196,7 @@
       return; //dont make map
     }
 
-    devicesWithLocation = [];
+  window.  devicesWithLocation = [];
     for (let i = 0; i < devices.length; i++) {
       let dv = devices[i];
       doesDvHaveLocation = ![null, "no location", undefined].includes(dv.device_location);
@@ -204,33 +210,47 @@
         devicesWithLocation.push(dv);
       }
     }
-
-
-
-
     atomIcons = {
       disarmed: NuIcon("disarmed"),
       created: NuIcon("created"),
       active: NuIcon("active")
     }
-
     //musisz policzyc srednia albo znalesc na necie position map to see all markers
     window.map = NuMap(devicesWithLocation[0].location.latitude, devicesWithLocation[0].location.longitude, mapDefaultZoom);
-
     window.allFeaturesCollection = {};
     window.arrayOfFeaturesAll = devicesWithLocation.map(dv => {
       feature = NuFeature(dv.device_name, dv.device_status, dv.location.latitude, dv.location.longitude)
       allFeaturesCollection[dv.device_id] = feature;
       return feature;
-    })
-    
-    
-
+    });
     allLayer = NuLayer(arrayOfFeaturesAll);
     map.addLayer(allLayer);
   }
+  function fakeUpdate(){
+	window.arrayOfFeaturesAll.forEach(f=>{
+		//.setGeometry(new ol.geom.Point(pos));
+		coords = f.getGeometry().getCoordinates();
 
-  watchmode.onUpdate= function(watchmodeinstance,freshValue,device,columnName){
+//works weirdly slowly
+		say("moved geometry")
+		})
+		return;
+	//stage1 just features
+	
+	//updateMarkerLocation(notthis,fv,dv,col);
+}
+  watchmode.onUpdate=updateMarkerLocation;
+  
+/*  window.setInterval(x=>{
+//fakeUpdate();
+
+say("updated");
+},500)*/
+
+
+
+	
+ function updateMarkerLocation(watchmodeinstance,freshValue,device,columnName){
     if (columnName != "device_location"){
       return;
     }
@@ -238,8 +258,12 @@
     locArr = freshValue.split("/");
         locOb.latitude = locArr[0];
         locOb.longitude = locArr[1];
+        locArr[0] = parseFloat(locArr[0]);
+        locArr[1] = parseFloat(locArr[1]);
     updatedFeature = allFeaturesCollection[device.device_id];
-    updatedFeature.setGeometry(new ol.geom.Point(locArr));
+  //  updatedFeature.setGeometry(new ol.geom.Point(locArr));
+    updatedFeature.set('geometry', new ol.geom.Point(getPointFromLongLat(locArr[1],locArr[0])));
+        //bookmark *** SEE if it works
 }
 
   function startMap() {
@@ -251,6 +275,7 @@
       for (let i = 0; i < tableData.length; i++) {
         let dv = tableData[i];
         //say(dv.device_location);
+
         doesDvHaveLocation = ![null, "no location", undefined].includes(dv.device_location);
         isThereAnyDeviceWithLocation = isThereAnyDeviceWithLocation || doesDvHaveLocation;
       }
