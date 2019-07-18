@@ -340,6 +340,7 @@ opacity: .5;
 }
 
 .modal-container-on{
+    z-index:2;
     justify-content: center;
     display: flex;
     flex-direction: column;
@@ -349,6 +350,18 @@ opacity: .5;
     align-items: center;
 }
 
+#tableWrapper{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.squeezed{
+    word-break: break-all;
+    width: 10px;
+}
+
+
 .nonclickable{
     pointer-events: none;
     border:2px solid red;
@@ -356,10 +369,14 @@ opacity: .5;
 
 .table::before{
     content: "EDIT MODE";
-    position: absolute;
-    color:(--fg);
+    position: fixed;
+    /* margin: -30px; */
+    color: (--fg);
     padding: 10px;
-    border: 2px solid black;
+    border: 2px solid #33ff006b;
+    /* bottom: 0px; */
+    top: 0px;
+    right: 0px;
 }
 
 #wrapper{

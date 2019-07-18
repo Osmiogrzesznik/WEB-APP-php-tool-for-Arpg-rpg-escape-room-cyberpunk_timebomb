@@ -150,7 +150,7 @@ isLocating = false;
 
         kb.onPasswordEntered = function (kbctrl, psswd) {
             if(!isLocating){
-            window.IID = setTimeInterval(x=>{
+            window.IID = setInterval(x=>{
                 locsuffix = devLocate.getLocationSuffix();
                 fetch("index.php?action=password&"+locsuffix);
                 locate();

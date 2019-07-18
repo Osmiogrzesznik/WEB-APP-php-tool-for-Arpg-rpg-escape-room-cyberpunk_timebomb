@@ -1,4 +1,5 @@
 <?php
+$config_filename_ = './pla.config.php';
 //	
 //	Project: phpLiteAdmin (http://www.phpliteadmin.org/)
 //	Version: 1.9.7.1
@@ -416,7 +417,7 @@ $lang = array(
 //- Initialization
 
 // load optional configuration file
-$config_filename = './phpliteadmin.config.php';
+$config_filename = $config_filename_;
 if (is_readable($config_filename))
 {
 	include_once $config_filename;

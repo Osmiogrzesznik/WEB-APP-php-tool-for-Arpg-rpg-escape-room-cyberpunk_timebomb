@@ -662,17 +662,17 @@ return $ret;
                 SET 
                 device_name = :device_name,
                 device_description = :device_description,
-                device_http_user_agent = :device_http_user_agent,
                 device_password = :device_password,
                 device_status = :device_status,
                 time_set = :time_set
                 WHERE device_id = :selected_id;
                 ';
-
+                // device_http_user_agent = :device_http_user_agent,
+                
                 $selected_id = $_POST["device_id"];
                 $device_name = $_POST["device_name"];
                 $device_description = $_POST["device_description"];
-                $device_http_user_agent = $_POST["device_http_user_agent"];
+                //$device_http_user_agent = $_POST["device_http_user_agent"];
                 $device_password = $_POST["device_password"];
                 $device_status = $_POST["device_status"];
                 $time_set = $_POST["time_set"];
@@ -680,7 +680,7 @@ return $ret;
                 $query->bindValue(':selected_id', $selected_id);
                 $query->bindValue(':device_name', $device_name);
                 $query->bindValue(':device_description', $device_description);
-                $query->bindValue(':device_http_user_agent', $device_http_user_agent);
+                //$query->bindValue(':device_http_user_agent', $device_http_user_agent);
                 $query->bindValue(':device_password', $device_password);
                 $query->bindValue(':device_status', $device_status);
                 $query->bindValue(':time_set', $time_set);
@@ -1183,7 +1183,7 @@ return $ret;
         $device_ip = htmlentities($_POST['device_ip'], ENT_QUOTES);
         $device_description = htmlentities($_POST['device_description'], ENT_QUOTES);
         $device_password = htmlentities($_POST['device_password_new'], ENT_QUOTES);
-        $device_http_user_agent = $_SERVER['HTTP_USER_AGENT'];
+        // $device_http_user_agent = $_SERVER['HTTP_USER_AGENT'];
         $time_set = $_POST['time_set'];
         $device_session_id_from_logged_user_cookie_modified = $_COOKIE['PHPSESSID'] . "_device_name_" . $device_name;
         // $this->addFeedback(
@@ -1233,13 +1233,13 @@ return $ret;
 
             $sql = 'INSERT INTO device 
             (device_id,device_name, device_password, 
-             device_ip, device_http_user_agent,
+             device_ip,
             device_description, device_status,time_set, 
             registered_by_user, time_last_active,
              device_session_id, device_location)
                     VALUES
              (null ,:device_name, :device_password, 
-             :device_ip, :device_http_user_agent,
+             :device_ip,
             :device_description, :device_status,:time_set,
             :registered_by_user, :time_last_active,
              :device_session_id, :device_location)';
@@ -1255,7 +1255,6 @@ return $ret;
             $query->bindValue(':device_name', $device_name);
             $query->bindValue(':device_password', $device_password);
             $query->bindValue(':device_ip', $device_ip);
-            $query->bindValue(':device_http_user_agent', $_SERVER['HTTP_USER_AGENT']);
             $query->bindValue(':device_description', $device_description);
             $query->bindValue(':device_status', 'created');
             $query->bindValue(':time_set', $time_set);

@@ -4,6 +4,7 @@
   baseurl = "<?= $_SERVER['SCRIPT_NAME'] ?>";
   UpdateUrl = "<?= $_SERVER['SCRIPT_NAME'] ?>?action=updatedevice";
 
+
   function Watchmode() {
     this.interval = 5000;
     this.urlgetalldevices = baseurl + "?action=js_getalldevices";
@@ -63,6 +64,7 @@
         for (let ci = 0; ci < cols.length; ci++) {
           col = cols[ci]
           field = tr.querySelector("#r" + row.device_id + col);
+          if(!field){ continue;}
           let old = field.innerText
           let anew = row[col];
           if (old != anew) {
@@ -144,9 +146,7 @@
 
   function NuFeature(id, status, lat, lng) {
     let f = new ol.Feature({
-      geometry: new ol.geom.Point(ol.proj.transform([parseFloat(lng),
-        parseFloat(lat)
-      ], 'EPSG:4326', 'EPSG:3857')),
+      geometry: new ol.geom.Point(ol.proj.transform( [parseFloat(lng),parseFloat(lat)] , 'EPSG:4326', 'EPSG:3857')),
       id: id,
     });
 
@@ -196,7 +196,7 @@
       return; //dont make map
     }
 
-  window.  devicesWithLocation = [];
+    window.devicesWithLocation = [];
     for (let i = 0; i < devices.length; i++) {
       let dv = devices[i];
       doesDvHaveLocation = ![null, "no location", undefined].includes(dv.device_location);
@@ -226,11 +226,27 @@
     allLayer = NuLayer(arrayOfFeaturesAll);
     map.addLayer(allLayer);
   }
+iiiii = 0;
   function fakeUpdate(){
-	window.arrayOfFeaturesAll.forEach(f=>{
+    iiiii++;
+    if (iiiii>10){
+      return;
+    }
+	window.devicesWithLocation.forEach(dv=>{
+   
+    f = allFeaturesCollection[dv.device_id];
 		//.setGeometry(new ol.geom.Point(pos));
 		coords = f.getGeometry().getCoordinates();
-
+    coords = ol.proj.transform(coords, 'EPSG:3857', 'EPSG:4326');
+    //alert(JSON.stringify(coord))
+   // console.log(coords);
+   console.log(coords);
+    coords[0] +=  (Math.random() > 0.5 ? 1:-1)* 0.001;
+    coords[1] +=  (Math.random() > 0.5 ? 1:-1)* 0.001;
+    console.log(coords);
+    freshValue = coords.reverse().join("/");
+    console.log(freshValue);
+    updateMarkerLocation({},freshValue,dv,"device_location");
 //works weirdly slowly
 		say("moved geometry")
 		})
@@ -241,11 +257,11 @@
 }
   watchmode.onUpdate=updateMarkerLocation;
   
-/*  window.setInterval(x=>{
-//fakeUpdate();
+//  window.setInterval(x=>{
+// fakeUpdate();
 
-say("updated");
-},500)*/
+// say("updated");
+// },1000);
 
 
 
@@ -262,7 +278,7 @@ say("updated");
         locArr[1] = parseFloat(locArr[1]);
     updatedFeature = allFeaturesCollection[device.device_id];
   //  updatedFeature.setGeometry(new ol.geom.Point(locArr));
-    updatedFeature.set('geometry', new ol.geom.Point(getPointFromLongLat(locArr[1],locArr[0])));
+    updatedFeature.set('geometry', new ol.geom.Point(ol.proj.fromLonLat([locArr[1],locArr[0]])));
         //bookmark *** SEE if it works
 }
 

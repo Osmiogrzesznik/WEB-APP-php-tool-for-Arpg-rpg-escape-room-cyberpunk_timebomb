@@ -3,7 +3,14 @@ $user_id = $this->user_id;
 $resultset = $this->resultset;
 $columns = $this->columns;
 $column_name_prefix = "device_";
+$nonVisibles = array("device_id","registered_by_user","device_session_id","device_http_user_agent");
 $nonEditables = array("device_id","registered_by_user","time_last_active","device_location","device_session_id");
+
+if (isset($_GET['all'])){
+  $nonVisibles=array();
+}
+
+
 ?>
 	ver3
 	alert on start watchmode
@@ -33,7 +40,12 @@ if( count($resultset) > 0 ) {
 <table id="tableToEdit" class="table table-bordered">
 	<thead>
 		<tr class='info' ;>
-			<?php foreach ($columns as $k => $column_name ) : ?>
+      <?php foreach ($columns as $k => $column_name ) : 
+        if(in_array($column_name,$nonVisibles)){
+          continue;
+        }
+        ?>
+      
       <th> <?php 
       $column_wout_prefix = str_replace($column_name_prefix,"",$column_name);
       echo $column_wout_prefix;
@@ -52,11 +64,17 @@ if( count($resultset) > 0 ) {
 
 				// output data of each row
 				foreach($resultset as $index => $row) {
-				$column_counter =0;
+        $column_counter =0;
+        
 			?>
 		<tr id="<?php echo 'r' . $row['device_id'] ?>">
       <?php for ($i=0; $i < count($columns); $i++):
       $column_name = $columns[$column_counter];
+      if(in_array($column_name,$nonVisibles)){
+        $column_counter++;
+        continue;
+      }
+
       if (in_array($column_name,$nonEditables)){ 
         if ($column_name == "time_last_active"){
         
@@ -73,7 +91,7 @@ if( count($resultset) > 0 ) {
       <?php
       }elseif($column_name == "device_location"){ // any other noneditable
         ?>
-    <td id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="field-non-editable" data-column-name="<?= $column_name ?>">
+    <td id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="field-non-editable squeezed" data-column-name="<?= $column_name ?>">
      <?=$row[$column_name];?>
      <?php 
         }else{ // any other noneditable
@@ -137,7 +155,7 @@ if( count($resultset) > 0 ) {
 <a href="<?= $_SERVER['SCRIPT_NAME'] ?>"><button onclick="">Refresh</button></a>
 <button onclick="watchmode.toggle(this)">Watch Mode(DO NOT edit table!)</button>
 
-<div id="mapDIV" class="centerpanel">
+<div id="mapDIV" class="centerpanel" >
 
 </div>
 <audio id="popsound" src="sounds/pop.mp3">
