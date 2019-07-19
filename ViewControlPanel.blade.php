@@ -179,8 +179,8 @@ if( count($resultset) > 0 ) {
     <style>
         
     </style>
-  <!--  method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerDevice" -->
-    <form method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>" id="new_device_form" name="registerform">
+  <!--  method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerdevice" -->
+    <form method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerdevice" id="new_device_form" name="registerform">
         <label for="device_name">
             device_name:
         </label>

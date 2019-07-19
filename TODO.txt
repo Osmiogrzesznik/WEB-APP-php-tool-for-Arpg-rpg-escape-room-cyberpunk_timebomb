@@ -1,16 +1,8 @@
-!!!!! feature TODO: update the map!!!!!
-https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-geolocation-marker-in-openlayers-3
+TODO: on password check should check if its too late , even when device already 
+                    // detonated, just to make sure nobody will fool admins
 
-iconFeature.setGeometry(new ol.geom.Point(pos));
-
-TODO: reset clocks after fetching update!!!!
-
-
-
-TODO: tick send location in registration form
-
-
-
+TODO: rethink timezones mechanism . Right now if device is in different country, there will be problems;
+	REMOVE $_SESSION s from code!!!!!
 
 TODO:  during registration - if real connection ip is different than 
 	ip being registered - save location. Admin being in the field setting up a device
@@ -18,6 +10,30 @@ TODO:  during registration - if real connection ip is different than
 	allowing device to share it's location 
 	and would already  provide its first location point 
 
+TODO: {
+	CREATE DEVICE TYPES, needs change in device registration form and programmatical retrieval
+	programmatical creation of new device
+	create table Types REL to device.device_type
+
+		type_statuses REL
+		type_folderpath (folder should have files newdevice.php,deletedevice.php, interaction.php and so on)
+		type_id
+		type_statuses
+
+	TABLE REL stateTransitions ? NO -to complicated
+		line_id
+		 type_id 
+		 statusfrom status
+	 statusTo status
+	 when ????? how to save logic in databases?
+	 		save path to php function file that accepts (dbconn,device object, currentstatus)
+			  and returns
+			 	the new status after doing some own logic
+	files in folder path should behave as classes with common device interface, accepting paramteres, and checking for
+	their own GETs and POSTs, possibly they should have interface.blade.php called with $this->device set and passed in
+	own css and so on
+	some devices provide possibilities such as control panel: RADAR instead of map
+}
 
 TODO: checking for $session existing piror to checking if is registered device
 	MAYBE JUST SANITY CHECK : IF DEVICE HAS SESSION AND IS NOT PRESENT IN DB JUST DESTROY SESSION?
@@ -267,3 +283,14 @@ https://www.openstreetmap.org/?mlat=52.44255&mlon=-1.49471#map=19/52.44255/-1.49
 where mlat and mlon stand for marker position
 OR
 https://mediarealm.com.au/articles/openstreetmap-openlayers-map-markers/
+
+done !!!!! feature TODO: update the map!!!!!
+https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-geolocation-marker-in-openlayers-3
+
+iconFeature.setGeometry(new ol.geom.Point(pos));
+DONe TODO: tick send location in registration form
+
+DONE? TODO: device_status cannot be both indicator of activeness and disarmedness? 
+	PROBLEM:Somebody who is being tracked constantly updates their location changing status, 
+		EVEN AFTER THEY'VE ENTERED THE PASSWORD TO STOP THE bomb
+		THIS overwrites the value in the database , and makes admin not see the proper information

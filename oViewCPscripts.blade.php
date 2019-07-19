@@ -574,7 +574,7 @@ say("map module ok");
 
   }
 
-  function sendNewDevice() {
+  function sendNewDevice(id, tr_row) {
     var FD = new FormData(document.querySelector("#new_device_form"));
     let fields = [];
     DEV_LOCATION = devLocate.getLocationObject();
@@ -582,7 +582,7 @@ say("map module ok");
     FD.append("latitude", DEV_LOCATION.latitude + "");
     FD.append("longitude", DEV_LOCATION.longitude + "");
     FD.append("registerdevice", "true");
-alert(DEV_LOCATION);
+
     fetch(newDeviceUrl, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         // mode: 'cors', // no-cors, cors, *same-origin
@@ -598,7 +598,6 @@ alert(DEV_LOCATION);
       })
       .then(response => response.text())
       .then(t => {
-	alert(t);
         say(t); //try to display modal else alert
       });; // parses JSON response into native JavaScript objects 
     return true; //false;//return false to prevent form from reloading the page   

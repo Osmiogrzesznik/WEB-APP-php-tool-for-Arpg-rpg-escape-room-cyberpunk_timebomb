@@ -1,11 +1,11 @@
 <?php
 if ($this->IsRegisteredDevice()){
-    $password_length = strlen($_SESSION["device_password"]);
-    $password_contains_only_digits = ctype_digit($_SESSION["device_password"]);
+    $password_length = strlen($this->device_password);
+    $password_contains_only_digits = ctype_digit($this->device_password);
     $response = array(
-        "device_id" => $_SESSION["device_id"],
-        "device_status" => $_SESSION["device_status"],
-        "time_set" => $_SESSION["time_set"],
+        "device_id" => $this->device_id,
+        "device_status" => $this->device_status_new,//after check in isregistered
+        "time_set" => $this->device_time_set,
         "password_length" => $password_length,
         "password_contains_only_digits" => $password_contains_only_digits,
         "feedback" => $this->feedback

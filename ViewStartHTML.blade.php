@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="halfdigi.css">
 </head>
 <body><script>
-window.onerror = function (event){
-	say("Blad kompilu js: "+JSON.stringify(event,null,2) +": "+event);
+window.onerror = function (msg,file,line,number,ob){
+	alert("Blad kompilu js: "+msg+"\n file: "+file+" at "+line+":"+number + event);
 	}
 
 

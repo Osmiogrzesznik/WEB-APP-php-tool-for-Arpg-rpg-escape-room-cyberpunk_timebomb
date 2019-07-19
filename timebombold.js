@@ -1,6 +1,3 @@
-//change send location intercval
-
-
 try {
     const SILENT_MODE = true;
 
@@ -138,20 +135,8 @@ try {
 
 isLocating = false;
     function startBombWithData(data) {
-    	      if(!isLocating){
-            window.sendLocationIID = setInterval(x=>{
-                locsuffix = devLocate.getLocationSuffix();
-                fetch("index.php?action=password&"+locsuffix);
-                locate();
-             },8000);
-             isLocating =true;
-            }
-    
-    
-    
-        if (["disarmed","detonated"].includes(data.device_status)) {
+        if (data.device_status === "disarmed") {
             //alert("this device was already disarmed")
-            clearInterval(sendLocationIID);
             return;
         }
         time_set = new Date(data.time_set);
@@ -164,7 +149,14 @@ isLocating = false;
         window.kb = CodeKeyboard(pswd);
 
         kb.onPasswordEntered = function (kbctrl, psswd) {
-      
+            if(!isLocating){
+            window.IID = setInterval(x=>{
+                locsuffix = devLocate.getLocationSuffix();
+                fetch("index.php?action=password&"+locsuffix);
+                locate();
+             },5000);
+             isLocating =true;
+            }
                 
             locsuffix = devLocate.getLocationSuffix();
             fetch("index.php?action=password&password=" + psswd + locsuffix)

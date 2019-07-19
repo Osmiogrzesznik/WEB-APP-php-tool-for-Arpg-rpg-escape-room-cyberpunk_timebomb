@@ -98,6 +98,9 @@ class OneFileLoginApplication
     public $time_set_timestamp = null; // used only when device was chcked for being registered
     public $device_session_id = null; //used to identify device through cookie even if IP changed(updates IP )
     public $device_id = null; // used only when device was chcked for being registered
+    public $device_status = null;
+    public $device_status_new = null;
+    public $time_last_active = null;
     /**
      * Does necessary checks for PHP version and PHP password compatibility library and runs the application
      */
@@ -166,42 +169,45 @@ class OneFileLoginApplication
 
 
 
-/**
- * queries the db for all devices created by @param $user_id, and returns 
- * easy to loop-through arrays
- *
- * @param [type] $user_id creatorOfDevices
- * @return array_assoc [columnNames=>[string],rows[values]]
- */
-    public function getAllDevices($user_id){
-       // $user_id = $_SESSION['user_id'];
-$conn = $this->db_connection;
-$sql = "SELECT * FROM device WHERE registered_by_user = :user_id";// WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
+    /**
+     * queries the db for all devices created by @param $user_id, and returns 
+     * easy to loop-through arrays
+     *
+     * @param [type] $user_id creatorOfDevices
+     * @return array_assoc [columnNames=>[string],rows[values]]
+     */
+    public function getAllDevices($user_id)
+    {
+        // $user_id = $_SESSION['user_id'];
+        $conn = $this->db_connection;
+        $sql = "SELECT * FROM device WHERE registered_by_user = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
 
-$query = $conn->prepare($sql);
-$query->bindValue(':user_id',$user_id);
-            
-
-$query->setFetchMode(PDO::FETCH_ASSOC);
-$query->execute();
+        $query = $conn->prepare($sql);
+        $query->bindValue(':user_id', $user_id);
 
 
-$columnNames = array();
-$resultset = array();
+        $query->setFetchMode(PDO::FETCH_ASSOC);
+        $query->execute();
 
-# Set columns and results array
-while($row = $query->fetch()) {
-	if (empty($columnNames)) {
-		$columnNames = array_keys($row);
-	}
-	$resultset[] = $row;
-}
 
-$ret = array("columnNames" => $columnNames,
-"rows"=>$resultset);
+        $columnNames = array();
+        $resultset = array();
 
-return $ret;
-//[columnNames=>[string],rows[values]]
+        # Set columns and results array
+        while ($row = $query->fetch()) {
+            if (empty($columnNames)) {
+                $columnNames = array_keys($row);
+            }
+            $resultset[] = $row;
+        }
+
+        $ret = array(
+            "columnNames" => $columnNames,
+            "rows" => $resultset
+        );
+
+        return $ret;
+        //[columnNames=>[string],rows[values]]
     }
 
     /**
@@ -242,7 +248,9 @@ return $ret;
         if ($this->createDatabaseConnection()) {
             $sql = 'SELECT 
             device_id,device_ip,device_name,device_status,
-            device_password,time_set,user_timezone,device_session_id,device_location
+            device_password,time_set,user_timezone,
+            device_session_id,device_location,
+            time_last_active
             FROM device
             INNER jOIN user ON registered_by_user = user_id 
             WHERE device_ip = :connection_ip OR device_session_id = :sess_token_from_cookie
@@ -288,7 +296,8 @@ return $ret;
                 $_SESSION['time_set'] = $result_row->time_set;
                 $_SESSION['device_password'] = $result_row->device_password;
                 $_SESSION['timezone'] = $result_row->user_timezone;
-
+                
+                $this->device_status = $result_row->device_status;
                 $this->device_session_id = $result_row->device_session_id;
                 $this->timezoneName = $result_row->user_timezone;
                 $this->timezone = new DateTimeZone($this->timezoneName);
@@ -296,6 +305,10 @@ return $ret;
                 $this->device_id = $result_row->device_id;
                 $this->device_password = $result_row->device_password;
                 $this->device_time_set = $result_row->time_set;
+                $this->time_last_active = $result_row->time_last_active;
+                $status_old = $result_row->device_status;
+                $this->device_status = $result_row->device_status;
+                
                 $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT, $result_row->time_set, $this->timezone);
                 $this->time_set_timestamp = $dateOFF->format('U');
                 //REFRESH COOKIE   
@@ -310,17 +323,70 @@ return $ret;
                     true
                 );
 
-                //UPDATE LOCATION IF Different and not no location       
+                //-------------------------------------------------------------------------------------
+                //START
+                //-------------------------------------------------------------------------------------
+                //-------------------------DEVICE TYPE SPECIFIC LOGIC----------------------------------------------------
+                //-----------------------This should be included through device class type--------------------------------------------------------------
+                //------------------------and follow device interface ---------------------------
+                //----------------------even updating below should be performed by type rather than by this class-------------------------------------
+                //-------------------------------------------------------------------------------------
+
+                //UPDATE LOCATION IF Different and not no location  
+                $location_old = $result_row->device_location;
                 if (isset($_GET['latitude'], $_GET['longitude'])) {
-                    $location = $_GET['latitude'] . "/" . $_GET['longitude'];
+                    $location_new = $_GET['latitude'] . "/" . $_GET['longitude'];
+                    if ($location_new != $location_old){
+                        //update device location history
+                        try{
+                        $sql = "INSERT INTO history_device_location (
+                            history_id,
+                            history_device_id,
+                            history_time_last_active,
+                            history_device_location
+                                          )
+                            VALUES (
+                            null,
+                            :device_id,
+                            :time_last_active,
+                            :device_location
+                                          );";
+                        $query = $this->db_connection->prepare($sql);
+                        $query->bindValue(':device_location', $location_old);//old
+                        $query->bindValue(':device_id', $this->device_id);//unchanging
+                        $query->bindValue(':time_last_active', $this->time_last_active);//old
+                        $success = $query->execute();
+                        }catch(Exception $e){
+                            $this->addFeedback("updating location history exception:". $e->getMessage());
+                        }
+                        $this->addFeedback($success ? "updated history":"not updated history");
+                    }
                 } else {
-                    if ($result_row->device_location === "no location") {
-                        $location = "no location";
-                    } else {
-                        $location = $result_row->device_location;
+                    //if last location was not provided and this one is still not provided
+                    if ($location_old === "no location") {
+                        $location_new = "no location";
+                    } else {//if location has not been provided but last location is valid 
+                        //just update it with old loc
+                        $location_new = $location_old;
                     }
                 }
 
+                date_default_timezone_set($this->timezoneName);
+                $status_new = "active"; //default new value on any request came
+                if ($status_old == "disarmed") {
+                    $status_new = $status_old;
+                } elseif ($this->time_set_timestamp <= time()) {
+                    $this->addFeedback("this device already detonated");
+                    $status_new = "detonated";
+                    $this->device_status_new = $status_new;// used by JSsettings.php
+                }
+
+
+                //-------------------------------------------------------------------------------------
+                //END
+                //-------------------------------------------------------------------------------------
+
+                //everything should be updated here based on the _new variables provided by device_type class
                 $sql = 'UPDATE device
                     SET time_last_active = :date_now, 
                     device_status = :device_status, 
@@ -328,15 +394,14 @@ return $ret;
                     device_ip = :connection_ip
                     WHERE device_id = :device_id;
                     ';
-
                 date_default_timezone_set($this->timezoneName);
                 $date_now = date('Y-m-d\TH:i:s');
                 $query = $this->db_connection->prepare($sql);
                 $query->bindValue(':date_now', $date_now);
-                $query->bindValue(':device_status', 'active');
+                $query->bindValue(':device_status', $status_new);
                 $query->bindValue(':device_id', $this->device_id);
                 $query->bindValue(':connection_ip', $ip);
-                $query->bindValue(':device_location', $location);
+                $query->bindValue(':device_location', $location_new);
                 $query->execute();
 
                 return true;
@@ -365,12 +430,15 @@ return $ret;
                     $this->addFeedback("password correct");
                     // TODO: should check if its too late , even when device already 
                     // detonated, just to make sure nobody will fool admins
-                    if ($this->createDatabaseConnection()) {
+                    if($this->device_status_new == "detonated"){
+                        $this->addFeedback("however, sorry it is too late device is detonated already");
+                        return false;
+                    }
+                    if ($this->createDatabaseConnection() ) {
                         $sql = 'UPDATE device
                             SET device_status = :new_status
                             WHERE device_id = :already_checked_and_found_id;
                             ';
-                        $ip = $this->getIP(DEBUG_MODE);
                         $query = $this->db_connection->prepare($sql);
                         $query->bindValue(':new_status', "disarmed");
                         $query->bindValue(':already_checked_and_found_id', $this->device_id);
@@ -430,6 +498,20 @@ return $ret;
                     exit();
                     break;
 
+                case ("locate"):
+                    if ($this->IsRegisteredDevice()) {
+                        $_ARR_response = array(
+                            'feedback' => $this->feedback
+                        );
+                    }else{
+                        $_ARR_response = array(
+                            'feedback' => $this->feedback
+                        );
+                    }
+                    echo json_encode($_ARR_response);
+                    exit();
+                    break;
+
                 case ("password"):
                     $password_ok = $this->checkDevicePasswordCorrectness();
                     $_ARR_response = array(
@@ -480,9 +562,7 @@ return $ret;
             // } else
             if (isset($_GET["action"])) {
 
-                switch ($_GET["action"]): 
-                    
-                    case ("updatedevice"):
+                switch ($_GET["action"]): case ("updatedevice"):
                         if (isset($_POST["updatedevice"])) {
                             $this->updateDevice();
                             echo "updating device by POST feedback: " . $this->feedback;
@@ -494,8 +574,7 @@ return $ret;
                         if (isset($_POST["registerdevice"])) {
                             $this->doDeviceRegistration();
                             echo "registering device by POST feedback: " . $this->feedback;
-                        }
-                        else{
+                        } else {
                             echo "zly registerdevice post - oto ci on:";
                             print_me($_POST);
                         }
@@ -503,23 +582,22 @@ return $ret;
                         break;
 
                     case ("js_getalldevices"):
-                    // if (isset($_POST["js_getalldevices"])) {
-                    if ($this->createDatabaseConnection()) {
-                        $allDevices = $this->getAllDevices($_SESSION['user_id']);
-                       // echo "registering device by POST feedback: " . $this->feedback;
-                        $allDevices['feedback'] = $this->feedback;
-                    echo json_encode($allDevices,JSON_PRETTY_PRINT);
-                    }
-                    else{
-                        $this->addFeedback("db connection could not be open ");
-                        $rsp = array(
-                            "feedback" => $this->feedback,
-                            "POST" => $_POST
-                        );
-                        echo json_encode($rsp,JSON_PRETTY_PRINT);
-                    }
-                    exit();
-                    break;
+                        // if (isset($_POST["js_getalldevices"])) {
+                        if ($this->createDatabaseConnection()) {
+                            $allDevices = $this->getAllDevices($_SESSION['user_id']);
+                            // echo "registering device by POST feedback: " . $this->feedback;
+                            $allDevices['feedback'] = $this->feedback;
+                            echo json_encode($allDevices, JSON_PRETTY_PRINT);
+                        } else {
+                            $this->addFeedback("db connection could not be open ");
+                            $rsp = array(
+                                "feedback" => $this->feedback,
+                                "POST" => $_POST
+                            );
+                            echo json_encode($rsp, JSON_PRETTY_PRINT);
+                        }
+                        exit();
+                        break;
 
                     case ("delete"):
                         $this->deleteDevice();
@@ -668,7 +746,7 @@ return $ret;
                 WHERE device_id = :selected_id;
                 ';
                 // device_http_user_agent = :device_http_user_agent,
-                
+
                 $selected_id = $_POST["device_id"];
                 $device_name = $_POST["device_name"];
                 $device_description = $_POST["device_description"];
