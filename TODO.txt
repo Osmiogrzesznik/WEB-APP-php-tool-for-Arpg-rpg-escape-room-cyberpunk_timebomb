@@ -1,14 +1,22 @@
+TODO: think about buffering database operations; careful!!!
+TODO : BUG update doeasnt work from admin !!!! cp; no feedback in modal
+TODO: Poor Admin user interface map, table should be hiding and showed as drawer
+
+
+TODO: device should get update to settings after each request to server
+
+TODO-1: server should dispatch websites attaching final devicesettings inline script , that takes care
+	of setting the modules up (customize SILENT_MODE,devLocate.serverrequiresLocation,devLocate.serverRequiresPrecision);
+
 TODO: on password check should check if its too late , even when device already 
                     // detonated, just to make sure nobody will fool admins
 
 TODO: rethink timezones mechanism . Right now if device is in different country, there will be problems;
-	REMOVE $_SESSION s from code!!!!!
+	
+TODO: CANNOT DO? cannot do for user - needed to retrieve when user logged in
+	REMOVE $_SESSION s from code!!!!! 
 
-TODO:  during registration - if real connection ip is different than 
-	ip being registered - save location. Admin being in the field setting up a device
-	would already take care of clicking prompt ,
-	allowing device to share it's location 
-	and would already  provide its first location point 
+
 
 TODO: {
 	CREATE DEVICE TYPES, needs change in device registration form and programmatical retrieval
@@ -43,32 +51,13 @@ TODO: ask tomek to test
 
 TODO: remaining attempts?
 TODO: what if two users try to register the same ip address as their bombs?
-TODO: deviceregistration should allow to set time "from now" (just minutes)
-	ViewAddTODEvics.php input field and js calculation to set the date in the form each time (just minutes)
-	TODO: device update
-    this one may be a bit dodgy. Cannot use CHeckDeviceRegistrationData as  it is? 
-    need to be done in POST and if reuse it POST will need to provide:
-             newPassword, repeat password and so on
-       if update would use its own function/method:
-        again same problem a lot of code to check if any value differs / either on js side or php-wise
-    TODO - make clock beep faster at the end PROBLEM:SOUNDS ARE LOST)
-TODO:display feedback in red border
-       
-TODO: on each touch ? NO - PASSWORD ATTEMPT
- listener should remember 
-the two timestamps, one get from db , and one registered
- on each touch of window. 
-setInterval function should be active: 
-    check if lasttouchtimestamp 
-    is not null and if it is different from currently 
-    hold in js memory DBtimestamp(not fetched from DB)    
+ 
 
 TODO modify scripts so they are proper js classes or constructor functions
 	DONE ClockController.js
 	TODO touchKeyboard.js
 
-TODO - clock controller should create its components on its own
-user just creates counterCNT'ainer
+
 
 
 ________________________________________________________________________________________________________
@@ -294,3 +283,32 @@ DONE? TODO: device_status cannot be both indicator of activeness and disarmednes
 	PROBLEM:Somebody who is being tracked constantly updates their location changing status, 
 		EVEN AFTER THEY'VE ENTERED THE PASSWORD TO STOP THE bomb
 		THIS overwrites the value in the database , and makes admin not see the proper information
+
+NOT NEEDED TODO:  deviceregistration should allow to set time "from now" (just minutes)
+	ViewAddTODEvics.php input field and js calculation to set the date in the form each time (just minutes)
+	TODO: device update
+    this one may be a bit dodgy. Cannot use CHeckDeviceRegistrationData as  it is? 
+    need to be done in POST and if reuse it POST will need to provide:
+             newPassword, repeat password and so on
+       if update would use its own function/method:
+        again same problem a lot of code to check if any value differs / either on js side or php-wise
+TODO:display feedback in red border
+
+DONE TODO:  during registration - if real connection ip is different than 
+	ip being registered - save location. Admin being in the field setting up a device
+	would already take care of clicking prompt ,
+	allowing device to share it's location 
+	and would already  provide its first location point 
+
+
+COMMIT:
+CAUSED A BUG: cannot update device's ip from control panel
+tick sound now is even , used metronome.js and webworker
+tick sound now doubles up ticking when close to detonation (UX)
+DONE TODO - make clock beep faster at the end PROBLEM:SOUNDS ARE LOST
+locating is now done via watchposition() to avoid multiple popups or warnings
+rewrote timebomb.js devLocate module : prepared for TODO-1: server sets up the device type(loaction,sound and so on) 
+
+DONE: TODO - clock controller should create its components on its own
+user just creates counterCNT'ainer
+

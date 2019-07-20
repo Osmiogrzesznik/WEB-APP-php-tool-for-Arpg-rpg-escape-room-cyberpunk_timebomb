@@ -9,28 +9,35 @@
 </head>
 <body><script>
 window.onerror = function (msg,file,line,number,ob){
+    say("Blad kompilu js: "+msg+"\n file: "+file+" at "+line+":"+number + event);
+	
 	alert("Blad kompilu js: "+msg+"\n file: "+file+" at "+line+":"+number + event);
 	}
-
 
     function feedbackModalConfirmation(clickevent){
     modalContainer.removeEventListener('click',feedbackModalConfirmation);
     feedback.classList.remove("feedback-pre-console");
-    //feedbackContainer.classList.remove("feedback-pre-console");
+    feedbackContainer.classList.remove("feedback-pre-console");
     modalContainer.classList.remove("modal-container-on");
 }
 
 function say(msg,keephidden=false){
-  feedback.innerText += "\n" + msg;
+  feedback.innerText += msg ? "\n": "";
   if (keephidden){
       return;
   }
   
-  //feedbackContainer.classList.add("feedback-pre-console");
+ showfeedback();
+}
+
+function showfeedback(){
+     feedbackContainer.classList.add("feedback-pre-console");
   feedback.classList.add("feedback-pre-console");
   modalContainer.classList.add("modal-container-on");
     modalContainer.addEventListener('click',feedbackModalConfirmation);
 }
+
+window.addEventListener("load",x=>say("finished loading"));
 
 </script>
 	
@@ -38,8 +45,8 @@ function say(msg,keephidden=false){
 
 <div id="modalContainer" class="modal-container">
     
-    <div id="feedbackContainer">
-    <pre id="feedback">    
+    <div id="feedbackContainer" class="feedbackContainer">
+    <pre id="feedback" class="feedback-pre-console">    
 <?php
 if ($this->feedback) {          
             echo "FEEDBACK : \n" . $this->feedback ;
@@ -47,11 +54,11 @@ if ($this->feedback) {
 </pre>
 <div class="flex-row">
 <button>OK</button>
-<button onclick="feedback.innerText=[];">Clear</button>
+<button onclick="feedback.innerText=null">Clear</button>
 </div>
 </div>
 </div>
-<button onclick="say('')">Show feedback</button>
+<button onclick="showfeedback()">Show feedback</button>
 <br/>
 
 

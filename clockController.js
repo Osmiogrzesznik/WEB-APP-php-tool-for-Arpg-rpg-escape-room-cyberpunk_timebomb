@@ -50,7 +50,7 @@ function ClockController(counterEl,counter_sec,counter_min,counter_hour){
     this.sw = 0, //?
     this.isPaused = false,
     this.isRunning = false,
-    this.timeElapsed = 0, // time remaining in miliseconds
+    this.remainingTime = 0, // time remaining in miliseconds
     this.IID = null, // ID for stopping of the function ran in interval 
     /**
      * replaceable listeners  - user customizable
@@ -70,7 +70,7 @@ function ClockController(counterEl,counter_sec,counter_min,counter_hour){
         this.cts.innerText = f(s);
         this.ctm.innerText = f(m);
         this.cth.innerText = f(h);
-        //this.ctte.innerText = this.timeElapsed;
+        //this.ctte.innerText = this.remainingTime;
         //pause here 
     };
    /**
@@ -91,6 +91,7 @@ function ClockController(counterEl,counter_sec,counter_min,counter_hour){
             //zaczyna ponownie ale dalej pamieta kiedy 
         }
 
+        
         this.IID = window.setInterval(x => {
             this.tick();
         }, this.ticklg);
@@ -98,13 +99,14 @@ function ClockController(counterEl,counter_sec,counter_min,counter_hour){
         this.isRunning = true;
         this.update();
     };
-
+    this.onStop = this.noop;
     this.stop = function() {
         if (!this.isRunning) {
             return;
         }
         window.clearInterval(this.IID);
         this.isRunning = false;
+        this.onStop(this);
     },
     this.reset = function() {
         if (this.isRunning) {
@@ -129,11 +131,11 @@ function ClockController(counterEl,counter_sec,counter_min,counter_hour){
     },
     this.update = function() {
         // old counting based on Limit
-        // let te = this.tLim - (Date.now() - this.mBase);
+        // let rT = this.tLim - (Date.now() - this.mBase);
         // new counting - deadline-based
-        let te = this.tEnd - Date.now();
-        this.timeElapsed = te;
-        if (this.timeElapsed < this.ticklg) {
+        let rT = this.tEnd - Date.now();
+        this.remainingTime = rT;
+        if (this.remainingTime < this.ticklg) {
             this.showTime(0, 0, 0);
             for (let i = 0; i < this.ctflashers.length; i++) {
                 this.ctflashers[i].classList.remove("flash");
@@ -144,12 +146,12 @@ function ClockController(counterEl,counter_sec,counter_min,counter_hour){
         }
         let d, h, m, s, r;
         //never use math round here it rounds hours every time when there is more than 30 minutes
-        h = ~~((te / (3600 * 1000)));
-        r = ~~(te % (3600 * 1000));
+        h = ~~((rT / (3600 * 1000)));
+        r = ~~(rT % (3600 * 1000));
         m = ~~((r / (60 * 1000))); // was m = ~~(Math.round(r / (60 * 1000)));
         r = ~~(r % (60 * 1000));
         s = ~~((r / 1000));
-        // console.log({ te, r, m });
+        // console.log({ rT, r, m });
         this.s = Math.abs(s);
         this.m = Math.abs(m);
         this.h = Math.abs(h);
@@ -179,7 +181,7 @@ function ClockController(counterEl,counter_sec,counter_min,counter_hour){
     
 };
     
-    //ctte: counter_timeElapsed,
+    //ctte: counter_remainingTime,
     
     
 

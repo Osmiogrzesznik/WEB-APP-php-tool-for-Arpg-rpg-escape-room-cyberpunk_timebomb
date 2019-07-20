@@ -1,107 +1,126 @@
-//    //change send location intercval
+//change send location intercval
 
 
 try {
 
+    function onError(error){
+        alert(error);
+    }
 
     const SILENT_MODE = false;
     audioContext = null;
     beepBeepingBuffer = null;
 
+    window.addEventListener("load", x => {
+        if (!SILENT_MODE) {
 
-    function playSoundAt(buffer, time) {
+            try {
+                // Fix up for prefixing
+
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContext();
+                // ticksoundA = new Audio("sounds/beep.mp3");
+
+                // //ticksoundA = document.getElementById("ticksound");
+                // ticksound = audioContext.createMediaElementSource(ticksoundA);
+                // //audioContext = new AudioContext().destination;
+                // //ticksound.connect(audioContext.destination);
+                // this.console.log(ticksound)
+                // alert(JSON.stringify(ticksound));
+
+                // cx.onTick = function (cxthis) {
+                //     //  ticksound.start();
+                // }
+
+            } catch (e) {
+                alert('Web Audio API is not supported in this browser, fallback to time interval');
+            }
+        }
+
+        if (audioContext) {
+            alert("audio context created");
+
+            function loadSound(url) {
+                var request = new XMLHttpRequest();
+                request.open('GET', url, true);
+                request.responseType = 'arraybuffer';
+
+                // Decode asynchronously
+                request.onload = function () {
+                    audioContext.decodeAudioData(request.response, function (buffer) {
+                        beepBeepingBuffer = buffer;
+                    }, onError);
+                }
+                request.send();
+            }
+
+            loadSound("sounds/beep.mp3");
+        }
+
+        
+
+    });
+
+    function playSound(buffer) {
         var source = audioContext.createBufferSource(); // creates a sound source
-        source.buffer = buffer; // tell the source which sound to play
-        source.connect(audioContext.destination); // connect the source to the context's destination (the speakers)
-        source.start(time); // play the source now
-        // note: on older systems, may have to use deprecated noteOn(time);
-    }
+        source.buffer = buffer;                    // tell the source which sound to play
+        source.connect(audioContext.destination);       // connect the source to the context's destination (the speakers)
+        source.start(0);                           // play the source now
+                                                   // note: on older systems, may have to use deprecated noteOn(time);
+      }
 
 
 
     cx = new ClockController(counter, counter_sec, counter_min, counter_hour);
 
     // Fullscreen - first user interaction - so set up sounds as well
-    addEventListener("click", prepareAudioAPI);
-
-    function prepareAudioAPI() {
-
-        if (!devLocate.isLocating) {
-            devLocate.startLocating();
-        };
-
+    addEventListener("click", function () {
         var el = document.documentElement,
             rfs = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen;
         rfs.call(el);
+        counterCNT.addEventListener("click", toggleKeyboard, false); //after fullscreening clicking again shows keyboard
 
         if (!SILENT_MODE) {
-            try {
-                // Fix up for prefixing
 
-                window.AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioContext = new AudioContext();
-                console.log("audio context created");
+            // try {
+            //     // Fix up for prefixing
+            //     window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            //     audioContext = new AudioContext();
+            // } catch (e) {
+            //     alert('Web Audio API is not supported in this browser, fallback to time interval');
+            // }
 
 
-                var request = new XMLHttpRequest();
-                request.open('GET', "sounds/beep.mp3", true);
-                request.responseType = 'arraybuffer';
-                // Decode asynchronously
-                request.onload = function () {
-                    audioContext.decodeAudioData(request.response, function (buffer) {
-                        // _________________________________________
-                        // this is the actual end of logic !!!!
-                        // _________________________________________
-                        // this is the actual end of logic !!!!
-                        beepBeepingBuffer = buffer;
-                        playSoundAt(beepBeepingBuffer, 0);
+            // function playtick(){
+            //     alert("this is null func");
+            if (audioContext) {
+                playSound(beepBeepingBuffer);
+                // ticksound = document.getElementById("ticksound");
+                // alert(JSON.stringify(ticksound));
+                // // ticksoundA = new Audio("beep.mp3");
+                // ticksound = audioContext.createMediaElementSource(ticksound);
+                // //audioContext = new AudioContext().destination;
+                // ticksound.connect(audioContext.destination);
+                // this.console.log(ticksound)
 
-                        cx.onStop = function (cxthis) {
-                            console.log("timer has stopped , stopping metronome");
-                            stop(); //stop the
-                        }
-                        // sound here not needed As metronome will take care
-                        cx.onTick = function (cxthis) {
-                            if (cxthis.remainingTime < 60000) {
-                                if (cxthis.remainingTime < 30000) {
-                                    if (cxthis.remainingTime < 15000) {
-                                        noteResolution = 0;
-                                        return;
-                                    }
-                                    noteResolution = 1;
-                                    return;
-                                }
-                                noteResolution = 2;
-                                return;
-                            }
-                        }
-                        unlocked = true;
-                        init();
-                        console.log(play());
-                    }, onError);
-                }
-                onError = function () {
-                    cx.onTick = function (cxthis) {
-                        ticksound.play();
-                    }
-                }
-                request.send();
-            } catch (e) {
-                alert('Web Audio API is not supported in this browser, fallback to time interval');
+                // cx.onTick = function (cxthis) {
+                //   //  ticksound.start();
+                // }
+                //ticksound.start();
+            } else {
                 cx.onTick = function (cxthis) {
                     ticksound.play();
                 }
             }
+
             //always (doesnt need timing)
 
             kb.onIncorrectPassword = kbctrl => {
                 wrongSound.play();
             }
 
-        } //end of if (!SILENT_MODE)
-        window.removeEventListener("click", prepareAudioAPI);
-        counterCNT.addEventListener("click", toggleKeyboard, false); //after fullscreening clicking again shows keyboard
-    }
+        } //end of if (!SILENT_MODE) 
+    });
 
 
     // debug tools
@@ -132,11 +151,6 @@ try {
     time_set = Date.now() + 30000;
 
     devLocate = {
-        locateURL: "index.php?action=locate",
-        serverRequiresLocating: true,
-        serverRequiresPrecision: false,
-        watchPositionID: null,
-        isLocating: false,
         lastError: "",
         wasError: false,
         wasUpdated: false,
@@ -146,71 +160,44 @@ try {
             longitude: null
         },
         isOKtoSend() {
-            return !this.wasError && this.wasUpdated && this.isLocating;
+            return !this.wasError && this.wasUpdated;
         },
         updatePosition(latitude, longitude) {
-            this.isLocating = true;
             this.wasUpdated = true;
             this.position.latitude = latitude;
             this.position.longitude = longitude;
         },
         getLocationSuffix() {
-            let suffix = this.isOKtoSend() ?
+            suffix = this.isOKtoSend() ?
                 ("&latitude=" + this.position.latitude +
                     "&longitude=" + this.position.longitude) :
                 "";
             return suffix;
-        },
-        startLocating() {
-            if (!this.serverRequiresLocating) {
-                return false;
-            }
-            if (this.isLocating) {
-                return true;
-            }
-            if (this.wasError) {
-                return false;
-            }
-            if (!navigator.geolocation) {
-                this.wasError = true;
-                this.pos_status.textContent = 'Geolocation is not supported by your browser';
-                return false;
-            } else {
-                this.pos_status.textContent = 'Locating…';
-                let positionOptions = {
-                    enableHighAccuracy: this.serverRequiresPrecision
-                };
-                this.watchPositionID = navigator.geolocation.watchPosition(
-                    pos => this.locationSuccess(pos),
-                    err => this.locationError(err),
-                    positionOptions);
-            }
-        },
-        stopLocating() {
-            navigator.geolocation.clearWatch(this.watchPositionID);
-            this.pos_status.textContent = 'Stopped Locating.';
-            this.isLocating = false;
-        },
-        locationSuccess(position) {
-            this.wasError = false;
-            this.isLocating = true;
-            console.log(position);
-            this.updatePosition(position.coords.latitude, position.coords.longitude)
-            locsuffix = this.getLocationSuffix();
-            fetch(this.locateURL + locsuffix)
-                .then(p => p.text())
-                .then(t => console.log(t));
-        },
-        locationError(error) {
-            this.wasError = true;
-            this.lastError = error.code + ' : ' + error.message;
-            this.pos_status.textContent = 'Unable to retrieve your location';
-            this.isLocating = false;
         }
     }
 
+    function locationSuccess(position) {
+        devLocate.updatePosition(position.coords.latitude, position.coords.longitude)
+    }
 
+    function locationError(error) {
+        devLocate.wasError = true;
+        devLocate.lastError = error.code + ' : ' + error.message;
+        devLocate.pos_status.textContent = 'Unable to retrieve your location';
+    }
 
+    function locate() {
+        if (devLocate.wasError) {
+            return;
+        }
+        if (!navigator.geolocation) {
+            devLocate.wasError = true;
+            devLocate.pos_status.textContent = 'Geolocation is not supported by your browser';
+        } else {
+            devLocate.pos_status.textContent = 'Locating…';
+            navigator.geolocation.getCurrentPosition(locationSuccess, locationError);
+        }
+    }
 
 
     // if ("geolocation" in navigator) {
@@ -248,9 +235,19 @@ try {
     }
 
 
-
+    isLocating = false;
 
     function startBombWithData(data) {
+        if (!isLocating) {
+            window.sendLocationIID = setInterval(x => {
+                locsuffix = devLocate.getLocationSuffix();
+                fetch("index.php?action=password&" + locsuffix);
+                locate();
+            }, 8000);
+            isLocating = true;
+        }
+
+
 
         if (["disarmed", "detonated"].includes(data.device_status)) {
             //alert("this device was already disarmed")
@@ -330,6 +327,7 @@ try {
 
 
     function startup() {
+        locate();
         fetchSettings();
     }
 

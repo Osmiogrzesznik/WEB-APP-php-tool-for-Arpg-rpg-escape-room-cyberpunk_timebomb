@@ -299,7 +299,8 @@ iiiii = 0;
 
       if (isThereAnyDeviceWithLocation) {
         // show map only if there are any located devices
-        document.querySelector("#mapDIV").innerHTML = '<div id="map" style="width: 70vw; height: 70vh;"></div>';
+        document.querySelector("#mapDIV").innerHTML =
+         '<div id="map"></div>';
         window.addEventListener("load", function() {
           showDevices(tableData);
 
@@ -307,7 +308,7 @@ iiiii = 0;
         
       }else{
         say("no devices that provide location coords yet"+
-       +" \n not showing the map")
+       +" \n not showing the map");
       }
 
 

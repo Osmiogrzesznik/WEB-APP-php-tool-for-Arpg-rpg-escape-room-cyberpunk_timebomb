@@ -25,6 +25,11 @@ if (isset($_GET['all'])){
  <button>Delete Account</button></a>
 <br>
 
+<h1>All Devices Registered By You</h1>
+<h3 >Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br/>
+      You can edit only one field at a time. If field is <span class="KBdisplay field-non-editable">greyed out</span> it is impossible to change the value. Delete the device and create new instead
+</h3>
+<div id="tableWrapper">
 <?php
 # If records found
 if( count($resultset) > 0 ) {
@@ -32,11 +37,7 @@ if( count($resultset) > 0 ) {
 
 
 
-<h1>All Devices Registered By You</h1>
-<h3 >Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br/>
-      You can edit only one field at a time. If field is <span class="KBdisplay field-non-editable">greyed out</span> it is impossible to change the value. Delete the device and create new instead
-</h3>
-<div id="tableWrapper">
+
 <table id="tableToEdit" class="table table-bordered">
 	<thead>
 		<tr class='info' ;>
@@ -155,7 +156,7 @@ if( count($resultset) > 0 ) {
 <a href="<?= $_SERVER['SCRIPT_NAME'] ?>"><button onclick="">Refresh</button></a>
 <button onclick="watchmode.toggle(this)">Watch Mode(DO NOT edit table!)</button>
 
-<div id="mapDIV" class="centerpanel" >
+<div id="mapDIV" class="" >
 
 </div>
 <audio id="popsound" src="sounds/pop.mp3">
@@ -180,7 +181,7 @@ if( count($resultset) > 0 ) {
         
     </style>
   <!--  method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerdevice" -->
-    <form method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerdevice" id="new_device_form" name="registerform">
+    <form id="new_device_form" name="registerform">
         <label for="device_name">
             device_name:
         </label>
