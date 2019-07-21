@@ -253,8 +253,8 @@ try {
     function startBombWithData(data) {
 
         if (["disarmed", "detonated"].includes(data.device_status)) {
-            //alert("this device was already disarmed")
-            clearInterval(sendLocationIID);
+            alert("this device was already disarmed");
+            window.open("index.php?action=superuser","_self");
             return;
         }
         time_set = new Date(data.time_set);
