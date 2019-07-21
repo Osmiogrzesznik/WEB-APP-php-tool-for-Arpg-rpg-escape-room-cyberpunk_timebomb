@@ -22,13 +22,11 @@ window.onerror = function (msg,file,line,number,ob){
 }
 
 function say(msg,keephidden=false){
-  feedback.innerText += msg ? "\n": "";
-  if (keephidden){
-      return;
-  }
-  
- showfeedback();
+  feedback.innerText += msg ? "\n>>>" + msg : "";
+!keephidden? showfeedback():0;
 }
+
+//say = alert;
 
 function showfeedback(){
      feedbackContainer.classList.add("feedback-pre-console");
@@ -48,13 +46,14 @@ window.addEventListener("load",x=>say("finished loading"));
     <div id="feedbackContainer" class="feedbackContainer">
     <pre id="feedback" class="feedback-pre-console">    
 <?php
+echo "FEEDBACK : \n";
 if ($this->feedback) {          
-            echo "FEEDBACK : \n" . $this->feedback ;
+            echo $this->feedback ;
 }?>
 </pre>
 <div class="flex-row">
 <button>OK</button>
-<button onclick="feedback.innerText=null">Clear</button>
+<button onclick="feedback.innerText='cleared'">Clear</button>
 </div>
 </div>
 </div>

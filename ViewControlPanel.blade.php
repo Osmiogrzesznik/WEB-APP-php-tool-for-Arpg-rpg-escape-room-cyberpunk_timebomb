@@ -26,9 +26,9 @@ if (isset($_GET['all'])){
 <br>
 
 <h1>All Devices Registered By You</h1>
-<h3 >Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br/>
+<div >Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br/>
       You can edit only one field at a time. If field is <span class="KBdisplay field-non-editable">greyed out</span> it is impossible to change the value. Delete the device and create new instead
-</h3>
+  </div>
 <div id="tableWrapper">
 <?php
 # If records found
@@ -181,7 +181,7 @@ if( count($resultset) > 0 ) {
         
     </style>
   <!--  method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerdevice" -->
-    <form id="new_device_form" name="registerform">
+    <form id="new_device_form" name="registerform" onsubmit="return false">
         <label for="device_name">
             device_name:
         </label>

@@ -481,7 +481,7 @@ class OneFileLoginApplication
 
 
         $this->getIP(DEBUG_MODE);
-        $this->http_user_agent = getenv('HTTP_USER_AGENT');
+       // $this->http_user_agent = getenv('HTTP_USER_AGENT');
         // $this->info = $this->script_start_time. " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
         // file_put_contents('visitors.txt', "\n" . $this->info, FILE_APPEND);
 
@@ -494,6 +494,19 @@ class OneFileLoginApplication
             //both ofbthese cases check agst db for regstd dev
             //factor out isRegistteredDevice()
             switch ($_GET["action"]): case ("superuser"):
+                    $this->doLogout();
+                    //destroy cookie
+                     
+                    setcookie(
+                        "device_session_id",
+                        null,
+                        1,
+                        "",
+                        "",
+                        false,
+                        true
+                    );
+
                     $this->showPageLoginForm();
                     exit();
                     break;
@@ -571,19 +584,27 @@ class OneFileLoginApplication
                 switch ($_GET["action"]): case ("updatedevice"):
                         if (isset($_POST["updatedevice"])) {
                             $this->updateDevice();
-                            echo "updating device by POST feedback: " . $this->feedback;
+                        }else{
+                        $this->addFeedback("no updatedevice form data entry - no POST param");
                         }
+                        $_ARR_response = array(
+                            'feedback' => "updating device by POST feedback: " . $this->feedback
+                        );
+                        echo json_encode($_ARR_response);
                         exit();
                         break;
 
                     case ("registerdevice"):
                         if (isset($_POST["registerdevice"])) {
                             $this->doDeviceRegistration();
-                            echo "registering device by POST feedback: " . $this->feedback;
                         } else {
-                            echo "zly registerdevice post - oto ci on:";
-                            print_me($_POST);
+                            $this->addFeedback("missing updatedevice form data entry - no POST param");
+                            $this->addFeedback(print_me($_POST,1));
                         }
+                        $_ARR_response = array(
+                            'feedback' => "registering device by POST feedback: " . $this->feedback
+                        );
+                        echo json_encode($_ARR_response);
                         exit();
                         break;
 

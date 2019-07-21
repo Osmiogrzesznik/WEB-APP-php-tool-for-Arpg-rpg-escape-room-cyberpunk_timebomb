@@ -1,28 +1,27 @@
-
 .edit-td .edit-area {
     border: none;
     margin: 0;
     padding: 0;
     display: block;
-  
+
     /* remove resizing handle in Firefox */
     resize: none;
-  
+
     /* remove outline on focus in Chrome */
     outline: none;
-  
+
     /* remove scrollbar in IE */
     overflow: auto;
-  }
-  
-  .edit-controls {
+}
+
+.edit-controls {
     position: absolute;
-  }
-  
-  .edit-td {
+}
+
+.edit-td {
     position: relative;
     padding: 0;
-  }
+}
 
 a,
 body,
@@ -65,13 +64,14 @@ a {
     /* border-color: rgba(0, 70, 0, .7); */
 }
 
-.link{
+.link {
     background-color: rgba(0, 70, 0, .7);
     color: white;
     font-size: initial;
 }
 
-form,.centerpanel {
+form,
+.centerpanel {
     /* margin: 1vh; */
     /* display:block; */
     flex-direction: column;
@@ -81,7 +81,7 @@ form,.centerpanel {
     align-items: center;
 }
 
-form{
+form {
     width: min-content;
     border: 2px solid;
     padding: 10px;
@@ -205,7 +205,7 @@ table {
     src: url("fonts/alarm clock.ttf") format("truetype");
 }
 
- @font-face {
+@font-face {
     font-family: "digit";
     src: url("fonts/digit.TTF") format("truetype");
 }
@@ -230,7 +230,7 @@ table {
     border-color: var(--rd);
 }
 
-.CorrectAnswer{
+.CorrectAnswer {
     animation-name: shine;
     animation-duration: 1s;
     animation-iteration-count: 1;
@@ -256,16 +256,16 @@ table {
     animation-timing-function: cubic-bezier(0.190, 1.000, 0.220, 1.000);
 }
 
-.updatedAnim{
+.updatedAnim {
     animation-duration: 0.2s;
     animation-timing-function: cubic-bezier(0.190, 1.000, 0.220, 1.000);
     animation-name: popUpdate;
     animation-direction: alternate;
     animation-iteration-count: 2;
-    }
-    
-.changed{
-    color:rgb(254, 255, 172);
+}
+
+.changed {
+    color: rgb(254, 255, 172);
 }
 
 .redglow {
@@ -317,14 +317,14 @@ opacity: .5;
     }
 }
 
-.feedback-pre-console{
+.feedback-pre-console {
     background-color: rgba(12, 0, 0, 0.95);
     padding: 5px;
     border: 3px solid;
     overflow: auto;
 }
 
-.feedbackContainer{
+.feedbackContainer {
     max-width: 85vw;
     max-height: 62vh;
     display: flex;
@@ -336,43 +336,44 @@ opacity: .5;
     background-color: #070631f2;
 }
 
-.modal-container{
-    position:fixed;
+.modal-container {
+    position: fixed;
     position: initial;
-    display:none;
+    display: none;
 }
 
-.modal-container-on{
+.modal-container-on {
     position: fixed;
-    top:0px;
-    left:0px;
-    z-index:2;
+    top: 0px;
+    left: 0px;
+    z-index: 2;
     justify-content: center;
     display: flex;
     flex-direction: column;
     width: 100vw;
     height: 100vh;
-    
+
     align-items: center;
 }
 
-#map{
-    margin-left:0px;
+#map {
+    margin-left: 0px;
     width: 95vw;
     height: 90vh;
 }
-.squeezed{
+
+.squeezed {
     word-break: break-all;
     width: 10px;
 }
 
 
-.nonclickable{
+.nonclickable {
     pointer-events: none;
-    border:2px solid red;
+    border: 2px solid red;
 }
 
-.table::before{
+.table::before {
     content: "EDIT MODE";
     position: fixed;
     /* margin: -30px; */
@@ -384,13 +385,14 @@ opacity: .5;
     right: 0px;
 }
 
-#wrapper{
+#wrapper {
     position: relative;
-    display: table; /*Expand to fit the content, width could be calculated automatically in JS*/
+    display: table;
+    /*Expand to fit the content, width could be calculated automatically in JS*/
 
 }
 
-.nonclickable::before{
+.nonclickable::before {
     content: "WATCH MODE";
     position: absolute;
     color: #fff700;
@@ -431,7 +433,7 @@ opacity: .5;
 }
 
 .time_last_active {
-    font-size:initial;
+    font-size: initial;
 }
 
 .field-editable {
@@ -466,4 +468,158 @@ input:invalid+span:after {
 input:valid+span:after {
     content: 'value OK';
     padding-left: 5px;
+}
+
+
+
+@media only screen and (max-width: 760px),
+(min-device-width: 768px) and (max-device-width: 1024px) {
+    .squeezed {
+        /* word-break: break-all; */
+        width: inherit;
+
+    }
+    .table::before {
+        content: "EDIT MODE";
+        position: inherit;
+        /* margin: -30px; */
+        color: (--fg);
+        padding: 0px;
+        border: 2px solid #33ff006b;
+        /* bottom: 0px; */
+        top: 0px;
+        /* right: 0px; */
+    }
+    
+    #wrapper {
+        position: relative;
+        display: table;
+        /*Expand to fit the content, width could be calculated automatically in JS*/
+    
+    }
+    
+    .nonclickable::before {
+        
+            content: "WATCH MODE";
+            position: inherit;
+            color: #fff700;
+            padding: 0px;
+            border: 2px solid #ff1800;
+        
+    }
+
+    .time_set{
+        /* margin:auto; */
+        
+        align-self: flex-end;
+    }
+
+    .uuu{
+        display: flex;
+    flex-direction: column
+    }
+
+    table{
+        /* position: absolute; */
+        margin: 1vh;
+        width: 90vw;
+        /* border-collapse: collapse; */
+        /* height: 80vh; */
+    }
+
+
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        /* width: 90vw; */
+        display: block;
+    }
+
+    
+    /* Hide table headers (but not display: none;, for accessibility) */
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    tr {
+        /* border: 1px solid #ccc; */
+    }
+
+    td {
+        border: none;
+        border-bottom: 1px solid (--fg);
+        position: relative;
+        padding-bottom: 5px;
+        padding-left: 4vw;
+        margin-bottom: 1px;
+        text-align:end;
+    }
+
+    .flex-row {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        width: 100vw;
+    }
+
+    td:before {
+        position: absolute;
+        /* top: 6px; */
+        left: 0px;
+        width: 25%;
+        /* padding-right: 10px; */
+        white-space: nowrap;
+        background-color: var(--fg);
+        color: var(--bg);
+        padding: 2px;
+        border: 1px solid (--bg);
+    }
+
+    /*
+	Label the data
+	*/
+    td:nth-of-type(1):before {
+        content: "name";
+    }
+
+    td:nth-of-type(2):before {
+        content: "description";
+    }
+
+    td:nth-of-type(3):before {
+        content: "ip";
+    }
+
+    td:nth-of-type(4):before {
+        content: "password";
+    }
+
+    td:nth-of-type(5):before {
+        content: "status";
+    }
+
+    td:nth-of-type(6):before {
+        content: "time_set";
+    }
+
+    td:nth-of-type(7):before {
+        content: "last active";
+    }
+
+    td:nth-of-type(8):before {
+        content: "location";
+    }
+
+    td:nth-of-type(9):before {
+        content: "OPTIONS";
+    }
+
+    td:nth-of-type(10):before {
+        content: "Arbitrary Data";
+    }
 }

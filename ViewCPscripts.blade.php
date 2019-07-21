@@ -1,9 +1,11 @@
 <script>
+  //SETTINGS SCRIPT 
   tableData = <?php echo json_encode($this->resultset, JSON_PRETTY_PRINT); ?>;
-
   baseurl = "<?= $_SERVER['SCRIPT_NAME'] ?>";
-  UpdateUrl = "<?= $_SERVER['SCRIPT_NAME'] ?>?action=updatedevice";
-
+</script>
+<script>
+UpdateUrl = baseurl + "?action=updatedevice";
+  newDeviceUrl = baseurl + "?action=registerdevice";
 
   function Watchmode() {
     this.interval = 5000;
@@ -37,9 +39,9 @@
         })
         .then(x => x.json())
         .then(data => this.update(data))
+        .catch(err=> say(err.stack));
     };
     this.update = function(data) {
-    	
       console.log(data);
       say("fetchOK", 1);
       cols = data.columnNames;
@@ -55,14 +57,14 @@
           "\nyou need to refresh, there is a new device registered on your account"
 
           say(msg);
-          alert(msg);
+          say(msg);
           open(baseurl); //just open new window - to much hassle ?
           return;
         }
         // later in api you can make it so cols are not all send
         // so only important/changeable stuff is updated
         for (let ci = 0; ci < cols.length; ci++) {
-          col = cols[ci]
+          col = cols[ci];
           field = tr.querySelector("#r" + row.device_id + col);
           if(!field){ continue;}
           let old = field.innerText
@@ -74,7 +76,7 @@
             popsound ? popsound.play() : 0; //play the sound if exists
             window.fieldonlater = field;
             setTimeout(x => {
-              //alert(fieldonlater.classList)
+              //say(fieldonlater.classList)
               fieldonlater.classList.remove("updatedAnim")
             }, 1000);
 
@@ -238,7 +240,7 @@ iiiii = 0;
 		//.setGeometry(new ol.geom.Point(pos));
 		coords = f.getGeometry().getCoordinates();
     coords = ol.proj.transform(coords, 'EPSG:3857', 'EPSG:4326');
-    //alert(JSON.stringify(coord))
+    //say(JSON.stringify(coord))
    // console.log(coords);
    console.log(coords);
     coords[0] +=  (Math.random() > 0.5 ? 1:-1)* 0.001;
@@ -486,7 +488,6 @@ say("map module ok");
   // }
   // document.querySelector('form').onkeypress = checkEnter;
 
-  newDeviceUrl = "<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerdevice";
 
   devLocate = {
     lastError: "",
@@ -579,11 +580,11 @@ say("map module ok");
     var FD = new FormData(document.querySelector("#new_device_form"));
     let fields = [];
     DEV_LOCATION = devLocate.getLocationObject();
-    say(JSON.stringify(DEV_LOCATION));
+    //say(JSON.stringify(DEV_LOCATION));
     FD.append("latitude", DEV_LOCATION.latitude + "");
     FD.append("longitude", DEV_LOCATION.longitude + "");
     FD.append("registerdevice", "true");
-alert(DEV_LOCATION);
+say(DEV_LOCATION);
     fetch(newDeviceUrl, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         // mode: 'cors', // no-cors, cors, *same-origin
@@ -599,8 +600,11 @@ alert(DEV_LOCATION);
       })
       .then(response => response.text())
       .then(t => {
-	alert(t);
-        say(t); //try to display modal else alert
+	feedback.innerText = "New device feedback:";
+	say(t);
+        confirm("if device added succesfully , click ok to refresh window"+t)?
+        window.open(baseurl,"_self"):0; //try to display modal else say
+        
       });; // parses JSON response into native JavaScript objects 
     return true; //false;//return false to prevent form from reloading the page   
   }
@@ -632,7 +636,7 @@ alert(DEV_LOCATION);
     cx.start();
     time_set.addEventListener('change', (ev) => {
       cx.reset();
-      //alert(event.target.value);
+      //say(event.target.value);
       cx.setTimestampEndfromString(ev.target.value);
       cx.start();
     }, false)
