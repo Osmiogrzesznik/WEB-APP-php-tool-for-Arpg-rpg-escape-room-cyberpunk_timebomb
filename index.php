@@ -901,6 +901,11 @@ class OneFileLoginApplication
         try {
             $this->db_connection = new PDO($this->db_type . ':' . $this->db_sqlite_path);
             $this->db_connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $sql = '
+                PRAGMA foreign_keys = ON;
+                ';
+                $query = $this->db_connection->prepare($sql);
+                $query->execute();
             // } catch (PDOException $e) 
             //     echo "\nSorry Bo , opening db went wrong- " . $e->getMessage() . $ip . " " . $info;
             //     file_put_contents('PDOErrors.txt', $e->getMessage(), FILE_APPEND);
