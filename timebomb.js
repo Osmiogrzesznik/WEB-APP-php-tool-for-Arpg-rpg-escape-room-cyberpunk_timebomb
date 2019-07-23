@@ -199,7 +199,14 @@ try {
             locsuffix = this.getLocationSuffix();
             fetch(this.locateURL + locsuffix)
                 .then(p => p.text())
-                .then(t => console.log(t));
+                .then(t => {
+
+		console.log(t);
+		j= JSON.parse(t);
+	updateStateFromServerResponse(j);
+
+})
+.catch(err=>alert(err))
         },
         locationError(error) {
             this.wasError = true;
@@ -253,10 +260,12 @@ try {
     function startBombWithData(data) {
 
         if (["disarmed", "detonated"].includes(data.device_status)) {
-            alert("this device was already disarmed");
+            alert("this device was already "+data.device_status);
             window.open("index.php?action=superuser","_self");
             return;
         }
+alert("this device is "+data.device_status);
+
         time_set = new Date(data.time_set);
         //alert(time_set.getTime());
 
@@ -273,6 +282,9 @@ try {
             fetch("index.php?action=password&password=" + psswd + locsuffix)
                 .then(response => response.json())
                 .then(json => {
+	
+	updateStateFromServerResponse(json);
+	
                     // alert(json);
                     // json = JSON.parse(json);
                     // ////alert(JSON.stringify(json));
@@ -345,6 +357,24 @@ try {
             })
             .catch(x => alert(x.stack));
     }
+
+
+function updateStateFromServerResponse(j){
+cx.setTimestampEnd(Date.parse(j.time_set));
+if (j.device_status == "detonated"){
+	cx.stop();
+	cx.showTime(0,0,0);
+detonate();
+	}
+if (j.device_status == "disarmed"){
+cx.stop();
+	}
+
+}
+
+
+
+
 
 
     startup();

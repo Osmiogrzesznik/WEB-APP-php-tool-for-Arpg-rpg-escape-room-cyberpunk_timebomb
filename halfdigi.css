@@ -16,12 +16,16 @@
 
 .edit-controls {
     position: absolute;
+    right: 0px;
 }
 
 .edit-td {
     position: relative;
     padding: 0;
+    text-align: right;
 }
+
+
 
 a,
 body,
@@ -33,11 +37,15 @@ select {
     --bg: #000;
     background-color: #000;
     color: #20f86c;
-    font-family: monospace;
-    font-size: 12px;
+    font-family: joystix;
+
+    font-size: 9px;
     margin: 0px;
 }
 
+#feedback{
+    font-family: joystix;  
+}
 
 
 .hud {
@@ -53,10 +61,11 @@ a {
     /* padding: 0.5em; */
     background-color: rgba(0, 0, 0, .7);
     text-align: center;
+    font-size: 9px;
 }
 
 .big {
-    width: 20vw;
+    /* width: 20vw; */
     height: 20vh;
     background-color: rgba(0, 70, 0, .7);
     color: white;
@@ -82,9 +91,9 @@ form,
 }
 
 form {
-    width: min-content;
-    border: 2px solid;
-    padding: 10px;
+        /* width: min-content; */
+        border: 2px solid;
+        /* padding: 10px; */
 }
 
 td {
@@ -98,6 +107,7 @@ a {
     background-color: var(--fg);
     color: var(--bg);
     border: 1px solid (--bg);
+    font-size: 9px;
 }
 
 btn {
@@ -201,8 +211,8 @@ table {
 
 
 @font-face {
-    font-family: "alarmclock";
-    src: url("fonts/alarm clock.ttf") format("truetype");
+    font-family: "joystix";
+    src: url("fonts/joystix.ttf") format("truetype");
 }
 
 @font-face {
@@ -357,6 +367,7 @@ opacity: .5;
 }
 
 #map {
+    margin-top: 20px;
     margin-left: 0px;
     width: 95vw;
     height: 90vh;
@@ -374,6 +385,7 @@ opacity: .5;
 }
 
 .table::before {
+    font-size: 9px;
     content: "EDIT MODE";
     position: fixed;
     /* margin: -30px; */
@@ -433,7 +445,7 @@ opacity: .5;
 }
 
 .time_last_active {
-    font-size: initial;
+    /* font-size: initial; */
 }
 
 .field-editable {
@@ -474,11 +486,40 @@ input:valid+span:after {
 
 @media only screen and (max-width: 760px),
 (min-device-width: 768px) and (max-device-width: 1024px) {
+
+
+    .edit-controls {
+        position: absolute;
+        right: 0px;
+    }
+
+
+
+    .edit-area {
+        padding: 0;
+        text-align: right;
+        direction: rtl;
+
+    }
+
+
+    .edit-td {
+        position: relative;
+        padding: 0;
+        margin-bottom: 20px;
+        text-align: right;
+    }
+
+
+
+
+
     .squeezed {
         /* word-break: break-all; */
         width: inherit;
 
     }
+
     .table::before {
         content: "EDIT MODE";
         position: inherit;
@@ -490,36 +531,37 @@ input:valid+span:after {
         top: 0px;
         /* right: 0px; */
     }
-    
+
     #wrapper {
         position: relative;
         display: table;
         /*Expand to fit the content, width could be calculated automatically in JS*/
-    
+
     }
-    
+
     .nonclickable::before {
-        
-            content: "WATCH MODE";
-            position: inherit;
-            color: #fff700;
-            padding: 0px;
-            border: 2px solid #ff1800;
-        
+
+        content: "WATCH MODE";
+        position: inherit;
+        color: #fff700;
+        padding: 0px;
+        border: 2px solid #ff1800;
+
     }
 
-    .time_set{
-        /* margin:auto; */
-        
-        align-self: flex-end;
+    .time_set {
+        margin:auto;
+        width:90%;
+
+        /* align-self: flex-end; */
     }
 
-    .uuu{
+    .uuu {
         display: flex;
-    flex-direction: column
+        flex-direction: column
     }
 
-    table{
+    table {
         /* position: absolute; */
         margin: 1vh;
         width: 90vw;
@@ -538,7 +580,7 @@ input:valid+span:after {
         display: block;
     }
 
-    
+
     /* Hide table headers (but not display: none;, for accessibility) */
     thead tr {
         position: absolute;
@@ -547,7 +589,7 @@ input:valid+span:after {
     }
 
     tr {
-        /* border: 1px solid #ccc; */
+        border: 2px solid #20f86c;
     }
 
     td {
@@ -557,7 +599,8 @@ input:valid+span:after {
         padding-bottom: 5px;
         padding-left: 4vw;
         margin-bottom: 1px;
-        text-align:end;
+        text-align: end;
+        min-height: 1rem;
     }
 
     .flex-row {

@@ -296,7 +296,7 @@ class OneFileLoginApplication
                 $_SESSION['time_set'] = $result_row->time_set;
                 $_SESSION['device_password'] = $result_row->device_password;
                 $_SESSION['timezone'] = $result_row->user_timezone;
-                
+
                 $this->device_status = $result_row->device_status;
                 $this->device_session_id = $result_row->device_session_id;
                 $this->timezoneName = $result_row->user_timezone;
@@ -308,7 +308,7 @@ class OneFileLoginApplication
                 $this->time_last_active = $result_row->time_last_active;
                 $status_old = $result_row->device_status;
                 $this->device_status = $result_row->device_status;
-                
+
                 $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT, $result_row->time_set, $this->timezone);
                 $this->time_set_timestamp = $dateOFF->format('U');
                 //REFRESH COOKIE   
@@ -337,11 +337,11 @@ class OneFileLoginApplication
                 if (isset($_GET['latitude'], $_GET['longitude'])) {
                     $location_new = $_GET['latitude'] . "/" . $_GET['longitude'];
                     $this->addFeedback("got location GET params");
-                    if ($location_new != $location_old){
+                    if ($location_new != $location_old) {
                         //update device location history
                         $this->addFeedback("location is new, storing old in history");
-                        try{
-                        $sql = "INSERT INTO history_device_location (
+                        try {
+                            $sql = "INSERT INTO history_device_location (
                             history_id,
                             history_device_id,
                             history_time_last_active,
@@ -353,22 +353,22 @@ class OneFileLoginApplication
                             :time_last_active,
                             :device_location
                                           );";
-                        $query = $this->db_connection->prepare($sql);
-                        $query->bindValue(':device_location', $location_old);//old
-                        $query->bindValue(':device_id', $this->device_id);//unchanging
-                        $query->bindValue(':time_last_active', $this->time_last_active);//old
-                        $success = $query->execute();
-                        }catch(Exception $e){
-                            $this->addFeedback("updating location history exception:". $e->getMessage());
+                            $query = $this->db_connection->prepare($sql);
+                            $query->bindValue(':device_location', $location_old); //old
+                            $query->bindValue(':device_id', $this->device_id); //unchanging
+                            $query->bindValue(':time_last_active', $this->time_last_active); //old
+                            $success = $query->execute();
+                        } catch (Exception $e) {
+                            $this->addFeedback("updating location history exception:" . $e->getMessage());
                         }
-                        $this->addFeedback($success ? "updated history":"not updated history");
+                        $this->addFeedback($success ? "updated history" : "not updated history");
                     }
-                } else {//location not provided
+                } else { //location not provided
                     $this->addFeedback("location not provided");
                     //if last location was not provided and this one is still not provided
                     if ($location_old === "no location") {
                         $location_new = "no location";
-                    } else {//if location has not been provided but last location is valid 
+                    } else { //if location has not been provided but last location is valid 
                         //just update it with old loc
                         $location_new = $location_old;
                         $this->addFeedback("but previously you were sending location");
@@ -380,12 +380,15 @@ class OneFileLoginApplication
                 if ($status_old == "disarmed") {
                     $this->addFeedback("this device was already disarmed");
                     $status_new = $status_old;
+                } elseif ($status_old == "detonated") {
+                    $this->addFeedback("this device was already detonated");
+                    $status_new = $status_old;
                 } elseif ($this->time_set_timestamp <= time()) {
-                    $this->addFeedback("this device already detonated");
+                    $this->addFeedback("this device just detonated");
                     $status_new = "detonated";
-                    $this->device_status_new = $status_new;// used by JSsettings.php
+                    $this->device_status_new = $status_new; // used by JSsettings.php
                 }
-
+                $this->device_status_new = $status_new;
 
                 //-------------------------------------------------------------------------------------
                 //END
@@ -435,11 +438,11 @@ class OneFileLoginApplication
                     $this->addFeedback("password correct");
                     // TODO: should check if its too late , even when device already 
                     // detonated, just to make sure nobody will fool admins
-                    if($this->device_status_new == "detonated"){
+                    if ($this->device_status_new == "detonated") {
                         $this->addFeedback("however, sorry it is too late device is detonated already");
                         return false;
                     }
-                    if ($this->createDatabaseConnection() ) {
+                    if ($this->createDatabaseConnection()) {
                         $sql = 'UPDATE device
                             SET device_status = :new_status
                             WHERE device_id = :already_checked_and_found_id;
@@ -481,7 +484,7 @@ class OneFileLoginApplication
 
 
         $this->getIP(DEBUG_MODE);
-       // $this->http_user_agent = getenv('HTTP_USER_AGENT');
+        // $this->http_user_agent = getenv('HTTP_USER_AGENT');
         // $this->info = $this->script_start_time. " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
         // file_put_contents('visitors.txt', "\n" . $this->info, FILE_APPEND);
 
@@ -496,7 +499,7 @@ class OneFileLoginApplication
             switch ($_GET["action"]): case ("superuser"):
                     $this->doLogout();
                     //destroy cookie
-                     
+
                     setcookie(
                         "device_session_id",
                         null,
@@ -519,9 +522,11 @@ class OneFileLoginApplication
                 case ("locate"):
                     if ($this->IsRegisteredDevice()) {
                         $_ARR_response = array(
+                            'device_status' => $this->device_status_new,
+                            'time_set' => $this->device_time_set,
                             'feedback' => $this->feedback
                         );
-                    }else{
+                    } else {
                         $_ARR_response = array(
                             'feedback' => $this->feedback
                         );
@@ -533,6 +538,8 @@ class OneFileLoginApplication
                 case ("password"):
                     $password_ok = $this->checkDevicePasswordCorrectness();
                     $_ARR_response = array(
+                        'device_status' => $this->device_status_new,
+                        'time_set' => $this->device_time_set,
                         'password_ok' => $password_ok,
                         'feedback' => $this->feedback
                     );
@@ -551,7 +558,7 @@ class OneFileLoginApplication
 
                 case ("registerUser"):
                     if (isset($_POST["register"])) {
-                         
+
                         $this->doRegistration();
                     }
                     $this->showPageLoggedIn();
@@ -584,8 +591,8 @@ class OneFileLoginApplication
                 switch ($_GET["action"]): case ("updatedevice"):
                         if (isset($_POST["updatedevice"])) {
                             $this->updateDevice();
-                        }else{
-                        $this->addFeedback("no updatedevice form data entry - no POST param");
+                        } else {
+                            $this->addFeedback("no updatedevice form data entry - no POST param");
                         }
                         $_ARR_response = array(
                             'feedback' => "updating device by POST feedback: " . $this->feedback
@@ -599,12 +606,28 @@ class OneFileLoginApplication
                             $this->doDeviceRegistration();
                         } else {
                             $this->addFeedback("missing updatedevice form data entry - no POST param");
-                            $this->addFeedback(print_me($_POST,1));
+                            $this->addFeedback(print_me($_POST, 1));
                         }
                         $_ARR_response = array(
                             'feedback' => "registering device by POST feedback: " . $this->feedback
                         );
                         echo json_encode($_ARR_response);
+                        exit();
+                        break;
+
+                    case("savemap"):
+                        if (!isset($_GET["map"])){
+                            exit();
+                        }
+                        if($this->createDatabaseConnection()){
+                            $sql = "UPDATE user SET user_map_srv = :map WHERE user_id = :id";
+                            $query = $this->db_connection->prepare($sql);
+                            $query->bindValue(':id', $_SESSION["user_id"]);
+                            $query->bindValue(':map', $_GET["map"]);
+                            $query->execute();
+                        }
+                        $_SESSION['user_map_srv']= $_GET["map"];
+                        echo "user_MAP_srv changed";
                         exit();
                         break;
 
@@ -904,8 +927,8 @@ class OneFileLoginApplication
             $sql = '
                 PRAGMA foreign_keys = ON;
                 ';
-                $query = $this->db_connection->prepare($sql);
-                $query->execute();
+            $query = $this->db_connection->prepare($sql);
+            $query->execute();
             // } catch (PDOException $e) 
             //     echo "\nSorry Bo , opening db went wrong- " . $e->getMessage() . $ip . " " . $info;
             //     file_put_contents('PDOErrors.txt', $e->getMessage(), FILE_APPEND);
@@ -959,7 +982,8 @@ class OneFileLoginApplication
     {
         $this->timezoneName = $_SESSION['user_timezone'];
         $this->user_id = $_SESSION['user_id'];
-
+        $this->user_name = $_SESSION['user_name'];
+        $this->user_map_srv = $_SESSION['user_map_srv'];
         $this->timezone = new DateTimeZone($this->timezoneName);
         $this->user_is_logged_in = true;
     }
@@ -1051,7 +1075,7 @@ class OneFileLoginApplication
     private function checkPasswordCorrectnessAndLogin()
     {
         // remember: the user can log in with username or email address
-        $sql = 'SELECT user_id, user_name, user_password_hash, user_timezone
+        $sql = 'SELECT user_id, user_name, user_password_hash, user_timezone, user_map_srv
                 FROM user
                 WHERE user_name = :user_name
                 LIMIT 1';
@@ -1074,6 +1098,8 @@ class OneFileLoginApplication
                 $_SESSION['user_name'] = $result_row->user_name;
                 $_SESSION['user_timezone'] = $result_row->user_timezone;
                 $_SESSION['user_is_logged_in'] = true;
+                $this->user_map_srv = $result_row->user_map_srv;
+                $_SESSION['user_map_srv'] = $result_row->user_map_srv;
                 $this->user_id = $result_row->user_id;
                 $this->timezoneName = $result_row->user_timezone;
                 $this->timezone = new DateTimeZone($this->timezoneName);
@@ -1425,7 +1451,7 @@ class OneFileLoginApplication
     private function showPageLoggedIn()
     {
         if ($this->createDatabaseConnection()) {
-            $this->user_id = $this->user_id;
+            $this->user_id = $this->user_id; // ???????????
             $allDevices = $this->getAllDevices($this->user_id);
             $this->columns = $allDevices['columnNames'];
             $this->resultset = $allDevices['rows'];

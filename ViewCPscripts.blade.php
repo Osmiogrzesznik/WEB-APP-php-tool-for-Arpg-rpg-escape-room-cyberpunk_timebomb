@@ -1,9 +1,53 @@
 <script>
   //SETTINGS SCRIPT 
+  usr_map_srv = <?= isset($_SESSION["user_map_srv"]) ? $_SESSION["user_map_srv"] : 0 ?>;
   tableData = <?php echo json_encode($this->resultset, JSON_PRETTY_PRINT); ?>;
   baseurl = "<?= $_SERVER['SCRIPT_NAME'] ?>";
 </script>
 <script>
+  TILE_SERVERS=[
+  {name:"cartodb-basemaps DARK a", url: "https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"},
+  {name:"cartodb-basemaps DARK b", url: "https://cartodb-basemaps-b.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"},
+  {name:"cartodb-basemaps DARK c", url: "https://cartodb-basemaps-c.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"},
+  {name:"cartodb-basemaps light a", url: "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"},
+  {name:"cartodb-basemaps light b", url: "https://cartodb-basemaps-b.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"},
+  {name:"cartodb-basemaps light c", url: "https://cartodb-basemaps-c.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"},
+  {name: "stamen watercolor", url:"http://c.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg"},
+  {name: "stamen toner", url:"http://a.tile.stamen.com/toner/{z}/{x}/{y}.png"},
+  {name: "OSM a", url:"https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"},
+  {name: "OSM b", url:"https://b.tile.openstreetmap.org/{z}/{x}/{y}.png"},
+  {name: "OSM c", url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"},
+  {name: "OSM.de a", url:"https://a.tile.openstreetmap.de/{z}/{x}/{y}.png"},
+  {name: "OSM.de b", url:"https://b.tile.openstreetmap.de/{z}/{x}/{y}.png"},
+  {name: "OSM.de c", url:"https://c.tile.openstreetmap.de/{z}/{x}/{y}.png"},
+  {name: "wikimedia", url: "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png"},
+  {name: "OSM.fr hot a", url: "http://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png "},
+  {name: "OSM.fr hot b", url: "http://b.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"},
+  {name: "OSM.fr osmfr a", url: "http://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png "},
+  {name: "OSM.fr osmfr b", url: "http://b.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png "},
+  {name: "OSM.fr osmfr c", url: "http://c.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"},
+  {name: "opentopomap a", url: "https://a.tile.opentopomap.org/{z}/{x}/{y}.png"},
+  {name: "opentopomap b", url: "https://b.tile.opentopomap.org/{z}/{x}/{y}.png"},
+  {name: "opentopomap c", url: "https://c.tile.opentopomap.org/{z}/{x}/{y}.png"}
+  ]
+
+  SELECTED_TILE_SERVER = TILE_SERVERS[usr_map_srv].url;
+  mapCHGbtn.innerText = "change Map server:" + TILE_SERVERS[usr_map_srv].name;
+  mapChanger = {
+    idx:usr_map_srv,
+    maps:TILE_SERVERS,
+    lnt:TILE_SERVERS.length,
+    nextMap(btn){
+      this.idx = (this.idx+1 < this.lnt)? this.idx+1:0;
+      curMap = this.maps[this.idx];
+      btn.innerText = "change Map server:" + curMap.name; 
+      changeMapUrl(curMap.url);
+      fetch(baseurl+"?action=savemap&map=" + this.idx)
+      .then(x=>x.text())
+      .then(t=>say(t));
+    }
+  }
+  
 UpdateUrl = baseurl + "?action=updatedevice";
   newDeviceUrl = baseurl + "?action=registerdevice";
 
@@ -29,9 +73,22 @@ UpdateUrl = baseurl + "?action=updatedevice";
       this.IID = setInterval(x => this.fetchToUpdate(), this.interval);
       this.fetchToUpdate();
     };
+    this.removeClassChanges = function(){
+      changed = tableToEdit.getElementsByClassName("changed");
+        [].forEach.call(changed, function(el) {
+    el.classList.remove("changed");
+  });
+  updatedAnim = tableToEdit.getElementsByClassName("updatedAnim");
+        [].forEach.call(updatedAnim, function(el) {
+    el.classList.remove("updatedAnim");
+  });
+    }
     this.stop = function() {
-      tableToEdit.classList.remove("nonclickable");
       clearInterval(this.IID);
+      this.isOn = false;
+      this.removeClassChanges();
+      tableToEdit.classList.remove("nonclickable");
+      setTimeout(x=>this.removeClassChanges(),1000);
     };
     this.fetchToUpdate = function() {
       fetch(this.urlgetalldevices, {
@@ -42,6 +99,7 @@ UpdateUrl = baseurl + "?action=updatedevice";
         .catch(err=> say(err.stack));
     };
     this.update = function(data) {
+      if (!this.isOn) {return;}
       console.log(data);
       say("fetchOK", 1);
       cols = data.columnNames;
@@ -78,7 +136,7 @@ UpdateUrl = baseurl + "?action=updatedevice";
             setTimeout(x => {
               //say(fieldonlater.classList)
               fieldonlater.classList.remove("updatedAnim")
-            }, 1000);
+            }, 300);
 
             this.onUpdate(this,anew,row,col);
 
@@ -114,16 +172,11 @@ UpdateUrl = baseurl + "?action=updatedevice";
   var vectorLayer;
   var atomIcons = {};
 
-  function NuMap(mapLat, mapLng, mapDefaultZoom) {
+  function NuMap(mapLat, mapLng, mapDefaultZoom, tileLayer) {
     return new ol.Map({
       target: "map",
       layers: [
-        new ol.layer.Tile({
-          source: new ol.source.OSM({
-            url: "https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png",
-            urluuu: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          })
-        })
+        tileLayer
       ],
       view: new ol.View({
         center: ol.proj.fromLonLat([parseFloat(mapLng), parseFloat(mapLat)]),
@@ -162,10 +215,13 @@ UpdateUrl = baseurl + "?action=updatedevice";
       text: new ol.style.Text({
         text: text,
         offsetY: 20,
-        font: "bold 20px sans-serif",
+        font: "12px joystix",
         stroke: new ol.style.Stroke({
           width: 3,
-          color: "#ffffff"
+          color: "#000000"
+        }),
+        fill: new ol.style.Fill({
+          color:'#20f86c'
         })
       })
     })
@@ -180,6 +236,23 @@ UpdateUrl = baseurl + "?action=updatedevice";
     })
   }
 
+  function NuTileLayer(url){
+    return new ol.layer.Tile({
+          source: new ol.source.OSM({
+            url: url
+          })
+        });
+  }
+
+  function changeMapUrl(url){
+    if (!tileLayer){
+      say("no devices to show on map, so no map:P")
+      return;
+    }
+    tileLayer.setSource(new ol.source.OSM({
+            url: url
+          }));
+  }
 
   function showDevices(devices) {
     if (devices.length < 1) {
@@ -217,8 +290,12 @@ UpdateUrl = baseurl + "?action=updatedevice";
       created: NuIcon("created"),
       active: NuIcon("active")
     }
+    tileLayer = NuTileLayer(SELECTED_TILE_SERVER);
+    
     //musisz policzyc srednia albo znalesc na necie position map to see all markers
-    window.map = NuMap(devicesWithLocation[0].location.latitude, devicesWithLocation[0].location.longitude, mapDefaultZoom);
+    window.map = NuMap(devicesWithLocation[0].location.latitude,
+     devicesWithLocation[0].location.longitude,
+      mapDefaultZoom, tileLayer);
     window.allFeaturesCollection = {};
     window.arrayOfFeaturesAll = devicesWithLocation.map(dv => {
       feature = NuFeature(dv.device_name, dv.device_status, dv.location.latitude, dv.location.longitude)

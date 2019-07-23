@@ -1,10 +1,11 @@
-CREATE TABLE IF NOT EXISTS `user` (
+CREATE TABLE IF NOT EXISTS `user2` (
         `user_id` INTEGER PRIMARY KEY,
         `user_ip` varchar(64) NOT NULL,
         `user_name` varchar(64) NOT NULL,
         `user_password_hash` varchar(255) NOT NULL,
         `user_timezone` varchar(64) NOT NULL,
-        'user_location' varchar(255)
+        'user_location' varchar(255),
+        'user_map_srv' INTEGER NOT NULL DEFAULT 0
         );
 
 CREATE TABLE IF NOT EXISTS device (

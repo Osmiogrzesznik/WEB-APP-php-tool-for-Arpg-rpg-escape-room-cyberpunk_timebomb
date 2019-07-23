@@ -14,7 +14,10 @@ if (isset($_GET['all'])){
 ?>
 	ver3
 	alert on start watchmode
+<style>
 
+
+</style>
 <div class="hud">
 <a href="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=logout"><button class="big">Log out</button></a>
 <br>
@@ -155,6 +158,8 @@ if( count($resultset) > 0 ) {
 </div>
 <a href="<?= $_SERVER['SCRIPT_NAME'] ?>"><button onclick="">Refresh</button></a>
 <button onclick="watchmode.toggle(this)">Watch Mode(DO NOT edit table!)</button>
+<br><br><br>
+<button id="mapCHGbtn" onclick="mapChanger.nextMap(this)">change Map server:cartodb-basemaps DARK a</button>
 
 <div id="mapDIV" class="" >
 
