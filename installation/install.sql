@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS history_device_location (
                       );
 
 CREATE UNIQUE INDEX IF NOT EXISTS `user_name_UNIQUE` ON `user` (`user_name` ASC);
-CREATE UNIQUE INDEX IF NOT EXISTS `user_ip_UNIQUE` ON `user` (`user_ip` ASC);
 CREATE UNIQUE INDEX IF NOT EXISTS `device_ip_UNIQUE` ON device ( `device_ip` ASC);
 CREATE UNIQUE INDEX IF NOT EXISTS `device_session_id_UNIQUE` ON device ( `device_session_id` ASC);
                 

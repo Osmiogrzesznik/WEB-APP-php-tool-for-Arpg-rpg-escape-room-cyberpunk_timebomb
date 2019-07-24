@@ -1,55 +1,31 @@
+server data script
 <script>
   //SETTINGS SCRIPT 
   usr_map_srv = <?= isset($_SESSION["user_map_srv"]) ? $_SESSION["user_map_srv"] : 0 ?>;
   tableData = <?php echo json_encode($this->resultset, JSON_PRETTY_PRINT); ?>;
   baseurl = "<?= $_SERVER['SCRIPT_NAME'] ?>";
 </script>
-<script>
-  TILE_SERVERS=[
-  {name:"cartodb-basemaps DARK a", url: "https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"},
-  {name:"cartodb-basemaps DARK b", url: "https://cartodb-basemaps-b.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"},
-  {name:"cartodb-basemaps DARK c", url: "https://cartodb-basemaps-c.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"},
-  {name:"cartodb-basemaps light a", url: "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"},
-  {name:"cartodb-basemaps light b", url: "https://cartodb-basemaps-b.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"},
-  {name:"cartodb-basemaps light c", url: "https://cartodb-basemaps-c.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"},
-  {name: "stamen watercolor", url:"http://c.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg"},
-  {name: "stamen toner", url:"http://a.tile.stamen.com/toner/{z}/{x}/{y}.png"},
-  {name: "OSM a", url:"https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"},
-  {name: "OSM b", url:"https://b.tile.openstreetmap.org/{z}/{x}/{y}.png"},
-  {name: "OSM c", url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"},
-  {name: "OSM.de a", url:"https://a.tile.openstreetmap.de/{z}/{x}/{y}.png"},
-  {name: "OSM.de b", url:"https://b.tile.openstreetmap.de/{z}/{x}/{y}.png"},
-  {name: "OSM.de c", url:"https://c.tile.openstreetmap.de/{z}/{x}/{y}.png"},
-  {name: "wikimedia", url: "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png"},
-  {name: "OSM.fr hot a", url: "http://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png "},
-  {name: "OSM.fr hot b", url: "http://b.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"},
-  {name: "OSM.fr osmfr a", url: "http://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png "},
-  {name: "OSM.fr osmfr b", url: "http://b.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png "},
-  {name: "OSM.fr osmfr c", url: "http://c.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"},
-  {name: "opentopomap a", url: "https://a.tile.opentopomap.org/{z}/{x}/{y}.png"},
-  {name: "opentopomap b", url: "https://b.tile.opentopomap.org/{z}/{x}/{y}.png"},
-  {name: "opentopomap c", url: "https://c.tile.opentopomap.org/{z}/{x}/{y}.png"}
-  ]
 
-  SELECTED_TILE_SERVER = TILE_SERVERS[usr_map_srv].url;
-  mapCHGbtn.innerText = "change Map server:" + TILE_SERVERS[usr_map_srv].name;
-  mapChanger = {
-    idx:usr_map_srv,
-    maps:TILE_SERVERS,
-    lnt:TILE_SERVERS.length,
-    nextMap(btn){
-      this.idx = (this.idx+1 < this.lnt)? this.idx+1:0;
-      curMap = this.maps[this.idx];
-      btn.innerText = "change Map server:" + curMap.name; 
-      changeMapUrl(curMap.url);
-      fetch(baseurl+"?action=savemap&map=" + this.idx)
-      .then(x=>x.text())
-      .then(t=>say(t));
+
+Test
+
+</script>
+
+watchmode script
+<script>
+  UpdateUrl = baseurl + "?action=updatedevice";
+  newDeviceUrl = baseurl + "?action=registerdevice";
+
+  function jsonTextErr(x) {
+    try {
+      return x.json();
+    } catch (e) {
+      say(e.stack);
+      return x.text();
     }
   }
-  
-UpdateUrl = baseurl + "?action=updatedevice";
-  newDeviceUrl = baseurl + "?action=registerdevice";
+
+
 
   function Watchmode() {
     this.interval = 5000;
@@ -73,104 +49,238 @@ UpdateUrl = baseurl + "?action=updatedevice";
       this.IID = setInterval(x => this.fetchToUpdate(), this.interval);
       this.fetchToUpdate();
     };
-    this.removeClassChanges = function(){
+    this.removeClassChanges = function() {
       changed = tableToEdit.getElementsByClassName("changed");
-        [].forEach.call(changed, function(el) {
-    el.classList.remove("changed");
-  });
-  updatedAnim = tableToEdit.getElementsByClassName("updatedAnim");
-        [].forEach.call(updatedAnim, function(el) {
-    el.classList.remove("updatedAnim");
-  });
+      [].forEach.call(changed, function(el) {
+        el.classList.remove("changed");
+      });
+      updatedAnim = tableToEdit.getElementsByClassName("updatedAnim");
+      [].forEach.call(updatedAnim, function(el) {
+        el.classList.remove("updatedAnim");
+      });
     }
     this.stop = function() {
       clearInterval(this.IID);
       this.isOn = false;
       this.removeClassChanges();
       tableToEdit.classList.remove("nonclickable");
-      setTimeout(x=>this.removeClassChanges(),1000);
+      setTimeout(x => this.removeClassChanges(), 1000);
     };
     this.fetchToUpdate = function() {
       fetch(this.urlgetalldevices, {
           credentials: "include"
         })
-        .then(x => x.json())
-        .then(data => this.update(data))
-        .catch(err=> say(err.stack));
+        .then(x => {
+          try {
+            return x.json();
+          } catch (e) {
+            say(e.stack);
+          }
+        })
+        .then(data => {
+          if ((typeof data) === "string") {
+            say(data)
+          }
+          this.update(data)
+        })
+        .catch(err => say(err.stack));
     };
     this.update = function(data) {
-      if (!this.isOn) {return;}
-      console.log(data);
-      say("fetchOK", 1);
-      cols = data.columnNames;
-      rows = data.rows;
-
-      for (let i = 0; i < rows.length; i++) {
-        let row = rows[i];
-        tr = tableToEdit.querySelector("#r" + row.device_id);
-        if (!tr) { // new Device was added that is not yet in table
-          // trTMPL = tableToEdit.querySelector("#r")*****
-          this.stop();
-          let msg = "TODO: cloneNode the row and fill it in with data "+
-          "\nyou need to refresh, there is a new device registered on your account"
-
-          say(msg);
-          say(msg);
-          open(baseurl); //just open new window - to much hassle ?
+        if (!this.isOn) {
           return;
         }
-        // later in api you can make it so cols are not all send
-        // so only important/changeable stuff is updated
-        for (let ci = 0; ci < cols.length; ci++) {
-          col = cols[ci];
-          field = tr.querySelector("#r" + row.device_id + col);
-          if(!field){ continue;}
-          let old = field.innerText
-          let anew = row[col];
-          if (old != anew) {
-            field.innerText = anew;
-            field.classList.add("updatedAnim");
-            field.classList.add("changed");
-            popsound ? popsound.play() : 0; //play the sound if exists
-            window.fieldonlater = field;
-            setTimeout(x => {
-              //say(fieldonlater.classList)
-              fieldonlater.classList.remove("updatedAnim")
-            }, 300);
+        console.log(data);
+        say("fetchOK", 1);
+        cols = data.columnNames;
+        rows = data.rows;
 
-            this.onUpdate(this,anew,row,col);
+        for (let i = 0; i < rows.length; i++) {
+          let row = rows[i];
+          tr = tableToEdit.querySelector("#r" + row.device_id);
+          if (!tr) { // new Device was added that is not yet in table
+            // trTMPL = tableToEdit.querySelector("#r")*****
+            this.stop();
+            let msg = "TODO: cloneNode the row and fill it in with data " +
+              "\nyou need to refresh, there is a new device registered on your account"
 
-          } // end of if
+            say(msg);
+            say(msg);
+            open(baseurl); //just open new window - to much hassle ?
+            return;
+          }
+          // later in api you can make it so cols are not all send
+          // so only important/changeable stuff is updated
+          for (let ci = 0; ci < cols.length; ci++) {
+            col = cols[ci];
+            field = tr.querySelector("#r" + row.device_id + col);
+            if (!field) {
+              continue;
+            }
+            let old = field.innerText
+            let anew = row[col];
+            if (old != anew) {
+              field.innerText = anew;
+              field.classList.add("updatedAnim");
+              field.classList.add("changed");
+              popsound ? popsound.play() : 0; //play the sound if exists
+              window.fieldonlater = field;
+              setTimeout(x => {
+                //say(fieldonlater.classList)
+                fieldonlater.classList.remove("updatedAnim")
+              }, 300);
+
+              this.onUpdate(this, anew, row, col);
+
+            } // end of if
+          } //end of for
+
         } //end of for
 
-      } //end of for
-      
-      
-    },
-  
 
- //end of update
-    this.onUpdate = function(watchmodeinstance,freshValue,device,columnName){};
+      },
+
+
+      //end of update
+      this.onUpdate = function(watchmodeinstance, freshValue, device, columnName) {};
   } //end of watchmode func
   watchmode = new Watchmode();
 
   say("watchmode module loaded ok");
 </script>
 <script>
- //----------------------------------------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------------
   //----------------------------------------------------------------------------------------------------
   //----------------------------------------------------------------------------------------------------
   //----------------------------------------------------------------------------------------------------
   //--------------------------MAP MODULE--------------------------------------------------------------------------
   //----------------------------------------------------------------------------------------------------
   //----------------------------------------------------------------------------------------------------
- 
+
 
 
   var map;
   var mapDefaultZoom = 10;
   var vectorLayer;
   var atomIcons = {};
+
+  TILE_SERVERS = [{
+      name: "cartodb-basemaps DARK a",
+      url: "https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
+    },
+    {
+      name: "cartodb-basemaps DARK b",
+      url: "https://cartodb-basemaps-b.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
+    },
+    {
+      name: "cartodb-basemaps DARK c",
+      url: "https://cartodb-basemaps-c.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
+    },
+    {
+      name: "cartodb-basemaps light a",
+      url: "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+    },
+    {
+      name: "cartodb-basemaps light b",
+      url: "https://cartodb-basemaps-b.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+    },
+    {
+      name: "cartodb-basemaps light c",
+      url: "https://cartodb-basemaps-c.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+    },
+    {
+      name: "stamen watercolor",
+      url: "http://c.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg"
+    },
+    {
+      name: "stamen toner",
+      url: "http://a.tile.stamen.com/toner/{z}/{x}/{y}.png"
+    },
+    {
+      name: "OSM a",
+      url: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    },
+    {
+      name: "OSM b",
+      url: "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    },
+    {
+      name: "OSM c",
+      url: "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    },
+    {
+      name: "OSM.de a",
+      url: "https://a.tile.openstreetmap.de/{z}/{x}/{y}.png"
+    },
+    {
+      name: "OSM.de b",
+      url: "https://b.tile.openstreetmap.de/{z}/{x}/{y}.png"
+    },
+    {
+      name: "OSM.de c",
+      url: "https://c.tile.openstreetmap.de/{z}/{x}/{y}.png"
+    },
+    {
+      name: "wikimedia",
+      url: "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png"
+    },
+    {
+      name: "OSM.fr hot a",
+      url: "http://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png "
+    },
+    {
+      name: "OSM.fr hot b",
+      url: "http://b.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+    },
+    {
+      name: "OSM.fr osmfr a",
+      url: "http://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png "
+    },
+    {
+      name: "OSM.fr osmfr b",
+      url: "http://b.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png "
+    },
+    {
+      name: "OSM.fr osmfr c",
+      url: "http://c.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"
+    },
+    {
+      name: "opentopomap a",
+      url: "https://a.tile.opentopomap.org/{z}/{x}/{y}.png"
+    },
+    {
+      name: "opentopomap b",
+      url: "https://b.tile.opentopomap.org/{z}/{x}/{y}.png"
+    },
+    {
+      name: "opentopomap c",
+      url: "https://c.tile.opentopomap.org/{z}/{x}/{y}.png"
+    }
+  ];
+
+  SELECTED_TILE_SERVER = TILE_SERVERS[usr_map_srv].url;
+  if (!document.querySelector("#mapCHGbtn")) {
+    say("no devices yet")
+  } else {
+
+    document.querySelector("#mapCHGbtn").innerText = "change Map server:" + TILE_SERVERS[usr_map_srv].name;
+
+  }
+  mapChanger = {
+    idx: usr_map_srv,
+    maps: TILE_SERVERS,
+    lnt: TILE_SERVERS.length,
+    nextMap(btn) {
+      this.idx = (this.idx + 1 < this.lnt) ? this.idx + 1 : 0;
+      curMap = this.maps[this.idx];
+      btn.innerText = "change Map server:" + curMap.name;
+      changeMapUrl(curMap.url);
+      fetch(baseurl + "?action=savemap&map=" + this.idx)
+        .then(x => x.text())
+        .then(t => say(t));
+    }
+
+  }
+
 
   function NuMap(mapLat, mapLng, mapDefaultZoom, tileLayer) {
     return new ol.Map({
@@ -201,7 +311,7 @@ UpdateUrl = baseurl + "?action=updatedevice";
 
   function NuFeature(id, status, lat, lng) {
     let f = new ol.Feature({
-      geometry: new ol.geom.Point(ol.proj.transform( [parseFloat(lng),parseFloat(lat)] , 'EPSG:4326', 'EPSG:3857')),
+      geometry: new ol.geom.Point(ol.proj.transform([parseFloat(lng), parseFloat(lat)], 'EPSG:4326', 'EPSG:3857')),
       id: id,
     });
 
@@ -221,7 +331,7 @@ UpdateUrl = baseurl + "?action=updatedevice";
           color: "#000000"
         }),
         fill: new ol.style.Fill({
-          color:'#20f86c'
+          color: '#20f86c'
         })
       })
     })
@@ -236,22 +346,22 @@ UpdateUrl = baseurl + "?action=updatedevice";
     })
   }
 
-  function NuTileLayer(url){
+  function NuTileLayer(url) {
     return new ol.layer.Tile({
-          source: new ol.source.OSM({
-            url: url
-          })
-        });
+      source: new ol.source.OSM({
+        url: url
+      })
+    });
   }
 
-  function changeMapUrl(url){
-    if (!tileLayer){
+  function changeMapUrl(url) {
+    if (!tileLayer) {
       say("no devices to show on map, so no map:P")
       return;
     }
     tileLayer.setSource(new ol.source.OSM({
-            url: url
-          }));
+      url: url
+    }));
   }
 
   function showDevices(devices) {
@@ -291,10 +401,10 @@ UpdateUrl = baseurl + "?action=updatedevice";
       active: NuIcon("active")
     }
     tileLayer = NuTileLayer(SELECTED_TILE_SERVER);
-    
+
     //musisz policzyc srednia albo znalesc na necie position map to see all markers
     window.map = NuMap(devicesWithLocation[0].location.latitude,
-     devicesWithLocation[0].location.longitude,
+      devicesWithLocation[0].location.longitude,
       mapDefaultZoom, tileLayer);
     window.allFeaturesCollection = {};
     window.arrayOfFeaturesAll = devicesWithLocation.map(dv => {
@@ -305,61 +415,62 @@ UpdateUrl = baseurl + "?action=updatedevice";
     allLayer = NuLayer(arrayOfFeaturesAll);
     map.addLayer(allLayer);
   }
-iiiii = 0;
-  function fakeUpdate(){
+  iiiii = 0;
+
+  function fakeUpdate() {
     iiiii++;
-    if (iiiii>10){
+    if (iiiii > 10) {
       return;
     }
-	window.devicesWithLocation.forEach(dv=>{
-   
-    f = allFeaturesCollection[dv.device_id];
-		//.setGeometry(new ol.geom.Point(pos));
-		coords = f.getGeometry().getCoordinates();
-    coords = ol.proj.transform(coords, 'EPSG:3857', 'EPSG:4326');
-    //say(JSON.stringify(coord))
-   // console.log(coords);
-   console.log(coords);
-    coords[0] +=  (Math.random() > 0.5 ? 1:-1)* 0.001;
-    coords[1] +=  (Math.random() > 0.5 ? 1:-1)* 0.001;
-    console.log(coords);
-    freshValue = coords.reverse().join("/");
-    console.log(freshValue);
-    updateMarkerLocation({},freshValue,dv,"device_location");
-//works weirdly slowly
-		say("moved geometry")
-		})
-		return;
-	//stage1 just features
-	
-	//updateMarkerLocation(notthis,fv,dv,col);
-}
-  watchmode.onUpdate=updateMarkerLocation;
-  
-//  window.setInterval(x=>{
-// fakeUpdate();
+    window.devicesWithLocation.forEach(dv => {
 
-// say("updated");
-// },1000);
+      f = allFeaturesCollection[dv.device_id];
+      //.setGeometry(new ol.geom.Point(pos));
+      coords = f.getGeometry().getCoordinates();
+      coords = ol.proj.transform(coords, 'EPSG:3857', 'EPSG:4326');
+      //say(JSON.stringify(coord))
+      // console.log(coords);
+      console.log(coords);
+      coords[0] += (Math.random() > 0.5 ? 1 : -1) * 0.001;
+      coords[1] += (Math.random() > 0.5 ? 1 : -1) * 0.001;
+      console.log(coords);
+      freshValue = coords.reverse().join("/");
+      console.log(freshValue);
+      updateMarkerLocation({}, freshValue, dv, "device_location");
+      //works weirdly slowly
+      say("moved geometry")
+    })
+    return;
+    //stage1 just features
+
+    //updateMarkerLocation(notthis,fv,dv,col);
+  }
+  watchmode.onUpdate = updateMarkerLocation;
+
+  //  window.setInterval(x=>{
+  // fakeUpdate();
+
+  // say("updated");
+  // },1000);
 
 
 
-	
- function updateMarkerLocation(watchmodeinstance,freshValue,device,columnName){
-    if (columnName != "device_location"){
+
+  function updateMarkerLocation(watchmodeinstance, freshValue, device, columnName) {
+    if (columnName != "device_location") {
       return;
     }
 
     locArr = freshValue.split("/");
-        locOb.latitude = locArr[0];
-        locOb.longitude = locArr[1];
-        locArr[0] = parseFloat(locArr[0]);
-        locArr[1] = parseFloat(locArr[1]);
+    locOb.latitude = locArr[0];
+    locOb.longitude = locArr[1];
+    locArr[0] = parseFloat(locArr[0]);
+    locArr[1] = parseFloat(locArr[1]);
     updatedFeature = allFeaturesCollection[device.device_id];
-  //  updatedFeature.setGeometry(new ol.geom.Point(locArr));
-    updatedFeature.set('geometry', new ol.geom.Point(ol.proj.fromLonLat([locArr[1],locArr[0]])));
-        //bookmark *** SEE if it works
-}
+    //  updatedFeature.setGeometry(new ol.geom.Point(locArr));
+    updatedFeature.set('geometry', new ol.geom.Point(ol.proj.fromLonLat([locArr[1], locArr[0]])));
+    //bookmark *** SEE if it works
+  }
 
   function startMap() {
     // this happens at the start
@@ -379,15 +490,15 @@ iiiii = 0;
       if (isThereAnyDeviceWithLocation) {
         // show map only if there are any located devices
         document.querySelector("#mapDIV").innerHTML =
-         '<div id="map"></div>';
+          '<div id="map"></div>';
         window.addEventListener("load", function() {
           showDevices(tableData);
 
         });
-        
-      }else{
-        say("no devices that provide location coords yet"+
-       +" \n not showing the map");
+
+      } else {
+        say("no devices that provide location coords yet" +
+          +" \n not showing the map");
       }
 
 
@@ -395,12 +506,11 @@ iiiii = 0;
   }
 
 
-  
-startMap();
-say("map module ok");
+
+  startMap();
+  say("map module ok");
 </script>
 <script>
-
   //----------------------------------------------------------------------------------------------------
   //----------------------------------------------------------------------------------------------------
   //----------------------------------------------------------------------------------------------------
@@ -649,10 +759,13 @@ say("map module ok");
       // Checkbox is not checked..
       devLocate.setApproved(false)
     }
-
-
   }
 
+
+  say("locate module ok");
+</script>
+send new device script
+<script>
   function sendNewDevice() {
     var FD = new FormData(document.querySelector("#new_device_form"));
     let fields = [];
@@ -661,7 +774,7 @@ say("map module ok");
     FD.append("latitude", DEV_LOCATION.latitude + "");
     FD.append("longitude", DEV_LOCATION.longitude + "");
     FD.append("registerdevice", "true");
-say(DEV_LOCATION);
+    say(DEV_LOCATION);
     fetch(newDeviceUrl, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         // mode: 'cors', // no-cors, cors, *same-origin
@@ -677,29 +790,31 @@ say(DEV_LOCATION);
       })
       .then(response => response.text())
       .then(t => {
-	feedback.innerText = "New device feedback:";
-	say(t);
-        confirm("if device added succesfully , click ok to refresh window"+t)?
-        window.open(baseurl,"_self"):0; //try to display modal else say
-        
-      });; // parses JSON response into native JavaScript objects 
-    return true; //false;//return false to prevent form from reloading the page   
+        try {
+          let j = JSON.parse(t);
+          if (j.ok) {
+            let reloadFunc = function(ev){
+              window.open(baseurl, "_self")
+            }
+            say(j.feedback + "\n click or press any key to see your device").on('click',reloadFunc).on('keydown',reloadFunc);
+            
+          } else {
+            say("there was a problem with form entries :\n" + j.feedback)
+          }
+        } catch (err) {
+          say(err);
+        }
+        // confirm("if device added succesfully , click ok to refresh window"+t)?
+        // window.open(baseurl,"_self"):0; //try to display modal else say
+
+      })
+      .catch(err => say(err));; // parses JSON response into native JavaScript objects 
+    return false; //false;//return false to prevent form from reloading the page   
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  say("send new device module ok");
+</script>
+<script>
   time_setsNL = document.querySelectorAll(".time_set");
   cxs = [];
   counters = [];
@@ -806,12 +921,8 @@ say(DEV_LOCATION);
     // time_setMINtext.value = dstr;
     // time_set.min = dstr;
   }, 5000);
-
-
-
-
-
-
+</script>
+<script>
   function time_ago(time) {
 
     switch (typeof time) {

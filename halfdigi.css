@@ -90,10 +90,28 @@ form,
     align-items: center;
 }
 
+option{
+    width: 100%;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+select{
+    width: 100%;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
 form {
-        /* width: min-content; */
-        border: 2px solid;
-        /* padding: 10px; */
+    
+    border: 2px solid;
+    padding: 10px;
+   
+    border: 2px solid;
+    padding: 10px;
+    max-width: 90vw;
 }
 
 td {
@@ -328,10 +346,22 @@ opacity: .5;
 }
 
 .feedback-pre-console {
+    /* background-color: rgba(12, 0, 0, 0.95); */
+    /* padding: 5px; */
+    /* border: 3px solid; */
+    /* overflow: auto; */
     background-color: rgba(12, 0, 0, 0.95);
     padding: 5px;
     border: 3px solid;
-    overflow: auto;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    text-overflow: clip;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -pre-wrap;
+    white-space: -o-pre-wrap;
+    word-wrap: break-word;
 }
 
 .feedbackContainer {

@@ -475,6 +475,9 @@ class OneFileLoginApplication
      */
     public function runApplication()
     {
+        if(isset($_REQUEST['msg'])){
+            $this->addFeedback(htmlentities($_REQUEST['msg']));
+        }
         //first check ip
         // echo "post";
         // print_me($_POST);
@@ -561,6 +564,8 @@ class OneFileLoginApplication
 
                         $this->doRegistration();
                     }
+                    $this->performUserLoginAction();
+
                     $this->showPageLoggedIn();
                     exit();
                     break;
@@ -583,7 +588,7 @@ class OneFileLoginApplication
             //     exit();
             // } elseif (isset($_POST["registerdevice"])) {
             //     $this->doDeviceRegistration();
-            //     echo "registering device by POST feedback: " . $this->feedback;
+            //     echo "registering device by POST feedback: \n " . $this->feedback;
             //     exit();
             // } else
             if (isset($_GET["action"])) {
@@ -602,31 +607,34 @@ class OneFileLoginApplication
                         break;
 
                     case ("registerdevice"):
+                        $success = false;
                         if (isset($_POST["registerdevice"])) {
-                            $this->doDeviceRegistration();
+                            $success = $this->doDeviceRegistration();
                         } else {
+                            $success = false;
                             $this->addFeedback("missing updatedevice form data entry - no POST param");
                             $this->addFeedback(print_me($_POST, 1));
                         }
                         $_ARR_response = array(
-                            'feedback' => "registering device by POST feedback: " . $this->feedback
+                            'ok' => $success,
+                            'feedback' => "registering device by POST feedback: \n " . $this->feedback
                         );
                         echo json_encode($_ARR_response);
                         exit();
                         break;
 
-                    case("savemap"):
-                        if (!isset($_GET["map"])){
+                    case ("savemap"):
+                        if (!isset($_GET["map"])) {
                             exit();
                         }
-                        if($this->createDatabaseConnection()){
+                        if ($this->createDatabaseConnection()) {
                             $sql = "UPDATE user SET user_map_srv = :map WHERE user_id = :id";
                             $query = $this->db_connection->prepare($sql);
                             $query->bindValue(':id', $_SESSION["user_id"]);
                             $query->bindValue(':map', $_GET["map"]);
                             $query->execute();
                         }
-                        $_SESSION['user_map_srv']= $_GET["map"];
+                        $_SESSION['user_map_srv'] = $_GET["map"];
                         echo "user_MAP_srv changed";
                         exit();
                         break;
@@ -635,7 +643,7 @@ class OneFileLoginApplication
                         // if (isset($_POST["js_getalldevices"])) {
                         if ($this->createDatabaseConnection()) {
                             $allDevices = $this->getAllDevices($this->user_id);
-                            // echo "registering device by POST feedback: " . $this->feedback;
+                            // echo "registering device by POST feedback: \n " . $this->feedback;
                             $allDevices['feedback'] = $this->feedback;
                             echo json_encode($allDevices, JSON_PRETTY_PRINT);
                         } else {
@@ -652,7 +660,7 @@ class OneFileLoginApplication
                     case ("delete"):
                         $this->deleteDevice();
                         $this->showPageLoggedIn();
-                        $this->showPageAddToDevices();
+                        // $this->showPageAddToDevices();
                         //   include("JSsettings.php");
                         exit();
                         break;
@@ -674,12 +682,12 @@ class OneFileLoginApplication
                 probably here user should have an option to logout");
 
                 $this->showPageLoggedIn();
-                $this->showPageAddToDevices(); //for Adding More? Maybe bomb interface instead?
+                //     $this->showPageAddToDevices(); //for Adding More? Maybe bomb interface instead?
 
             } elseif (!$this->device_is_logged_in) {
                 //do not show table of devices here this is 
                 $this->showPageLoggedIn();
-                $this->showPageAddToDevices();
+                //     $this->showPageAddToDevices();
                 // after all admin should use separate device to add it to db
 
 
@@ -905,11 +913,7 @@ class OneFileLoginApplication
         }
     }
 
-    private function showPageAddToDevices()
-    {
-        include_once("ViewStartHTML.blade.php");
-        include("ViewCPscripts.blade.php");
-    }
+    
 
     /**
      * Creates a PDO database connection (in this case to a SQLite flat-file database)
@@ -1040,9 +1044,11 @@ class OneFileLoginApplication
     {
         if ($this->checkDeviceRegistrationData()) {
             if ($this->createDatabaseConnection()) {
-                $this->createNewDevice();
+                return $this->createNewDevice();
+                
             } else {
                 $this->addFeedback("Problem with db connection \n");
+                return false;
             }
         } else {
             $this->addFeedback("Device registration data not ok ? \n");
@@ -1228,7 +1234,7 @@ class OneFileLoginApplication
             } elseif ($_POST['device_password_new'] !== $_POST['device_password_repeat']) {
                 $this->addFeedback("Password and password repeat are not the same");
             } elseif (strlen($_POST['device_password_new']) < 3) {
-                $this->addFeedback("Password has a minimum length of 6 characters");
+                $this->addFeedback("Password has a minimum length of 3 characters");
             } elseif (!preg_match('/^[a-z\d]{3,24}$/', $_POST['device_password_new'])) {
                 $this->addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 3 to 24 characters");
             } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
@@ -1299,7 +1305,29 @@ class OneFileLoginApplication
             $registration_success_state = $query->execute();
 
             if ($registration_success_state) {
+                $sql = 'SELECT user_id FROM user where user_name = :user_name;
+        '; // check if current ip is registered in devices or name is registered in users
+
+
+                $dbcon = $this->db_connection;
+                $query = $dbcon->prepare($sql);
+                $query->bindValue(':user_name', $user_name);
+                // $query->bindValue(':user_ip', $user_ip);
+                $query->execute();
+                $result_row = $query->fetchObject();
+                
+
                 $this->addFeedback("Your account has been created successfully. You can now log in.");
+                $_SESSION['user_id'] = $result_row->user_id;;
+                $_SESSION['user_name'] = $user_name;
+                $_SESSION['user_timezone'] = $user_timezone;
+                $_SESSION['user_is_logged_in'] = true;
+                $this->user_map_srv = 0;
+                $_SESSION['user_map_srv'] = 0;
+                $this->user_id = $result_row->user_id;
+                $this->timezoneName = $user_timezone;
+                $this->timezone = new DateTimeZone($this->timezoneName);
+                $this->user_is_logged_in = true;
                 return true;
             } else {
                 $this->addFeedback("Sorry, your registration failed. Please go back and try again.");
@@ -1350,21 +1378,18 @@ class OneFileLoginApplication
         // If you meet the inventor of PDO, punch him. Seriously.
         $result_row = $query->fetchObject();
         if ($result_row) {
-            $this->addFeedback("Sorry, some property is already taken:
-             \n\t$result_row->device_name as device name
-             \n\t/ $result_row->$device_ip as ip (your ip = " . $this->getIP(DEBUG_MODE) . "/
-             \n\t  $result_row->device_session_id as session_id is already taken. (your sessid = $device_session_id_from_logged_user_cookie_modified)
-             \n\t Please choose another one. ");
+            $given = array(
+                'device_name' => $device_name,
+                'device_ip' => $device_ip,
+                'device_session_id' =>  $device_session_id_from_logged_user_cookie_modified
+            );
+            $a=get_object_vars($result_row);
+            foreach ($a as $k => $v) {
+                if($v == $given[$k]){
+                $this->addFeedback("$k : $v is already taken. Please choose another one.");
+                }
+            }
         } else {
-            // -----------//         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-            // -----------//         'device_name' TEXT NOT NULL,
-            // -----------//         'device_description' TEXT,
-            // -----------//         'device_ip' TEXT NOT NULL,
-            // //         'device_http_user_agent' TEXT NOT NULL, 
-            // -----------//         'device_password' TEXT NOT NULL ,
-            // -----------//         'device_status' TEXT,
-            // //         'time_set' INTEGER,
-            // -----------//         'time_last_active' DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 
             $sql = 'INSERT INTO device 
             (device_id,device_name, device_password, 
@@ -1397,7 +1422,7 @@ class OneFileLoginApplication
             $query->bindValue(':time_last_active', $date_now);
             $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
 
-
+            //dodgy
             $_SESSION['device_session_id'] = $device_session_id_from_logged_user_cookie_modified;
             $expr = $this->time_set_timestamp;
             setcookie(
@@ -1451,13 +1476,14 @@ class OneFileLoginApplication
     private function showPageLoggedIn()
     {
         if ($this->createDatabaseConnection()) {
-            $this->user_id = $this->user_id; // ???????????
+            //$this->user_id = $this->user_id; // ???????????
             $allDevices = $this->getAllDevices($this->user_id);
             $this->columns = $allDevices['columnNames'];
             $this->resultset = $allDevices['rows'];
             include("ViewStartHTML.blade.php");
             echo 'Hello ' . $_SESSION['user_name'] . ', you are logged in.<br/><br/>';
             include('ViewControlPanel.blade.php');
+            include('ViewCPscripts.blade.php');
         } else {
             $this->addFeedback("\nsorry cannot display all your devices due to db conn problem");
             include("ViewStartHTML.blade.php");

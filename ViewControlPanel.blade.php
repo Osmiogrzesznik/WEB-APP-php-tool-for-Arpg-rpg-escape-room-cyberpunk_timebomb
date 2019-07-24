@@ -28,15 +28,15 @@ if (isset($_GET['all'])){
  <button>Delete Account</button></a>
 <br>
 
-<h1>All Devices Registered By You</h1>
-<div >Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br/>
-      You can edit only one field at a time. If field is <span class="KBdisplay field-non-editable">greyed out</span> it is impossible to change the value. Delete the device and create new instead
-  </div>
 <div id="tableWrapper">
 <?php
 # If records found
 if( count($resultset) > 0 ) {
 ?>
+<h1>All Devices Registered By You</h1>
+<div >Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br/>
+      You can edit only one field at a time. If field is <span class="KBdisplay field-non-editable">greyed out</span> it is impossible to change the value. Delete the device and create new instead
+  </div>
 
 
 
@@ -157,7 +157,7 @@ if( count($resultset) > 0 ) {
 </table>
 </div>
 <a href="<?= $_SERVER['SCRIPT_NAME'] ?>"><button onclick="">Refresh</button></a>
-<button onclick="watchmode.toggle(this)">Watch Mode(DO NOT edit table!)</button>
+<button onclick="watchmode.toggle(this)">Turn Watch Mode on</button>
 <br><br><br>
 <button id="mapCHGbtn" onclick="mapChanger.nextMap(this)">change Map server:cartodb-basemaps DARK a</button>
 
@@ -167,6 +167,7 @@ if( count($resultset) > 0 ) {
 <audio id="popsound" src="sounds/pop.mp3">
     Sorry, sounds are not supported
 </audio>
+
 <?php 
 
 
@@ -176,9 +177,10 @@ if( count($resultset) > 0 ) {
 <?php echo $this->getIP(DEBUG_MODE);
 } 
 ?>
+</div>
  </h4>
 
-</div>
+
 <script src="v4-6-5_build_ol.js" type="text/javascript"></script>
 <div class="centerpanel">
     <h2>New Device Registration</h2>

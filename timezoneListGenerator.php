@@ -12,7 +12,7 @@ function timezone_list() {
         foreach (DateTimeZone::listIdentifiers() as $timezone) {
             $now->setTimezone(new DateTimeZone($timezone));
             $offsets[] = $offset = $now->getOffset();
-            $timezones[$timezone] = '(' . format_GMT_offset($offset) . ') ' . format_timezone_name($timezone);
+            $timezones[$timezone] = format_timezone_name($timezone) . '(' . format_GMT_offset($offset) . ') ' ;
         }
 
         array_multisort($timezones,$offsets);

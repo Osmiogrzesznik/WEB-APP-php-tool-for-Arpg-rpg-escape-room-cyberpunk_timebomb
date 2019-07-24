@@ -15,7 +15,7 @@
 include_once("timezoneListGenerator.php");
 $timezones = timezone_list();
                 foreach ($timezones as $name => $val) { ?>
-                        <option value="<?php echo $name ?>"><?php echo $name . " - ". $val ?></option>
+                        <option value="<?php echo $name ?>"><?= $val ?></option>
                 <?php
                 } ?>
         </select>
