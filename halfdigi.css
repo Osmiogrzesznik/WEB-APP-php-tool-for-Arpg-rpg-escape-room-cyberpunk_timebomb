@@ -114,6 +114,16 @@ form {
     max-width: 90vw;
 }
 
+pseudoform {
+    
+    border: 2px solid;
+    padding: 10px;
+   
+    border: 2px solid;
+    padding: 10px;
+    max-width: 90vw;
+}
+
 td {
     word-wrap: break-word;
 }
@@ -132,12 +142,13 @@ btn {
     margin: 0.5em;
 }
 
-input[type=submit] {
+input[type=submit], .submitty {
     margin: 5px;
     background-color: rgba(0, 70, 0, .7);
     border-color: rgba(0, 70, 0, .7);
     border: 1px solid;
 }
+
 
 
 
