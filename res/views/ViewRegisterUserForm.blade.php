@@ -12,7 +12,7 @@
         <select id="timezone" name="timezone" title="required to calculate time " required>
                 <option selected="selected" value="">Choose one</option>
                 <?php
-include_once("timezoneListGenerator.php");
+include_once(PROJ ."res/timezoneListGenerator.php");
 $timezones = timezone_list();
                 foreach ($timezones as $name => $val) { ?>
                         <option value="<?php echo $name ?>"><?= $val ?></option>
