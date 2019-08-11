@@ -1,3 +1,8 @@
+<?php
+//$feedback = $this->feedback;
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -70,17 +75,13 @@
         window.addEventListener("load", x => say("finished loading"));
     </script>
 
-    <a href="<?php echo $_SERVER['SCRIPT_NAME'] ?>">Homepage</a>
+   
 
     <div id="modalContainer" class="modal-container">
 
         <div id="feedbackContainer" class="feedbackContainer">
             <pre id="feedback" class="feedback-pre-console">
-<?php
-echo "FEEDBACK : \n";
-if ($this->feedback) {
-    echo $this->feedback;
-} ?>
+FEEDBACK:<?= $feedback; ?>
 </pre>
             <div class="flex-row">
                 <button>OK</button>
@@ -88,5 +89,7 @@ if ($this->feedback) {
             </div>
         </div>
     </div>
-    <button onclick="showfeedback()">Show feedback</button>
+    
     <br />
+    <a href="<?php echo $_SERVER['SCRIPT_NAME'] ?>"><button>Homepage</button></a>
+    <button onclick="showfeedback()">Show feedback</button>

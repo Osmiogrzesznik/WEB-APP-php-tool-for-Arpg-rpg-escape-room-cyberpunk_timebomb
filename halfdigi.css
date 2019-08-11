@@ -1,3 +1,50 @@
+body,
+input,
+button,
+textarea,
+select {
+    --fg: #20f86c;
+    --rd: red;
+    --bg: #000;
+    --bgtrnsp: rgba(0, 0, 0, .7);
+    background-color: #000;
+    color: #20f86c;
+    font-family: joystix;
+
+    font-size: 9px;
+    margin: 0px;
+}
+
+button{
+  margin:5px;
+}
+
+btn,
+input,
+td{
+    border: 1px solid;
+    /* padding: 0.5em; */
+    background-color: rgba(0, 0, 0, .7);
+    text-align: center;
+    font-size: 9px;
+}
+
+label {
+    position: relative;
+    margin-top: 7px;
+    margin-bottom: 5px;
+    left: 0px;
+    align-self: flex-start;
+    text-decoration: underline;
+}
+
+textarea {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #20f86c;
+    width: 100%;
+}
+
 .edit-td .edit-area {
     border: none;
     margin: 0;
@@ -25,26 +72,56 @@
     text-align: right;
 }
 
-
-
-a,
-body,
-input,
-button,
-select {
-    --fg: #20f86c;
-    --rd: red;
-    --bg: #000;
-    background-color: #000;
-    color: #20f86c;
-    font-family: joystix;
-
-    font-size: 9px;
-    margin: 0px;
+.more-info-btn {
+    display: inline-block;
+    border: 1px dotted #20f86c;
+    padding-left: 5px;
+    /* border: 1px dotted; */
+    padding-right: 5px;
+    text-decoration: underline;
 }
 
-#feedback{
-    font-family: joystix;  
+.more-info-btn::after {
+    content: "?";
+    /* font-size: 1.1rem; */
+    padding-left: 5px;
+    /* border: 1px dotted; */
+    padding-right: 5px;
+    background-color: #20f86c;
+    color: black;
+    font-weight: bold;
+}
+
+.more-info-btn:hover {
+    text-decoration: none;
+}
+
+.more-info-btn:hover>.more-info-content {
+    display: block;
+    z-index: 10;
+}
+
+.more-info-content {
+    position: absolute;
+    left: 0;
+    display: none;
+    border: 1px solid #20f86c;
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 10);
+    width: 100%;
+    max-width: 100%;
+    min-width: max-content;
+}
+
+.more-info-show {
+    padding: 1px;
+}
+
+
+
+
+#feedback {
+    font-family: joystix;
 }
 
 
@@ -53,16 +130,7 @@ select {
 
 }
 
-btn,
-input,
-td,
-a {
-    border: 1px solid;
-    /* padding: 0.5em; */
-    background-color: rgba(0, 0, 0, .7);
-    text-align: center;
-    font-size: 9px;
-}
+
 
 .big {
     /* width: 20vw; */
@@ -90,14 +158,14 @@ form,
     align-items: center;
 }
 
-option{
+option {
     width: 100%;
     text-overflow: ellipsis;
     word-break: break-word;
     overflow-wrap: break-word;
 }
 
-select{
+select {
     width: 100%;
     text-overflow: ellipsis;
     word-break: break-word;
@@ -105,20 +173,20 @@ select{
 }
 
 form {
-    
+
     border: 2px solid;
     padding: 10px;
-   
+
     border: 2px solid;
     padding: 10px;
     max-width: 90vw;
 }
 
 pseudoform {
-    
+
     border: 2px solid;
     padding: 10px;
-   
+
     border: 2px solid;
     padding: 10px;
     max-width: 90vw;
@@ -126,12 +194,12 @@ pseudoform {
 
 td {
     word-wrap: break-word;
+    text-align: center;
 }
 
 btn:active,
 td:active,
-th,
-a {
+th{
     background-color: var(--fg);
     color: var(--bg);
     border: 1px solid (--bg);
@@ -142,7 +210,8 @@ btn {
     margin: 0.5em;
 }
 
-input[type=submit], .submitty {
+input[type=submit],
+.submitty {
     margin: 5px;
     background-color: rgba(0, 70, 0, .7);
     border-color: rgba(0, 70, 0, .7);
@@ -213,16 +282,17 @@ table {
 }
 
 .digits {
-    font-family: digit;
-    color: red;
-    font-size: 5vw;
-    text-align: center;
-    /* line-height: 100vw; */
-    /* height: 100vh;  */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-shadow: 0px 0px 10px red;
+  margin-right: 5px;
+  font-family: digit;
+  color: red;
+  font-size: 5vw;
+  /* text-align: center; */
+  /* line-height: 100vw; */
+  /* height: 100vh; */
+  /* display: flex; */
+  /* justify-content: center; */
+  /* align-items: center; */
+  text-shadow: 0px 0px 10px red;
 }
 
 .digits-small {
@@ -364,7 +434,7 @@ opacity: .5;
     background-color: rgba(12, 0, 0, 0.95);
     padding: 5px;
     border: 3px solid;
-    overflow: hidden;
+    overflow-y: auto;
     overflow-wrap: break-word;
     text-overflow: clip;
     overflow-x: auto;
@@ -527,7 +597,14 @@ input:valid+span:after {
 
 @media only screen and (max-width: 760px),
 (min-device-width: 768px) and (max-device-width: 1024px) {
-
+label{
+    position: relative;
+    margin-top: 7px;
+    margin-bottom: 5px;
+    left: 0px;
+    align-self: flex-start;
+    text-decoration: underline;
+}
 
     .edit-controls {
         position: absolute;
@@ -591,8 +668,8 @@ input:valid+span:after {
     }
 
     .time_set {
-        margin:auto;
-        width:90%;
+        margin: auto;
+        width: 90%;
 
         /* align-self: flex-end; */
     }
@@ -645,65 +722,28 @@ input:valid+span:after {
     }
 
     .flex-row {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-evenly;
-        width: 100vw;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      width: initial;
+  
     }
 
     td:before {
-        position: absolute;
-        /* top: 6px; */
-        left: 0px;
-        width: 25%;
-        /* padding-right: 10px; */
-        white-space: nowrap;
-        background-color: var(--fg);
-        color: var(--bg);
-        padding: 2px;
-        border: 1px solid (--bg);
+      position: absolute;
+      display: inline-table;
+      /* top: 6px; */
+      left: 0px;
+      width: 41%;
+      text-align: left;
+      /* padding-right: 10px; */
+      white-space: nowrap;
+      background-color: var(--fg);
+      color: var(--bg);
+      padding: 2px;
+      border: 1px solid (--bg);
     }
 
-    /*
-	Label the data
-	*/
-    td:nth-of-type(1):before {
-        content: "name";
-    }
+    
 
-    td:nth-of-type(2):before {
-        content: "description";
-    }
-
-    td:nth-of-type(3):before {
-        content: "ip";
-    }
-
-    td:nth-of-type(4):before {
-        content: "password";
-    }
-
-    td:nth-of-type(5):before {
-        content: "status";
-    }
-
-    td:nth-of-type(6):before {
-        content: "time_set";
-    }
-
-    td:nth-of-type(7):before {
-        content: "last active";
-    }
-
-    td:nth-of-type(8):before {
-        content: "location";
-    }
-
-    td:nth-of-type(9):before {
-        content: "OPTIONS";
-    }
-
-    td:nth-of-type(10):before {
-        content: "Arbitrary Data";
-    }
-}
+  }

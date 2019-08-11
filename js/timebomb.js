@@ -261,7 +261,8 @@ try {
 
         if (["disarmed", "detonated"].includes(data.device_status)) {
             alert("this device was already "+data.device_status);
-            window.open("index.php?action=superuser","_self");
+            cx.showTime(0,0,1);
+            //window.open("index.php?action=superuser","_self");
             return;
         }
 alert("this device is "+data.device_status);

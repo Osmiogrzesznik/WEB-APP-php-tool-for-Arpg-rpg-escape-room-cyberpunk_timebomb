@@ -28,9 +28,10 @@ function format_GMT_offset($offset) {
 }
 
 function format_timezone_name($name) {
-    $name = str_replace('/', ', ', $name);
     $name = str_replace('_', ' ', $name);
     $name = str_replace('St ', 'St. ', $name);
+    $nameARR = explode("/",$name);
+    $name = join(", ",array_reverse($nameARR));
     return $name;
 }
 

@@ -160,13 +160,13 @@ class OneFileLoginApplication
    */
   public function getAllDevices($user_id)
   {
-    $db = $this->db;
+    $conn = $this->db;
     $sql = "SELECT * FROM device
 INNER JOIN point 
 ON device.device_fk_location_point  = point.point_id
 WHERE registered_by_user = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
 
-    $query = $db->prepare($sql);
+    $query = $conn->prepare($sql);
     $query->bindValue(':user_id', $user_id);
 
 
@@ -233,7 +233,7 @@ WHERE registered_by_user = :user_id"; // WHERE class = '$class'"; later  -> WHER
     // you could check first for session vars here and for cookie, then  compare them against the db
 
     if ($this->createDatabaseConnection()) {
-      $this->deviceTable = new TableObject($this->db,"device",array(
+      $this->deviceTable = new TableObject($this->db, "device", array(
         'device_id',
         'device_ip',
         'device_name',
@@ -485,256 +485,220 @@ WHERE device_id = :device_id;
     $this->addFeedback("no error have no idea");
     return false;
   }
+
   /**
    * This is basically the controller that handles the entire flow of the application.
    */
   public function runApplication()
   {
-    if (isset($_REQUEST['msg'])) {
-      $this->addFeedback(htmlentities($_REQUEST['msg']));
-    }
-    //first check ip
-    // echo "post";
-    // print_me($_POST);
-    // echo "get";
-    // print_me($_GET);
-    // exit;
-
-
+    $action = get("action");
+    $this->action = $action;
     $this->getIP(DEBUG_MODE);
-    // $this->http_user_agent = getenv('HTTP_USER_AGENT');
-    // $this->info = $this->script_start_time. " IP: " . $this->ip . " USRAGT: " . $this->http_user_agent;
-    // file_put_contents('visitors.txt', "\n" . $this->info, FILE_APPEND);
-
-
     $this->doStartSession();
-    // print_me($_COOKIE);
-    // exit;
 
-    if (isset($_GET["action"])) {
-      //both ofbthese cases check agst db for regstd dev
-      //factor out isRegistteredDevice()
-      switch ($_GET["action"]): case ("superuser"):
-          $this->doLogout();
-          //destroy cookie
-
-          setcookie(
-            "device_session_id",
-            null,
-            1,
-            "",
-            "",
-            false,
-            true
-          );
-
-          $this->showPageLoginForm();
-          exit();
-          break;
-
-        case ("getsettings"):
-          include("JSsettings.php");
-          //*** change to View?
-          exit();
-          break;
-
-        case ("locate"):
-          if ($this->IsRegisteredDevice()) {
-            $_ARR_response = array(
-              'device_status' => $this->device_status_new,
-              'time_set' => $this->device_time_set,
-              'feedback' => $this->feedback
-            );
-          } else {
-            $_ARR_response = array(
-              'feedback' => $this->feedback
-            );
-          }
-          echo json_encode($_ARR_response);
-          exit();
-          break;
-
-        case ("password"):
-          $password_ok = $this->checkDevicePasswordCorrectness();
-          $_ARR_response = array(
-            'device_status' => $this->device_status_new,
-            'time_set' => $this->device_time_set,
-            'password_ok' => $password_ok,
-            'feedback' => $this->feedback
-          );
-          echo json_encode($_ARR_response);
-          exit();
-
-          break;
-
-
-        case ("registerForm"):
-
-          $this->showPageRegistration();
-          exit();
-          //$this->doRegistration();
-          break;
-
-        case ("registerUser"):
-          if (isset($_POST["register"])) {
-
-            $this->doRegistration();
-          }
-          $this->performUserLoginAction();
-
-          $this->showPageLoggedIn();
-          exit();
-          break;
-
-      // dont show nothing yet, it will be taken care of later down in the code
-      // if user is logged in and device was registered showpageloggedin will show all db
-      endswitch;
+    if ($action) {
+      $this->routeUserNotLoggedInActions($action);
     }
-
-    //if device is not registered  
+    //if device is not registered 
     // check for possible userADmin interactions (login with session/post data or logout)
     $this->performUserLoginAction();
-
-    if ($this->getUserLoginStatus()) {
-
-
-      // if (isset($_POST["updatedevice"])) {
-      //     $this->updateDevice();
-      //     echo "updating device by POST feedback: " . $this->feedback;
-      //     exit();
-      // } elseif (isset($_POST["registerdevice"])) {
-      //     $this->doDeviceRegistration();
-      //     echo "registering device by POST feedback: \n " . $this->feedback;
-      //     exit();
-      // } else
-      if (isset($_GET["action"])) {
-
-        switch ($_GET["action"]): case ("updatedevice"):
-            if (isset($_POST["updatedevice"])) {
-              $this->updateDevice();
-            } else {
-              $this->addFeedback("no updatedevice form data entry - no POST param");
-            }
-            $_ARR_response = array(
-              'feedback' => "updating device by POST feedback: " . $this->feedback
-            );
-            echo json_encode($_ARR_response);
-            exit();
-            break;
-
-          case ("registerdevice"):
-            $success = false;
-            if (isset($_POST["registerdevice"])) {
-              $success = $this->doDeviceRegistration();
-            } else {
-              $success = false;
-              $this->addFeedback("missing updatedevice form data entry - no POST param");
-              $this->addFeedback(print_me($_POST, 1));
-            }
-            $_ARR_response = array(
-              'ok' => $success,
-              'feedback' => "registering device by POST feedback: \n " . $this->feedback
-            );
-            echo json_encode($_ARR_response);
-            exit();
-            break;
-
-          case ("savepreferences"):
-            $user_map_srv = req("user_map_srv", 0,0);
-            $user_green_filter = req("user_green_filter", 1,1 );
-            $user_image_filter = req("user_image_filter", 0,0);
-            if ($this->createDatabaseConnection()) {
-              $sql = "UPDATE user 
-        SET 
-        user_map_srv = :user_map_srv,
-        user_green_filter = :user_green_filter,
-        user_image_filter = :user_image_filter
-        WHERE user_id = :id";
-              $query = $this->db->prepare($sql);
-              $query->bindValue(':id', $_SESSION["user_id"]);
-              $query->bindValue(':user_map_srv', $user_map_srv);
-              $query->bindValue(':user_green_filter', $user_green_filter);
-              $query->bindValue(':user_image_filter', $user_image_filter);
-              $query->execute();
-            }
-            $_SESSION['user_map_srv'] = $_GET["map"];
-            echo "user_MAP_srv changed";
-            exit();
-            break;
-
-          case ("js_getalldevices"):
-            // if (isset($_POST["js_getalldevices"])) {
-            if ($this->createDatabaseConnection()) {
-              $allDevices = $this->getAllDevices($this->user_id);
-              // echo "registering device by POST feedback: \n " . $this->feedback;
-              $allDevices['feedback'] = $this->feedback;
-              echo json_encode($allDevices, JSON_PRETTY_PRINT);
-            } else {
-              $this->addFeedback("db connection could not be open ");
-              $rsp = array(
-                "feedback" => $this->feedback,
-                "POST" => $_POST
-              );
-              echo json_encode($rsp, JSON_PRETTY_PRINT);
-            }
-            exit();
-            break;
-
-          case ("delete"):
-            $this->deleteDevice();
-            $this->showPageLoggedIn();
-            // $this->showPageAddToDevices();
-            //   include("JSsettings.php");
-            exit();
-            break;
-
-          case ("deleteme"):
-            $this->deleteMeUser();
-            $this->doLogout();
-            $this->showPageRegistration();
-            //   include("JSsettings.php");
-            exit();
-            break;
-        endswitch;
+    if ($this->getUserLoginStatus()) { //if user is logged in
+      if ($action) {
+        $this->routeUserLoggedInActions($action);
       }
-
-
-      if ($this->device_is_logged_in) {
-        //this means usrr just added device 
-        $this->addFeedback("userAdmin is logged in and device is logged in ,
-probably here user should have an option to logout");
-
-        $this->showPageLoggedIn();
-        //     $this->showPageAddToDevices(); //for Adding More? Maybe bomb interface instead?
-
-      } elseif (!$this->device_is_logged_in) {
-        //do not show table of devices here this is 
-        $this->showPageLoggedIn();
-        //     $this->showPageAddToDevices();
-        // after all admin should use separate device to add it to db
-
-
-
-
-      }
-    } //end of if user is $user_is_logged_in
-
+      $this->showPageLoggedIn();
+    }
+    //end of if user is $user_is_logged_in
     else {
-
       //user not logged in and no interesting action get was provided(so it is browser request mainly)
       if ($this->IsRegisteredDevice()) {
-        include("res/views/ViewBombInterface.html"); // no feedback
+        include("res/views/ViewBombInterface.html");
+        // no feedback
       }
       // below cannot register new user if user loggedout 
-      //and device  is a bomb already to prevent circumventions
+      //and device is a bomb already to prevent circumventions
 
       else {
         $this->showPageLoginForm();
       }
     }
 
-    //    echo "<br>reached end of logic on the server";
+    // echo "<br>reached end of logic on the server";
 
+  }
+
+  public function routeUserNotLoggedInActions($action)
+  {
+
+    switch ($action): case ("superuser"):
+        $this->doLogout();
+        //destroy cookie
+        setcookie(
+          "device_session_id",
+          null,
+          1,
+          "",
+          "",
+          false,
+          true
+        );
+        $this->showPageLoginForm();
+        exit();
+        break;
+
+      case ("getsettings"):
+        include("JSsettings.php");
+        //*** change to View?
+        exit();
+        break;
+
+      case ("locate"):
+        if ($this->IsRegisteredDevice()) {
+          $_ARR_response = array(
+            'device_status' => $this->device_status_new,
+            'time_set' => $this->device_time_set,
+            'feedback' => $this->feedback
+          );
+        } else {
+          $_ARR_response = array(
+            'feedback' => $this->feedback
+          );
+        }
+        echo json_encode($_ARR_response);
+        exit();
+        break;
+
+      case ("password"):
+        $password_ok = $this->checkDevicePasswordCorrectness();
+        $_ARR_response = array(
+          'device_status' => $this->device_status_new,
+          'time_set' => $this->device_time_set,
+          'password_ok' => $password_ok,
+          'feedback' => $this->feedback
+        );
+        echo json_encode($_ARR_response);
+
+        exit();
+        break;
+
+
+      case ("registerForm"):
+
+        $this->showPageRegistration();
+        //$this->doRegistration();
+        
+        exit();
+        break;
+
+      case ("registerUser"):
+        if (isset($_POST["register"])) {
+
+          $this->doRegistration();
+        }
+        $this->performUserLoginAction();
+
+        $this->showPageLoggedIn();
+        exit();
+        break;
+
+    // dont show nothing yet, it will be taken care of later down in the code
+    // if user is logged in and device was registered showpageloggedin will show all db
+    endswitch;
+    
+  }
+
+
+
+
+  public function routeUserLoggedInActions($action)
+  {
+    switch ($action): case ("updatedevice"):
+        if (post("updatedevice")) {
+          $this->updateDevice();
+        } else {
+          $this->addFeedback("no updatedevice form data entry - no POST param");
+        }
+        $_ARR_response = array(
+          'feedback' => "updating device by POST feedback: " . $this->feedback
+        );
+        echo json_encode($_ARR_response);
+        exit();
+        break;
+
+      case ("registerdevice"):
+        $success = false;
+        if (post("registerdevice")) {
+          $success = $this->doDeviceRegistration();
+        } else {
+          $success = false;
+          $this->addFeedback("missing updatedevice form data entry - no POST param");
+          $this->addFeedback(print_me($_POST, 1));
+        }
+        $_ARR_response = array(
+          'ok' => $success,
+          'feedback' => "registering device by POST feedback: \n " . $this->feedback
+        );
+        echo json_encode($_ARR_response);
+        exit();
+        break;
+
+      case ("savepreferences"):
+        $user_map_srv = req("user_map_srv", 0);
+        $user_green_filter = req("user_green_filter", 1);
+        $user_image_filter = req("user_image_filter", 0);
+        if ($this->createDatabaseConnection()) {
+          $sql = "UPDATE user 
+SET 
+user_map_srv = :user_map_srv,
+user_green_filter = :user_green_filter,
+user_image_filter = :user_image_filter
+WHERE user_id = :id";
+          $query = $this->db->prepare($sql);
+          $query->bindValue(':id', $_SESSION["user_id"]);
+          $query->bindValue(':user_map_srv', $user_map_srv);
+          $query->bindValue(':user_green_filter', $user_green_filter);
+          $query->bindValue(':user_image_filter', $user_image_filter);
+          $query->execute();
+        }
+        $_SESSION['user_map_srv'] = $_GET["map"];
+        echo "user_MAP_srv changed";
+        exit();
+        break;
+
+      case ("js_getalldevices"):
+        // if (isset($_POST["js_getalldevices"])) {
+        if ($this->createDatabaseConnection()) {
+          $allDevices = $this->getAllDevices($this->user_id);
+          // echo "registering device by POST feedback: \n " . $this->feedback;
+          $allDevices['feedback'] = $this->feedback;
+          echo json_encode($allDevices, JSON_PRETTY_PRINT);
+        } else {
+          $this->addFeedback("db connection could not be open ");
+          $rsp = array(
+            "feedback" => $this->feedback,
+            "POST" => $_POST
+          );
+          echo json_encode($rsp, JSON_PRETTY_PRINT);
+        }
+        exit();
+        break;
+
+      case ("delete"):
+        $this->deleteDevice();
+        $this->showPageLoggedIn();
+        // $this->showPageAddToDevices();
+        //   include("JSsettings.php");
+        exit();
+        break;
+
+      case ("deleteme"):
+        $this->deleteMeUser();
+        $this->doLogout();
+        $this->showPageRegistration();
+        //   include("JSsettings.php");
+        exit();
+        break;
+    endswitch;
   }
 
   private function deleteMeUser()
@@ -1517,6 +1481,7 @@ VALUES
       $this->columns = $allDevices['columnNames'];
       $this->resultset = $allDevices['rows'];
       View("ViewStartHTML", $this);
+      
       View('ViewControlPanel', $this);
       View('ViewCPscripts', $this);
     } else {

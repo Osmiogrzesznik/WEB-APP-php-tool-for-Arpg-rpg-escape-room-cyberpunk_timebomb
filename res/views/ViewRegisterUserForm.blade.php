@@ -1,4 +1,3 @@
-<a href="<?= $_SERVER['SCRIPT_NAME'] ?>">Homepage</a>
 <div class = "centerpanel"><h2>Registration</h2>
 
         <form method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerUser" name="registerform">

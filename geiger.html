@@ -1,4 +1,7 @@
 
+<script>
+
+var beepBeepingBuffers = [];
 var audioContext = null;
 var unlocked = false;
 var isPlaying = false;      // Are we currently playing?
@@ -6,13 +9,14 @@ var startTime;  //not used            // The start time of the entire sequence.
 var current16thNote;        // What note is currently last scheduled?
 var tempo = 120.0;          // tempo (in beats per minute)
 var lookahead = 100.0;       // How frequently to call scheduling function 
-                            //(in milliseconds)
+var lambda = 2;
+var maxLambda = 30;                            //(in milliseconds)
 var scheduleAheadTime = 0.1;    // How far ahead to schedule audio (sec)
                             // This is calculated from lookahead, and overlaps 
                             // with next interval (in case the timer is late)
 var nextNoteTime = 0.0;     // when the next note is due.
 var noteResolution = 3;     // 0 == 16th, 1 == 8th, 2 == quarter note, 3 = half note
-var noteLength = 0.1;      // length of "beep" (in seconds)
+var noteLength = 0.10;      // length of "beep" (in seconds)
 // var canvas,                 // the canvas element
 //     canvasContext;          // canvasContext is the canvas' context 2D
 var last16thNoteDrawn = -1; // the last "box" we drew on the screen
@@ -20,6 +24,71 @@ var notesInQueue = [];      // the notes that have been put into the web audio,
                             // and may or may not have played yet. {note, time}
 var timerWorker = null;     // The Web Worker used to fire timer messages
 
+
+
+
+   function playSoundAt(buffer, time) {
+        var source = audioContext.createBufferSource(); // creates a sound source
+        source.buffer = buffer; // tell the source which sound to play
+        source.connect(audioContext.destination); // connect the source to the context's destination (the speakers)
+        source.start(time); // play the source now
+        // note: on older systems, may have to use deprecated noteOn(time);
+    }
+
+  SILENT_MODE = false;
+
+function loadSound(audioContext,soundPath,onLoadedSound){
+  var request = new XMLHttpRequest();
+        request.open('GET', soundPath, true);
+        request.responseType = 'arraybuffer';
+        // Decode asynchronously
+        request.onload = function () {
+            audioContext.decodeAudioData(request.response,onLoadedSound, onError);
+        }
+        onError = function (E) {
+          alert(e);
+
+        }
+        request.send();
+}
+
+
+function prepareAudioAPI() {
+if (!SILENT_MODE) {
+    try {
+        // Fix up for prefixing
+
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = audioContext || new AudioContext();
+        console.log("audio context created");
+
+
+        loadSound(audioContext,"sounds/fo67tick.wav",function (buffer) {
+                // _________________________________________
+                // this is the actual end of logic !!!!
+                // _________________________________________
+                // this is the actual end of logic !!!!
+                beepBeepingBuffers.push(buffer);
+                playSoundAt(buffer, 0);
+                unlocked = true;
+                init();
+                console.log(play());
+            })
+        loadSound(audioContext,"sounds/fo67high.wav", function (buffer) {
+                beepBeepingBuffers.push(buffer);
+                playSoundAt(buffer, 0);
+            })
+    } catch (e) {
+        alert('Web Audio API is not supported in this browser, fallback to time interval');
+        cx.onTick = function (cxthis) {
+            ticksound.play();
+        }
+    }
+    //always (doesnt need timing)
+
+
+} //end of if (!SILENT_MODE)
+}
 
 // First, let's shim the requestAnimationFrame API, with a setTimeout fallback
 window.requestAnimFrame = (function(){
@@ -35,9 +104,11 @@ window.requestAnimFrame = (function(){
 
 function nextNote() {
     // Advance current note and time by a 16th note...
-    var secondsPerBeat = 60.0 / tempo;    // Notice this picks up the CURRENT 
+    //var secondsPerBeat = 60.0 / tempo;    // Notice this picks up the CURRENT 
                                           // tempo value to calculate beat length.
-    nextNoteTime += 0.25 * secondsPerBeat;    // Add beat length to last beat time
+//    nextNoteTime += 0.25 * secondsPerBeat;    // Add beat length to last beat time
+    nextNoteTime += -Math.log(1 - Math.random()) / lambda;  
+    
 
     current16thNote++;    // Advance the beat number, wrap to zero
     if (current16thNote == 16) {
@@ -49,12 +120,12 @@ function scheduleNote( beatNumber, time ) {
     // push the note on the queue, even if we're not playing.
     notesInQueue.push( { note: beatNumber, time: time } );
 
-    if ( (noteResolution==1) && (beatNumber%2))
-        return; // we're not playing non-8th 16th notes
-    if ( (noteResolution==2) && (beatNumber%4))
-        return; // we're not playing non-quarter 8th notes
-    if ( (noteResolution==3) && (beatNumber%8))
-        return; // we're not playing non-half'th 16th notes
+    // if ( (noteResolution==1) && (beatNumber%2))
+    //     return; // we're not playing non-8th 16th notes
+    // if ( (noteResolution==2) && (beatNumber%4))
+    //     return; // we're not playing non-quarter 8th notes
+    // if ( (noteResolution==3) && (beatNumber%8))
+    //     return; // we're not playing non-half'th 16th notes
     
     
     // create an oscillator
@@ -66,11 +137,13 @@ function scheduleNote( beatNumber, time ) {
     //     osc.frequency.value = 440.0;
     // else                        // other 16th notes = low pitch
     //     osc.frequency.value = 220.0;
+    buffer = beepBeepingBuffers[0];
     source = audioContext.createBufferSource(); // creates a sound source
-    source.buffer = beepBeepingBuffer;                    // tell the source which sound to play
+    source.buffer = buffer;                  // tell the source which sound to play
     source.connect(audioContext.destination);       // connect the source to the context's destination (the speakers)
+    source.playbackRate.value = 0.95 + Math.random() * 0.05;
     source.start( time );
-    source.stop( time + noteLength );
+    source.stop( time + buffer.duration );
 }
 
 function scheduler() {
@@ -91,6 +164,7 @@ function stop(){
 function play() {
     if (!unlocked) {
       // play silent buffer to unlock the audio
+      audioContext = window.audioContext || new AudioContext();
       var buffer = audioContext.createBuffer(1, 1, 22050);
       var node = audioContext.createBufferSource();
       node.buffer = buffer;
@@ -170,7 +244,7 @@ function init(){
 
     //requestAnimFrame(draw);    // start the drawing loop.
 
-    timerWorker = new Worker("metronomeworker.js");
+    timerWorker = new Worker("js/metronomeworker.js");
 
     timerWorker.onmessage = function(e) {
         if (e.data == "tick") {
@@ -187,3 +261,21 @@ function init(){
 
 //window.addEventListener("load", init );
 
+window.addEventListener("mousemove",ev=>{
+mouseev = ev;
+MX.innerText = ev.clientX;
+MY.innerText = ev.clientY;
+lambda = 1+~~(ev.clientX / window.innerWidth * maxLambda);
+})
+</script>
+
+
+<div>
+  mouseX:<span id="MX">000</span>
+</div>
+<div>
+    mouseY:<span id="MY">000</span>
+  </div>
+<button onclick="window.audioContext ? play():prepareAudioAPI()">Start simulation</button>
+<button onclick="stop()">Stop</button> 
+<button onclick="tick()">tick</button> counts: <span id="counter">0</span>

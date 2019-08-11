@@ -1,3 +1,45 @@
+
+
+
+//TODO 10: 
+//loop through $visibleColumns = array_diff($columns,$nonVisibles) instead checking on each iteration
+// possibly save for each column a parameter shoul it be displayable in DATABASE already
+
+
+location table object should be created inside the Device 
+application doesnt know
+device object knows how to check if it is registered
+user object knows how to check itself and so on
+
+PRAGMA foreign_keys=off;
+
+BEGIN TRANSACTION;
+
+ALTER TABLE table1 RENAME TO _table1_old;
+
+CREATE TABLE table1
+(
+  column1 datatype [ NULL | NOT NULL ],
+  column2 datatype [ NULL | NOT NULL ],
+  ...
+
+  CONSTRAINT fk_column
+    FOREIGN KEY (column1, column2, ... column_n)
+    REFERENCES parent_table (column1, column2, ... column_n)
+);
+
+INSERT INTO table1 SELECT * FROM _table1_old;
+
+COMMIT;
+
+PRAGMA foreign_keys=on;
+TODO: FIX EMPTY INSTALL.SQL INSTALL2 SQL
+
+Doing: rewrite sql queries for longitud latidtude from left inner joined points
+
+
+
+
 TODO: think about buffering database operations; careful!!!
 TODO : BUG update doeasnt work from admin !!!! cp; no feedback in modal
 TODO: Poor Admin user interface map, table should be hiding and showed as drawer

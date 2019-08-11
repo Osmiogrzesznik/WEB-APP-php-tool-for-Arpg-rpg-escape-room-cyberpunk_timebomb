@@ -121,7 +121,7 @@ class OneFileLoginApplication
             return true;
         }
         // default return
-        include("ViewStartHTML.blade.php");
+        View("ViewStartHTML",$this);
         return false;
     }
 
@@ -219,6 +219,7 @@ class OneFileLoginApplication
 
         //what if no cookie on the device but it is registered(e.g.different browser opened)
         // set cookie when retrieved device by using ip?
+        
         if (isset($_COOKIE['device_session_id'])) {
             $this->addFeedback("cookie accepted");
             $sess_token_from_cookie = $_COOKIE['device_session_id'];
@@ -230,6 +231,11 @@ class OneFileLoginApplication
         // you could check first for session vars here and for cookie, then  compare them against the db
 
         if ($this->createDatabaseConnection()) {
+            // replace with new Device($this->db_connection);
+            // but how to decide whether device should be of some type
+            /**
+             * 
+             */
             $sql = 'SELECT 
             device_id,device_ip,device_name,device_status,
             device_password,time_set,user_timezone,
@@ -503,6 +509,7 @@ class OneFileLoginApplication
 
                 case ("getsettings"):
                     include("JSsettings.php");
+//*** change to View?
                     exit();
                     break;
 
@@ -607,15 +614,22 @@ class OneFileLoginApplication
                         exit();
                         break;
 
-                    case ("savemap"):
-                        if (!isset($_GET["map"])) {
-                            exit();
-                        }
+                    case ("savepreferences"):
+                        $user_map_srv = req("user_map_srv",0,0);
+                        $user_green_filter = req("user_green_filter",1,1);
+                        $user_image_filter = req("user_image_filter",0,0);
                         if ($this->createDatabaseConnection()) {
-                            $sql = "UPDATE user SET user_map_srv = :map WHERE user_id = :id";
+                            $sql = "UPDATE user 
+                            SET 
+                            user_map_srv = :user_map_srv,
+                            user_green_filter = :user_green_filter,
+                            user_image_filter = :user_image_filter
+                            WHERE user_id = :id";
                             $query = $this->db_connection->prepare($sql);
                             $query->bindValue(':id', $_SESSION["user_id"]);
-                            $query->bindValue(':map', $_GET["map"]);
+                            $query->bindValue(':user_map_srv',$user_map_srv);
+                            $query->bindValue(':user_green_filter',$user_green_filter);
+                            $query->bindValue(':user_image_filter',$user_image_filter);
                             $query->execute();
                         }
                         $_SESSION['user_map_srv'] = $_GET["map"];
@@ -684,7 +698,7 @@ class OneFileLoginApplication
 
             //user not logged in and no interesting action get was provided(so it is browser request mainly)
             if ($this->IsRegisteredDevice()) {
-                include("ViewBombInterface.html"); // no feedback
+                include("res/views/ViewBombInterface.html"); // no feedback
             }
             // below cannot register new user if user loggedout 
             //and device  is a bomb already to prevent circumventions
@@ -1464,13 +1478,12 @@ class OneFileLoginApplication
             $allDevices = $this->getAllDevices($this->user_id);
             $this->columns = $allDevices['columnNames'];
             $this->resultset = $allDevices['rows'];
-            include("ViewStartHTML.blade.php");
-            echo 'Hello ' . $_SESSION['user_name'] . ', you are logged in.<br/><br/>';
-            include('ViewControlPanel.blade.php');
-            include('ViewCPscripts.blade.php');
+            View("ViewStartHTML",$this);
+            View('ViewControlPanel',$this);
+            View('ViewCPscripts',$this);
         } else {
             $this->addFeedback("\nsorry cannot display all your devices due to db conn problem");
-            include("ViewStartHTML.blade.php");
+            View("ViewStartHTML",$this);
         }
     }
 
@@ -1481,8 +1494,8 @@ class OneFileLoginApplication
      */
     private function showPageLoginForm()
     {
-        include("ViewStartHTML.blade.php");
-        include("ViewLoginForm.blade.php");
+        View("ViewStartHTML",$this);
+        View("ViewLoginForm",$this);
     }
 
     /**
@@ -1493,8 +1506,8 @@ class OneFileLoginApplication
     private function showPageRegistration()
     {
 
-        include("ViewStartHTML.blade.php");
-        include("ViewRegisterUserForm.blade.php");
+        View("ViewStartHTML",$this);
+        View("ViewRegisterUserForm",$this);
     }
 }
 

@@ -1,7 +1,13 @@
 <?php
-$user_id = $this->user_id;
-$resultset = $this->resultset;
-$columns = $this->columns;
+// it will be an array passed here no $this
+$index_link = $_SERVER['SCRIPT_NAME'];
+$connection_ip = $ip;//$this->getIP(DEBUG_MODE);
+//$user_id = $this->user_id;
+//$resultset = $this->resultset;
+//$columns = $this->columns;
+date_default_timezone_set($timezoneName);
+$minimum_time_set_date = date(MY_DATE_FORMAT, time());
+$default_time_set_date = date(MY_DATE_FORMAT, time()+60*30);//in 30 minutes
 $column_name_prefix = "device_";
 $nonVisibles = array("device_id","registered_by_user","device_session_id","device_http_user_agent");
 $nonEditables = array("device_id","registered_by_user","time_last_active","device_location","device_session_id");
@@ -9,29 +15,34 @@ $nonEditables = array("device_id","registered_by_user","time_last_active","devic
 if (isset($_GET['all'])){
   $nonVisibles=array();
 }
-
+$devicesExist = (count($resultset) > 0);
 
 ?>
-	ver3
-	alert on start watchmode
-<style>
 
+<script>
+  //SETTINGS SCRIPT 
+  tableData = <?= json_encode($resultset, JSON_PRETTY_PRINT); ?>;
+  usr_map_srv = <?= isset($_SESSION["user_map_srv"]) ? $_SESSION["user_map_srv"] : 0 ?>;
+  baseurl = "<?= $_SERVER['SCRIPT_NAME'] ?>";
+  
+  UpdateUrl = baseurl + "?action=updatedevice";
+  newDeviceUrl = baseurl + "?action=registerdevice";
+  say("settings script OK");
+</script>
 
-</style>
 <div class="hud">
-<a href="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=logout"><button class="big">Log out</button></a>
+<a href="<?= $index_link ?>?action=logout"><button class="big">Log out</button></a>
 <br>
 <BR><BR>
-<a href="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=deleteme' ?>"
+<a href="<?= $index_link . '?action=deleteme' ?>"
  onclick="if(!confirm('are you sure? All your devices will be deleted too'))
   {event.stopPropagation();event.preventDefault()}else{}">
  <button>Delete Account</button></a>
 <br>
-
 <div id="tableWrapper">
 <?php
 # If records found
-if( count($resultset) > 0 ) {
+if( $devicesExist ) {
 ?>
 <h1>All Devices Registered By You</h1>
 <div >Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br/>
@@ -71,7 +82,7 @@ if( count($resultset) > 0 ) {
         $column_counter =0;
         
 			?>
-		<tr id="<?php echo 'r' . $row['device_id'] ?>">
+		<tr id="r<?= $row['device_id'] ?>">
       <?php for ($i=0; $i < count($columns); $i++):
       $column_name = $columns[$column_counter];
       if(in_array($column_name,$nonVisibles)){
@@ -85,22 +96,20 @@ if( count($resultset) > 0 ) {
         date_default_timezone_set(DEFAULT_TIMEZONE_NAME_LONDON);
         $time_last_active = $row[$column_name];
 
-        // $time_elapsed_span = time_elapsed_HTMLelement("Y-m-d\TH:i:s",$time_last_active,$this->timezone,true);
-        // echo "<br>(" . $time_elapsed_span . ")";
      ?>
         <td class="field-non-editable time_last_active" data-column-name="time_last_active">	
-      <span id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="my_date_format"><?=$time_last_active ?></span>
+      <span id="r<?= $row['device_id'] . $column_name ?>" class="my_date_format"><?=$time_last_active ?></span>
 <br>
       <span class="ago"></span>
       <?php
       }elseif($column_name == "device_location"){ // any other noneditable
         ?>
-    <td id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="field-non-editable squeezed" data-column-name="<?= $column_name ?>">
+    <td id="r<?= $row['device_id'] . $column_name ?>" class="field-non-editable squeezed" data-column-name="<?= $column_name ?>">
      <?=$row[$column_name];?>
      <?php 
         }else{ // any other noneditable
           ?>
-			<td id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="field-non-editable" data-column-name="<?= $column_name ?>">
+			<td id="r<?= $row['device_id'] . $column_name ?>" class="field-non-editable" data-column-name="<?= $column_name ?>">
 			<?php  echo $row[$column_name];
         }
       //now outer if's elseif: editables
@@ -122,11 +131,11 @@ if( count($resultset) > 0 ) {
       class="field-editable time_set" 
       data-column-name="time_set"
       value="<?= $row["time_set"]; ?>">	
-      Current:<br><span id=<?php echo 'r' . $row['device_id'] . $column_name ?> ><?= $row[$column_name] ?><span>
+      Current:<br><span id="r<?= $row['device_id'] . $column_name ?>" ><?= $row[$column_name] ?><span>
       <?php
       }else{
         ?>
-			<td id=<?php echo 'r' . $row['device_id'] . $column_name ?> class="field-editable" data-column-name="<?php echo $column_name ?>">	
+			<td id="r<?= $row['device_id'] . $column_name ?>" class="field-editable" data-column-name="<?= $column_name ?>">	
       <?php
       echo $row[$column_name]; 
     }; 
@@ -138,11 +147,11 @@ if( count($resultset) > 0 ) {
       $column_counter++;
       endfor;?>
 			<td class="field-non-editable">
-      <?php echo $row["device_id"] . " - " . $row["device_name"]; ?>
+      <?= $row["device_id"] . " - " . $row["device_name"]; ?>
       <div class="flex-row">
 				<button onclick="sendUpdate(this.dataset.id)" 
-				data-id="<?php echo $row["device_id"]; ?>">Save</button>
-        <a href="<?php echo $_SERVER['SCRIPT_NAME'] ."?action=delete&id=". $row["device_id"]; ?>"
+				data-id="<?= $row["device_id"]; ?>">Save</button>
+        <a href="<?= $index_link ."?action=delete&id=". $row["device_id"]; ?>"
         onclick="if(!confirm('are you sure? deleting cannot be undone'))
   {event.stopPropagation();event.preventDefault()}else{}"  
         ><button>Delete</button></a>
@@ -156,7 +165,7 @@ if( count($resultset) > 0 ) {
 	</tbody>
 </table>
 </div>
-<a href="<?= $_SERVER['SCRIPT_NAME'] ?>"><button onclick="">Refresh</button></a>
+<a href="<?= $index_link ?>"><button onclick="">Refresh</button></a>
 <button onclick="watchmode.toggle(this)">Turn Watch Mode on</button>
 <br><br><br>
 <button id="mapCHGbtn" onclick="mapChanger.nextMap(this)">change Map server:cartodb-basemaps DARK a</button>
@@ -174,38 +183,59 @@ if( count($resultset) > 0 ) {
 
 }else{ ?>
 <h4> You didn't add any devices yet - add one below (by default it's ip is this device ip -
-<?php echo $this->getIP(DEBUG_MODE);
+<?= $connection_ip;
 } 
 ?>
 </div>
  </h4>
 
 
-<script src="v4-6-5_build_ol.js" type="text/javascript"></script>
+<script src="js/v5-3-0_build_ol_formatted.js" type="text/javascript"></script>
 <div class="centerpanel">
     <h2>New Device Registration</h2>
     <style>
         
     </style>
-  <!--  method="post" action="<?php echo $_SERVER['SCRIPT_NAME'] ?>?action=registerdevice" -->
+  <!--  method="post" action="<?= $index_link ?>?action=registerdevice" -->
     <form id="new_device_form" name="registerform" onsubmit="return false">
         <label for="device_name">
-            device_name:
+            device_name:<span 
+            class="more-info-btn" 
+            onclick="this.classList.toggle('more-info-show')">
+              <span class="more-info-content">
+              unique name that will allow you to identify device on map<br>
+              choose something simple and short.            
+              </span></span>
         </label>
         <input id="device_name" type="text" pattern="^.{2,64}$" name="device_name" required />
         <span class="validity">* required</span>
         <label for="device_description">
             device_description:
         </label>
-        <input id="device_description" type="text" name="device_description" />
+        <textarea id="device_description" name="device_description" rows = "5" cols = "60" name = "description" placeholder="...put something more in here in case device has no location services or anything that helps you identify it in table "></textarea><br>
+        
         <label for="is_sending_device_location">
-            track this device location:
+            track device location:<span 
+            class="more-info-btn" 
+            onclick="this.classList.toggle('more-info-show')">
+              <span class="more-info-content">
+              if you turn it on device will be tracked and shown on map<br>
+               if it will be a device that is different than this one 
+               <br>- you will need to confirm locating again.              
+              </span></span>
         </label>
         <input id="is_sending_device_location" 
         type="checkbox" name="is_sending_device_location" 
         onclick="checkLocation(event)" />
         <label for="device_password_new">
-            Device Password (3-24 characters, a-z 0-9) stops/unlocks the device
+            Device Password <span 
+            class="more-info-btn" 
+            onclick="this.classList.toggle('more-info-show')">
+              <span class="more-info-content">
+              (3-24 characters, a-z 0-9)
+              case insensitive, no special characters 
+              <br>stops/unlocks the device                
+              </span></span>
         </label>
         <input id="device_password_new" class="login_input" type="password" name="device_password_new" 
         pattern="[a-z0-9]{3,32}" required autocomplete="off" />
@@ -217,9 +247,25 @@ if( count($resultset) > 0 ) {
         pattern="[a-z0-9]{3,32}" required autocomplete="off" />
         <span class="validity">* required</span>
         <label for="device_ip">
-            Device IP(default this one):
+            Device IP(default this one):<br>
+            or pseudo ip for quick setup
+            <span 
+            class="more-info-btn" 
+            onclick="this.classList.toggle('more-info-show')">
+            Quick setup
+              <span class="more-info-content">
+                you can enter any combination of digits or letters, and later in field
+                without login just assign device to this setup by entering it on login screen.<br>
+                 Remember: this value will change to the actual device's IP after assignment.                
+              </span></span>
+            
         </label>
-        <input id="device_ip" type="text" name="device_ip" title="IP address of device" required autocomplete="off" <?php echo 'value=' . $this->getIP(DEBUG_MODE) . '' ?> />
+        <input 
+        id="device_ip"
+         type="text" 
+         name="device_ip" 
+         title="IP address of device" 
+         required autocomplete="off" <?= 'value=' . $connection_ip . '' ?> />
         <span class="validity">* required</span>
         <label for="time_set">
             time_set(this is the time device counts down to):
@@ -230,10 +276,9 @@ if( count($resultset) > 0 ) {
         type="datetime-local" 
         name="time_set" 
         pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
-        <?php
-        date_default_timezone_set($this->timezoneName);
-$datenow = date('Y-m-d\TH:i:s', time()+60*30);//in 30 minutes
-echo 'min="' . $datenow . '" value="' . $datenow . '"' ?> required>
+        min="<?= $minimum_time_set_date ?>"
+        value="<?= $default_time_set_date ?>"
+        required>
                 <span class="validity"></span>
 
         <!-- <input type="submit" name="register" value="Register" onclick="sendNewDevice()"/> -->
@@ -258,12 +303,39 @@ echo 'min="' . $datenow . '" value="' . $datenow . '"' ?> required>
 </div>
 Minimal Date ( NOW ):
 <pre id="time_setMIN" style="display:block">
-<?= date(MY_DATE_FORMAT, time());?></pre>
+<?= $minimum_time_set_date ?></pre>
 
 </div>
 
+<!-- all these needed anyway for form addnewdevice -->
 <link rel="stylesheet" href="flatpickr.css">
 <script type="text/javascript" src="flatpickr.js"></script>
 <script type="text/javascript" src="clockController.js"></script>
-<script type="text/javascript" src="touchKeyboard.js"></script>
-<!-- <script type="text/javascript" src="timebomb.js"></script> -->
+
+<script>
+  function jsonTextErr(x) {
+    try {
+      return x.json();
+    } catch (e) {
+      say(e.stack);
+      say(x.text());
+      return x.text();
+    }
+  }
+  say("utils ok")
+</script>
+
+
+Test
+jesli nie ma jeszcze tabeli po co watchmode, mapmodule,  ? senddatamodule?
+
+watchmode script
+<?php if ($devicesExist){ ?>
+<script src="js/watchModeModule.js"></script>
+<script src="js/olMapModule.js"></script>
+<script src="js/tableEditModule.js"></script>
+<?php } ?>
+
+<script src="js/devLocateModule.js"></script>
+<script src="js/sendNewDeviceModule.js"></script>
+
