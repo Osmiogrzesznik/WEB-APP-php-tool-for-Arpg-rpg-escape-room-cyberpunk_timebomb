@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS device (
         'device_description' TEXT,
         'device_ip' TEXT NOT NULL,
         'device_http_user_agent' TEXT NOT NULL, 
-        'device_password' TEXT NOT NULL ,
-        'device_status' TEXT,
+        'timebomb_password' TEXT NOT NULL ,
+        'timebomb_status' TEXT,
         'registered_by_user' integer not null,
-        'time_set' INTEGER,
+        'timebomb_time_set' INTEGER,
         'time_last_active' DATETIME NOT NULL,
         'device_location' varchar(255),
         CONSTRAINT fk_user

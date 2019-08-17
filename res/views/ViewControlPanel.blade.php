@@ -1,4 +1,10 @@
 <?php
+//needed visible
+//name 	description  ip 	time_last_active 	location  functionalities	 / 	password  status 	timebomb_time_set 
+//                                                    |
+//separate loop or query?
+
+
 // it will be an array passed here no $this
 $index_link = $_SERVER['SCRIPT_NAME'];
 $connection_ip = $ip; //$this->getIP(DEBUG_MODE);
@@ -6,10 +12,10 @@ $connection_ip = $ip; //$this->getIP(DEBUG_MODE);
 //$resultset = $this->resultset;
 //$displayedColumns = $this->columns;
 date_default_timezone_set($timezoneName);
-$minimum_time_set_date = date(MY_DATE_FORMAT, time());
-$default_time_set_date = date(MY_DATE_FORMAT, time() + 60 * 30); //in 30 minutes
+$minimum_timebomb_time_set_date = date(MY_DATE_FORMAT, time());
+$default_timebomb_time_set_date = date(MY_DATE_FORMAT, time() + 60 * 30); //in 30 minutes
 $column_name_prefix = "device_";
-$nonDisplayed = array("device_id", "registered_by_user", "device_session_id", "device_http_user_agent");
+$nonDisplayed = array("device_id", "registered_by_user", "device_session_id", "device_http_user_agent", "point_longitude", "point_latitude", "fk_location_point", "point_id");
 $nonEditables = array("device_id", "registered_by_user", "time_last_active", "device_location", "device_session_id");
 
 
@@ -19,8 +25,8 @@ $nonEditables = array("device_id", "registered_by_user", "time_last_active", "de
 
 if (isset($_GET['all'])) {
   $nonDisplayed = array();
-}else{
-  $displayedColumns = array_values(array_diff($columns,$nonDisplayed));
+} else {
+  $displayedColumns = array_values(array_diff($columns, $nonDisplayed));
   //print_me($displayedColumns);exit;
 }
 $devicesExist = (count($resultset) > 0);
@@ -56,16 +62,16 @@ $devicesExist = (count($resultset) > 0);
   say("settings script OK");
 </script>
 <a href="<?= $index_link ?>?action=logout"><button>Log out</button></a>
-  <a href="<?= $index_link . '?action=deleteme' ?>" onclick="if(!confirm('are you sure? All your devices will be deleted too'))
+<a href="<?= $index_link . '?action=deleteme' ?>" onclick="if(!confirm('are you sure? All your devices will be deleted too'))
   {event.stopPropagation();event.preventDefault()}else{}">
-    <button>Delete Account</button></a>
+  <button>Delete Account</button></a>
 
-  <button onclick="user.savePreferences();">Save Preferences <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
-      <span class="more-info-content">
-        save preferences such as green filter , map server/style
-      </span></span></button>
+<button onclick="user.savePreferences();">Save Preferences <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+    <span class="more-info-content">
+      save preferences such as green filter , map server/style
+    </span></span></button>
 <div class="hud">
-  
+
 
   <br>
   <div id="tableWrapper">
@@ -73,31 +79,31 @@ $devicesExist = (count($resultset) > 0);
     # If records found
     if ($devicesExist) {
       ?>
-      <h1>All Devices Registered By You</h1>
-      <div>Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br />
-        You can edit only one field at a time. If field is <span class="KBdisplay field-non-editable">greyed out</span> it is impossible to change the value. Delete the device and create new instead
-      </div>
+    <h1>All Devices Registered By You</h1>
+    <div>Click on field to Edit, press OK after editing a field, then Save to fetchToUpdate the device in database. <br />
+      You can edit only one field at a time. If field is <span class="KBdisplay field-non-editable">greyed out</span> it is impossible to change the value. Delete the device and create new instead
+    </div>
 
-      <!-- DYNAMICALLY creates css for mobile devices to represent rows as chunks/cards -->
+    <!-- DYNAMICALLY creates css for mobile devices to represent rows as chunks/cards -->
 
-      <?php
+    <?php
       echo "<style>@media only screen and (max-width: 760px),
             (min-device-width: 768px) and (max-device-width: 1024px) {
             ";
-            $visible_idx = 0;//index only for visibles 
-      for($idx = 0 ; $idx < count($displayedColumns);$idx++){
+      $visible_idx = 0; //index only for visibles 
+      for ($idx = 0; $idx < count($displayedColumns); $idx++) {
         $column_name = $displayedColumns[$idx];
         if (in_array($column_name, $nonDisplayed)) {
           //do not increase the counter
           continue;
         }
-        
+
         $column_wout_prefix = str_replace($column_name_prefix, "", $column_name);
-        $cssColNo = $visible_idx+1;
+        $cssColNo = $visible_idx + 1;
         echo "td:nth-of-type($cssColNo):before {
               content: '$column_wout_prefix';}";
-          $visible_idx++;
-        }
+        $visible_idx++;
+      }
       $cssColNo++;
       echo "td:nth-of-type($cssColNo):before {
               content: 'OPTIONS';}}</style>";
@@ -106,30 +112,30 @@ $devicesExist = (count($resultset) > 0);
 
 
 
-      <table id="tableToEdit" class="table table-bordered">
-        <thead>
-          <tr class='info'>
-            <?php foreach ($displayedColumns as $k => $column_name) :
+    <table id="tableToEdit" class="table table-bordered">
+      <thead>
+        <tr class='info'>
+          <?php foreach ($displayedColumns as $k => $column_name) :
               if (in_array($column_name, $nonDisplayed)) {
                 continue;
               }
               ?>
 
-              <th> <?php
+          <th> <?php
                     $column_wout_prefix = str_replace($column_name_prefix, "", $column_name);
                     echo $column_wout_prefix;
 
                     ?> </th>
-            <?php endforeach; ?>
-            <th>Save Changes</th>
+          <?php endforeach; ?>
+          <th>Save Changes</th>
 
-          </tr>
-        </thead>
-        <tbody>
+        </tr>
+      </thead>
+      <tbody>
 
 
 
-          <?php
+        <?php
 
           // output data of each row
           foreach ($resultset as $index => $row) {
@@ -138,20 +144,108 @@ $devicesExist = (count($resultset) > 0);
             include("DeviceAsTableRow.blade.php");
           } ?>
 
-        </tbody>
-      </table>
-    </div>
-    <a href="<?= $index_link ?>"><button onclick="">Refresh</button></a>
-    <button onclick="watchmode.toggle(this)">Turn Watch Mode on</button>
-    <br><br><br>
+      </tbody>
+    </table>
+  </div>
+  <a href="<?= $index_link ?>"><button onclick="">Refresh</button></a>
+  <button onclick="watchmode.toggle(this)">Turn Watch Mode on</button>
+  <br><br><br>
 
-    <div id="mapDIV" class="">
+  <?php
 
-    </div>
-    <button id="mapCHGbtn">change Map server:cartodb-basemaps DARK a</button>
-    <select id="mapCHGselect"></select>
-    <button id="FilterTogglerBtn">Green Filter:On</button>
-    <!-- <select id="kernel" name="kernel">
+
+
+  } else { ?>
+  <h4> You didn't add any devices yet - add one below (by default it's ip is this device ip -
+    <?= $connection_ip;
+    }
+    ?>
+
+    <style>
+      .modal-container-on {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: auto;
+      }
+
+
+      /* HIDE RADIO */
+      [type=radio] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      /* IMAGE STYLES */
+      [type=radio]+img {
+        cursor: pointer;
+      }
+
+      /* CHECKED STYLES */
+      [type=radio]:checked+img {
+        outline: 4px solid #f00;
+      }
+
+      .btn-rad-img {
+        width: 7vw;
+        border: 2px solid;
+      }
+    </style>
+
+    <body>
+      <div class="flex-row">
+        <label>
+          <input type="radio" class="radiowithimage" name="type" value="Circle" checked>
+          <img class="btn-rad-img" src="img/CircleFeature.png">
+        </label>
+
+        <label>
+          <input type="radio" class="radiowithimage" name="type" value="Point">
+          <img class="btn-rad-img" src="img/PointFeature.png">
+        </label>
+
+        <label>
+          <input type="radio" class="radiowithimage" name="type" value="Polygon">
+          <img class="btn-rad-img" src="img/PolygonFeature.png">
+        </label>
+
+        <label>
+          <input type="radio" class="radiowithimage" name="type" value="LineString">
+          <img class="btn-rad-img" src="img/LineStringFeature.png">
+        </label>
+
+        <label>
+          <input type="radio" class="radiowithimage" name="type" value="SelectAndEdit">
+          <img class="btn-rad-img" src="img/edit.png">
+        </label>
+
+        <label>
+          <input type="radio" class="radiowithimage" name="type" value="SelectAndDelete">
+          <img class="btn-rad-img" src="img/delete.png">
+        </label>
+
+
+      </div>
+      <input class="jscolor" id="jscolorInput" onchange="updateLastFeatureColor(this.jscolor)" data-jscolor="{closable:true,closeText:'Done'}">
+      <!-- careful if you change value fires changing value , does it lead to loopback? -->
+      <label for="featureNameInput">Object name:
+        <input type="text" id="featureNameInput" onchange="updateLastFeatureName(this)" onfocus="this.select(); this.selAll=1;" placeholder="Untitled" onmouseup="if(this.selAll==0) return true; this.selAll=0; return false;">
+        </input>
+      </label>
+      <button onclick='saveDrawnFeatures()'>Save</button>
+
+
+      <div id="mapDIV" class="" style="border:1px solid red">
+        <div id="map" class="map" tabindex="-1"></div>
+      </div>
+
+</div>
+<button id="mapCHGbtn">change Map server:cartodb-basemaps DARK a</button>
+<select id="mapCHGselect"></select>
+<button id="FilterTogglerBtn">Green Filter:On</button>
+<!-- <select id="kernel" name="kernel">
         <option>none</option>
         <option selected>sharpen</option>
         <option value="sharpenless">sharpen less</option>
@@ -160,19 +254,12 @@ $devicesExist = (count($resultset) > 0);
         <option>emboss</option>
         <option value="edge">edge detect</option>
       </select> -->
-    <audio id="popsound" src="sounds/pop.mp3">
-      Sorry, sounds are not supported
-    </audio>
-
-  <?php
+<audio id="popsound" src="sounds/pop.mp3">
+  Sorry, sounds are not supported
+</audio>
 
 
 
-  } else { ?>
-    <h4> You didn't add any devices yet - add one below (by default it's ip is this device ip -
-      <?= $connection_ip;
-    }
-    ?>
 </div>
 </h4>
 
@@ -191,7 +278,7 @@ $devicesExist = (count($resultset) > 0);
           choose something simple and short.
         </span></span>
     </label>
-    <input id="device_name" type="text" pattern="^.{2,64}$" name="device_name" required />
+    <input id="device_name" type="text" pattern="^.{2,64}$" name="device_name" value="qqq" required />
     <span class="validity">* required</span>
     <label for="device_description">
       device_description:
@@ -207,21 +294,7 @@ $devicesExist = (count($resultset) > 0);
         </span></span>
     </label>
     <input id="is_sending_device_location" type="checkbox" name="is_sending_device_location" onclick="checkLocation(event)" />
-    <label for="device_password_new">
-      Device Password <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
-        <span class="more-info-content">
-          (3-24 characters, a-z 0-9)
-          case insensitive, no special characters
-          <br>stops/unlocks the device
-        </span></span>
-    </label>
-    <input id="device_password_new" class="login_input" type="password" name="device_password_new" pattern="[a-z0-9]{3,32}" required autocomplete="off" />
-    <span class="validity">* required </span>
-    <label for="device_password_repeat">
-      Repeat password
-    </label>
-    <input id="device_password_repeat" class="login_input" type="password" name="device_password_repeat" pattern="[a-z0-9]{3,32}" required autocomplete="off" />
-    <span class="validity">* required</span>
+
     <label for="device_ip">
       Device IP(default this one):<br>
       or pseudo ip for quick setup
@@ -233,29 +306,220 @@ $devicesExist = (count($resultset) > 0);
           Remember: this value will change to the actual device's IP after assignment.
         </span></span>
 
+
     </label>
     <input id="device_ip" type="text" name="device_ip" title="IP address of device" required autocomplete="off" <?= 'value=' . $connection_ip . '' ?> />
+
     <span class="validity">* required</span>
-    <label for="time_set">
-      time_set(this is the time device counts down to):
-    </label>
-    <input id="time_set" class="time_set" type="datetime-local" name="time_set" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}" min="<?= $minimum_time_set_date ?>" value="<?= $default_time_set_date ?>" required>
-            <span class="validity"></span>
 
-    <!-- <input type="submit" name="register" value="Register" onclick="sendNewDevice()"/> -->
-    <button onclick="return sendNewDevice()">Register</button>
 
-    <div id="counterCNT" class="counterCNT">
-      <div id="counterMeas" class="counter">
-        <span id="counter" class="digits">
+    <style>
+      .flex-row>label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-          <span id="counter_hour">00</span>
-          <span id="counter_colon1">:</span>
-          <span id="counter_min">00</span>
-          <span id="counter_colon2" class="flash">:</span>
-          <span id="counter_sec">00</span>
-        </span>
+      /* HIDE RADIO */
+      .functionality-checkbox {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 10px;
+      }
+
+      /* IMAGE STYLES */
+      .functionality-checkbox+img {
+        opacity: 0.4;
+        cursor: pointer;
+        border-color: black;
+        /* margin: 5px; */
+        border: 3px solid #80808036;
+        border-style: outset;
+        /* border-radius: 16%; */
+        background: #000000;
+      }
+
+      /* CHECKED STYLES */
+      .functionality-checkbox:checked+img {
+        outline-color: green;
+        outline-style: solid;
+        outline-width: 1px;
+        opacity: 1;
+        cursor: pointer;
+        border-color: green;
+        /* margin: 5px; */
+        border: 3px solid green;
+        border-style: outset;
+
+        /* border-radius: 16%; */
+        background: #000000;
+      }
+
+      .btn-checkbox-img {
+        width: 40px;
+        /* border: 2px solid; */
+        margin: 5px;
+        display: block;
+      }
+    </style>
+    onclick display apprpopriate functionality settings
+    effects may be fubctionalities with accompanying mapentity radius
+    input for radius of effect or assign draw area where effect takes place
+    functionality type :inventory for items or selling
+    <div class="flex-row">
+      <label>
+        <input type="checkbox" class="functionality-checkbox" name="geiger" value="true" checked></input>
+        <img class="btn-checkbox-img" src="img/geiger.png">
+
+        <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+          Geiger Counter
+          <span class="more-info-content">
+            Geiger counter gets the location of radioactive map entities and by calculating
+            distance to their area indicates the radiation level. Needs MAP and ol modules for calculations
+          </span></span>
+
+      </label>
+
+      <label>
+        <input type="checkbox" class="functionality-checkbox" name="radar" value="true"></input>
+        <img class="btn-checkbox-img" src="img/radar.png">
+        <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+          Radar
+          <span class="more-info-content">
+            Radar gets the location of any registered devices and shows them on map. Radars may have different ranges set below. Needs MAP and ol modules for calculations
+          </span></span>
+      </label>
+
+      <label>
+        <input type="checkbox" class="functionality-checkbox" name="timebomb" value="true"></input>
+        <img class="btn-checkbox-img" src="img/timebomb.png">
+        <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+          Timebomb
+          <span class="more-info-content">
+            <pre>
+Timebomb - not visible on Radars .
+Options
+May be nuclear , dirty or simple .
+ Creates radioactive map entity around after explosion. 
+Destroys devices or inventory around . 
+</pre>
+          </span></span>
+      </label>
+
+      <label>
+        <input type="checkbox" class="functionality-checkbox" name="inventory" value="true"></input>
+        <img class="btn-checkbox-img" src="img/inventory.png">
+        <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+          Inventory
+          <span class="more-info-content">
+            Inventory . There's option to extend it to Shop.
+          </span></span>
+      </label>
+
+
+    </div>
+
+
+
+    <h2>Functionality Settings:</h2>
+
+    <div id="RadarFunctionalitySettingsDIV" class="centerpanel" style="display:flex">
+
+      <label for="radar_radius">
+        Radar radius<span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+          <span class="more-info-content">
+            (3-24 characters, a-z 0-9)
+            case insensitive, no special characters
+            <br>stops/unlocks the device
+          </span></span>
+      </label>
+      <input id="radar_radius" name="radar_radius" placeholder="1-10" value="1" title="how far extends the radar cone"></input>
+
+    </div>
+
+
+    <div id="timebombFunctionalitySettingsDIV" class="centerpanel" style="display:flex">
+      <label for="timebomb_password_new">
+        Device Password <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+          <span class="more-info-content">
+            (3-24 characters, a-z 0-9)
+            case insensitive, no special characters
+            <br>stops/unlocks the device
+          </span></span>
+      </label>
+      <input value="123" id="timebomb_password_new" class="login_input" type="password" name="timebomb_password_new" pattern="[a-z0-9]{3,32}" required autocomplete="off" />
+      <span class="validity">* required </span>
+      <label for="timebomb_password_repeat">
+        Repeat password
+      </label>
+      <input value="123" id="timebomb_password_repeat" class="login_input" type="password" name="timebomb_password_repeat" pattern="[a-z0-9]{3,32}" required autocomplete="off" />
+      <span class="validity">* required</span>
+
+      <div id="counterCNT" class="counterCNT">
+        <div id="counterMeas" class="counter">
+          <span id="counter" class="digits">
+
+            <span id="counter_hour">00</span>
+            <span id="counter_colon1">:</span>
+            <span id="counter_min">00</span>
+            <span id="counter_colon2" class="flash">:</span>
+            <span id="counter_sec">00</span>
+          </span>
+        </div>
+        <label for="timebomb_time_set">
+          timebomb_time_set(this is the time device counts down to):
+        </label>
+
+        <input id="timebomb_time_set" class="timebomb_time_set" type="datetime-local" name="timebomb_time_set" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}" min="<?= $minimum_timebomb_time_set_date ?>" value="<?= $default_timebomb_time_set_date ?>" required>
+                <span class="validity"></span>
+
+        <label for="effectintensity">
+          Effect Intensity
+          <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+            <span class="more-info-content">
+              press button to mark the expl. In case of radiation
+              radius represents maximum level of rafiation level and geiger counters will react before the boundary
+
+            </span></span>
+        </label>
+
+        <input id="effect_intensity" class="" type="telephone" name="effect_intensity">
+                <span class="validity"></span>
+
+        <label>
+
+
+          <label for="effect_intensity">
+            Effect Radius
+            <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+              <span class="more-info-content">
+                press button to mark the explosion radius on the map. In case of radiation
+                radius represents area of set effect intensity maximum level of rafiation level and geiger counters will react before the boundary
+
+              </span></span>
+          </label>
+
+          <input id="effectradius" class="" type="telephone" name="effect_radius">
+                  <span class="validity"></span>
+
+          <label>
+            <input type="checkbox" class="image-checkbox" name="effect" value="Radiation"></input>
+            <img class="btn-checkbox-img" src="img/radar.png">
+            <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+              Radiation Effect
+              <span class="more-info-content">
+                radiation level in proximity increases
+              </span></span>
+          </label>
+
       </div>
+
+      <!-- <input type="submit" name="register" value="Register" onclick="sendNewDevice()"/> -->
+      <button onclick="return sendNewDevice()">Register</button>
+
+
   </form>
 
 
@@ -263,8 +527,8 @@ $devicesExist = (count($resultset) > 0);
 
 </div>
 Minimal Date ( NOW ):
-<pre id="time_setMIN" style="display:block">
-<?= $minimum_time_set_date ?></pre>
+<pre id="timebomb_time_setMIN" style="display:block">
+<?= $minimum_timebomb_time_set_date ?></pre>
 
 </div>
 
@@ -286,19 +550,13 @@ Minimal Date ( NOW ):
   say("utils ok")
 </script>
 
-
-Test
-jesli nie ma jeszcze tabeli po co watchmode, mapmodule, ? senddatamodule?
-
-watchmode script
-<?php if ($devicesExist) { ?>
-  <script src="js/v5-3-0_build_ol.js"></script>
-  <link rel="stylesheet" href="ol.css">
-  <script src="js/focus_preventscroll_polyfill.js"></script>
-  <script src="js/watchModeModule.js"></script>
-  <script src="js/olMapModule.js"></script>
-  <script src="js/tableEditModule.js"></script>
-<?php } ?>
+<script src="js/v5-3-0_build_ol.js"></script>
+<link rel="stylesheet" href="ol.css">
+<script src="js/focus_preventscroll_polyfill.js"></script>
+<script src="js/watchModeModule.js"></script>
+<script src="js/jscolor.js"></script>
+<script src="js/olMapModule.js"></script>
+<script src="js/tableEditModule.js"></script>
 
 <script src="js/devLocateModule.js"></script>
 <script src="js/sendNewDeviceModule.js"></script>

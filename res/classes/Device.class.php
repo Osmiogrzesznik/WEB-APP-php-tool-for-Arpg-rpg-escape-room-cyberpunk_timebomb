@@ -6,7 +6,7 @@ class Device extends TableObject{
 
     public function __construct(PDO $db,array $columnNames)
     {
-        parent::__construct($db,"device",$columnNames);
+        parent::__construct("device");
         $this->tablename = "device";
     }
 
@@ -46,9 +46,9 @@ class Device extends TableObject{
         'device_id',
         'device_ip',
         'device_name',
-        'device_status',
-        'device_password',
-        'time_set',
+        'timebomb_status',
+        'timebomb_password',
+        'timebomb_time_set',
         'user_timezone',
         'device_session_id',
         'device_location',
@@ -58,8 +58,8 @@ class Device extends TableObject{
       );
     
       $sql = 'SELECT
-device_id,device_ip,device_name,device_status,
-device_password,time_set,user_timezone,
+device_id,device_ip,device_name,timebomb_status,
+timebomb_password,timebomb_time_set,user_timezone,
 device_session_id,device_location,
 time_last_active, point_longitude, point_latitude
 FROM device
@@ -112,27 +112,27 @@ LIMIT 1;';
         // $_SESSION['device_session_id'] = $result_row->device_session_id;
         $_SESSION['device_ip'] = $ip;
         // $_SESSION['device_name'] = $result_row->device_name;
-        // $_SESSION['device_status'] = $result_row->device_status;
-        // $_SESSION['time_set'] = $result_row->time_set;
-        // $_SESSION['device_password'] = $result_row->device_password;
+        // $_SESSION['timebomb_status'] = $result_row->timebomb_status;
+        // $_SESSION['timebomb_time_set'] = $result_row->timebomb_time_set;
+        // $_SESSION['timebomb_password'] = $result_row->timebomb_password;
         $_SESSION['timezone'] = $result_row->user_timezone;
 
-        // $this->device_status = $result_row->device_status;
+        // $this->timebomb_status = $result_row->timebomb_status;
         //$this->device_session_id = $result_row->device_session_id;
         $this->timezoneName = $result_row->user_timezone;
         $this->timezone = new DateTimeZone($this->timezoneName);
         $this->device_is_logged_in = true;
         //$this->device_id = $result_row->device_id;
-        //$this->device_password = $result_row->device_password;
-        $this->device_time_set = $result_row->time_set;
+        //$this->timebomb_password = $result_row->timebomb_password;
+        $this->device_timebomb_time_set = $result_row->timebomb_time_set;
         //$this->time_last_active = $result_row->time_last_active;
-        $status_old = $result_row->device_status;
-        // $this->device_status = $result_row->device_status;
+        $status_old = $result_row->timebomb_status;
+        // $this->timebomb_status = $result_row->timebomb_status;
 
-        $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT, $result_row->time_set, $this->timezone);
-        $this->time_set_timestamp = $dateOFF->format('U');
+        $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT, $result_row->timebomb_time_set, $this->timezone);
+        $this->timebomb_time_set_timestamp = $dateOFF->format('U');
         //REFRESH COOKIE   
-        $expire = $this->time_set_timestamp;
+        $expire = $this->timebomb_time_set_timestamp;
         setcookie(
           "device_session_id",
           $this->device_session_id,
@@ -203,12 +203,12 @@ LIMIT 1;';
         } elseif ($status_old == "detonated") {
           $this->addFeedback("this device was already detonated");
           $status_new = $status_old;
-        } elseif ($this->time_set_timestamp <= time()) {
+        } elseif ($this->timebomb_time_set_timestamp <= time()) {
           $this->addFeedback("this device just detonated");
           $status_new = "detonated";
-          $this->device_status_new = $status_new; // used by JSsettings.php
+          $this->timebomb_status_new = $status_new; // used by JSsettings.php
         }
-        $this->device_status_new = $status_new;
+        $this->timebomb_status_new = $status_new;
 
         //-------------------------------------------------------------------------------------
         //END
@@ -217,7 +217,7 @@ LIMIT 1;';
         //everything should be updated here based on the _new variables provided by device_type class
         $sql = 'UPDATE device
 SET time_last_active = :date_now, 
-device_status = :device_status, 
+timebomb_status = :timebomb_status, 
 device_location = :device_location,
 device_ip = :connection_ip
 WHERE device_id = :device_id;
@@ -226,7 +226,7 @@ WHERE device_id = :device_id;
         $date_now = date('Y-m-d\TH:i:s');
         $query = $this->db_connection->prepare($sql);
         $query->bindValue(':date_now', $date_now);
-        $query->bindValue(':device_status', $status_new);
+        $query->bindValue(':timebomb_status', $status_new);
         $query->bindValue(':device_id', $this->device_id);
         $query->bindValue(':connection_ip', $ip);
         $query->bindValue(':device_location', $location_new);

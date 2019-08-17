@@ -29,19 +29,24 @@ td{
     font-size: 9px;
 }
 
+input,textarea{
+  background-color: rgba(0, 20, 0, .7);
+    border-color: rgba(0, 20, 0, .7);
+}
+
 label {
     position: relative;
     margin-top: 7px;
     margin-bottom: 5px;
     left: 0px;
-    align-self: flex-start;
-    text-decoration: underline;
+    /* align-self: flex-start; */
+    /* text-decoration: underline; */
 }
 
-textarea {
+input,textarea {
     border-width: 1px;
     border-style: solid;
-    border-color: #20f86c;
+    border-color: #20f86c91;
     width: 100%;
 }
 
@@ -83,6 +88,7 @@ textarea {
 
 .more-info-btn::after {
     content: "?";
+    display: block;
     /* font-size: 1.1rem; */
     padding-left: 5px;
     /* border: 1px dotted; */
@@ -572,10 +578,10 @@ opacity: .5;
 
 
 
-input,
+/* input,
 label {
     display: block;
-}
+} */
 
 input:invalid {
     color: red;
@@ -598,12 +604,25 @@ input:valid+span:after {
 @media only screen and (max-width: 760px),
 (min-device-width: 768px) and (max-device-width: 1024px) {
 label{
-    position: relative;
-    margin-top: 7px;
-    margin-bottom: 5px;
-    left: 0px;
-    align-self: flex-start;
-    text-decoration: underline;
+    /* position: relative; */
+    /* margin-top: 7px; */
+    /* margin-bottom: 5px; */
+    /* left: 0px; */
+    /* text-decoration: underline; */
+    /* position: absolute; */
+    /* display: inline-table; */
+    /* top: 6px; */
+    /* display: flex; */
+    /* flex-direction: row; */
+    /* left: 0px; */
+    /* width: 41%; */
+    /* text-align: left; */
+    /* padding-right: 10px; */
+    /* white-space: nowrap; */
+    /* background-color: var(--fg); */
+    /* color: var(--bg); */
+    /* padding: 2px; */
+    /* border: 1px solid (--bg); */
 }
 
     .edit-controls {
@@ -667,7 +686,7 @@ label{
 
     }
 
-    .time_set {
+    .timebomb_time_set {
         margin: auto;
         width: 90%;
 

@@ -30,29 +30,28 @@ $sql= "create table	 if not exists drawnfeature(
 'drawnfeature_color' TEXT" ;
 'drawnfeature_pseudo_id' TEXT not null);
 ";*/
-  $fts = new modelTableObject("drawnfeature3");
-  $cols = array(
-    'id' => 'INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL',
-    'creator_fk' => 'integer',
-'creator' => 'integer not null',
-'name' => 'TEXT',
-'description' => 'TEXT',
-'type' => 'varchar(16)',
-'geometryjson' => 'TEXT',
-'effect_FK' => 'integer',
-'color' => 'TEXT',
-'pseudo_id' => 'TEXT not null'
-  );
+  // $cols = array(
+  //   'id' => 'INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL',
+  //   'creator_fk' => 'integer',
+  //   'creator' => 'integer not null',
+  //   'name' => 'TEXT',
+  //   'description' => 'TEXT',
+  //   'type' => 'varchar(16)',
+  //   'geometryjson' => 'TEXT',
+  //   'effect_FK' => 'integer',
+  //   'color' => 'TEXT',
+  //   'pseudo_id' => 'TEXT not null'
+  // );
+  // //$fts = new TableObject("drawnfeature3");
+  //$u = $fts->createTable($cols, null, true);
 
-  $u = $fts->createTable($cols,null,true);
-  echo $u;
   //$succ= $db->query($sql);
 }
 
 
 
 //file_put_contents("a.txt",print_r($_REQUEST,1));
-if (get("savedrawnfeatures", false)) {
+if (get("savedrawnfeatures")) {
   $fs = file_get_contents("php://input");
   $fsphp = json_decode($fs);
 
@@ -87,7 +86,19 @@ if (get("savedrawnfeatures", false)) {
   );
   echo json_encode($ans);
 } else {
+  $ansfeats = json_decode(file_get_contents("aaaa.json"));
+  if (!$ansfeats) {
+    $ans = array(
+      "ok" => false,
+      "features" => array(),
+    );
+  }
+  else{
+    $ans = array(
+      "ok" => true,
+      "features" => $ansfeats,
+    );
+  }
 
-  $ans = file_get_contents("aaaa.json");
-  echo $ans;
+  echo json_encode($ans);
 }

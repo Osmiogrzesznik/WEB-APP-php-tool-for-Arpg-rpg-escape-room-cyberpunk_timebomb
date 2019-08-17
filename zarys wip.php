@@ -63,8 +63,8 @@ function routeUserNotLoggedInActions($action){
   case ("locate"):
     if ($this->IsRegisteredDevice()) {
       $_ARR_response = array(
-        'device_status' => $this->device_status_new,
-        'time_set' => $this->device_time_set,
+        'timebomb_status' => $this->timebomb_status_new,
+        'timebomb_time_set' => $this->device_timebomb_time_set,
         'feedback' => $this->feedback
       );
     } else {
@@ -78,8 +78,8 @@ function routeUserNotLoggedInActions($action){
   case ("password"):
     $password_ok = $this->checkDevicePasswordCorrectness();
     $_ARR_response = array(
-      'device_status' => $this->device_status_new,
-      'time_set' => $this->device_time_set,
+      'timebomb_status' => $this->timebomb_status_new,
+      'timebomb_time_set' => $this->device_timebomb_time_set,
       'password_ok' => $password_ok,
       'feedback' => $this->feedback
     );

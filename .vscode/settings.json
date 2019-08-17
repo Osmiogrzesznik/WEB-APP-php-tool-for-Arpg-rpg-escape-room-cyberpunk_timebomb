@@ -1,0 +1,6 @@
+{
+  "intelephense.completion.insertUseDeclaration": false,
+  "intelephense.environment.includePaths": [
+    "res"
+  ]
+}

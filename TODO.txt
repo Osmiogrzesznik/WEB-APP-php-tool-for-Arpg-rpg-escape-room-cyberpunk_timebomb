@@ -1,39 +1,39 @@
+TODO 13: MAP draw features(mapentities)
+TODO 14: Bomb detonation adds mapentity
+todo 15: display functionalities for each device
+todo 16: separate Control panel table view properties 
+  //needed visible
+                          EVERY DEVICE                                 /      TIMEBOMBS only
+  //name 	description  ip 	time_last_active 	location  functionalities	 / 	password  status 	timebomb_time_set 
+      //                                                    |
+                                                    //separate loop or query?
+  todo 16.1: FIGURE OUT how to display - 
+          put functionality specific properties in single TD? not best idea
+          user at main table can see only common settings , by pressing edit for functionalities new 
+            table/or card displays additional funclty- specific settigns
+todo 17: IMPLEMENT SAVING CHOSEN FUNCtionalitie on create new device.
+  todo 17.1: implement checking for post requests validation. Validation depends on the funclty.
+  todo 17.2: loop through functionalities adding view modules to displayed output site;
+  todo 17.3: js modules need to be further atomized to accomodate for puzzle like joining
 
-
+//TODO 11:
+CHANGE DATABASE SCHEMA AND i2.php TO ACCOMODATE
+for  different device modules store them in an array and
+Loop through in a routeDeviceTypes- change
+ name to FUNCTIONALITIES
 
 //TODO 10: 
 //loop through $visibleColumns = array_diff($columns,$nonVisibles) instead checking on each iteration
 // possibly save for each column a parameter shoul it be displayable in DATABASE already
 
+THINK OVER TODO 12--- what if two people will try to pretend their device has two types of cookies, one for initial identification, when server doesnt know
+yet about the device. Second token will be assigned on the first time when user_is_not logged in
+and  
 
 location table object should be created inside the Device 
 application doesnt know
 device object knows how to check if it is registered
 user object knows how to check itself and so on
-
-PRAGMA foreign_keys=off;
-
-BEGIN TRANSACTION;
-
-ALTER TABLE table1 RENAME TO _table1_old;
-
-CREATE TABLE table1
-(
-  column1 datatype [ NULL | NOT NULL ],
-  column2 datatype [ NULL | NOT NULL ],
-  ...
-
-  CONSTRAINT fk_column
-    FOREIGN KEY (column1, column2, ... column_n)
-    REFERENCES parent_table (column1, column2, ... column_n)
-);
-
-INSERT INTO table1 SELECT * FROM _table1_old;
-
-COMMIT;
-
-PRAGMA foreign_keys=on;
-TODO: FIX EMPTY INSTALL.SQL INSTALL2 SQL
 
 Doing: rewrite sql queries for longitud latidtude from left inner joined points
 
@@ -301,7 +301,7 @@ DONE what if mobile device will move and its address wil change?
 		 	update ip in DB and proceed
 	-> above will result in access to login by GET setting ip=123 removed 
 	notes: don not forget to class declare 
-	$time_set_timestamp
+	$timebomb_time_set_timestamp
 	$device_session_id
 	$device_id
 	do not forgetto check db queries - they where made as if ip was more important 
@@ -321,7 +321,7 @@ https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-ge
 iconFeature.setGeometry(new ol.geom.Point(pos));
 DONe TODO: tick send location in registration form
 
-DONE? TODO: device_status cannot be both indicator of activeness and disarmedness? 
+DONE? TODO: timebomb_status cannot be both indicator of activeness and disarmedness? 
 	PROBLEM:Somebody who is being tracked constantly updates their location changing status, 
 		EVEN AFTER THEY'VE ENTERED THE PASSWORD TO STOP THE bomb
 		THIS overwrites the value in the database , and makes admin not see the proper information

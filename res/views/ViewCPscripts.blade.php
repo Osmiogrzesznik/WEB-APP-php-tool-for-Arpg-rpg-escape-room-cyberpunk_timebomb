@@ -1,18 +1,18 @@
 
 <script>
 
-  time_setsNL = document.querySelectorAll(".time_set");
+  timebomb_time_setsNL = document.querySelectorAll(".timebomb_time_set");
   cxs = [];
   counters = [];
-  for (let idx = 0; idx < time_setsNL.length; idx++) {
-    let time_set = time_setsNL[idx];
-    let counter = time_set.parentElement.querySelector(".digits");
+  for (let idx = 0; idx < timebomb_time_setsNL.length; idx++) {
+    let timebomb_time_set = timebomb_time_setsNL[idx];
+    let counter = timebomb_time_set.parentElement.querySelector(".digits");
     counters.push(counter);
     let cx = new ClockController(counter);
     cxs.push(cx);
-    cx.setTimestampEndfromString(time_set.value);
+    cx.setTimestampEndfromString(timebomb_time_set.value);
     cx.start();
-    time_set.addEventListener('change', (ev) => {
+    timebomb_time_set.addEventListener('change', (ev) => {
       cx.reset();
       //say(event.target.value);
       cx.setTimestampEndfromString(ev.target.value);
@@ -54,7 +54,7 @@
 
   //if there is many counters fps would be an array 
   //otherwise (when user didn't add any devices yet) its one flatpicker
-  fps = flatpickr(time_setsNL, stngs);
+  fps = flatpickr(timebomb_time_setsNL, stngs);
   is_many_flatpickers = fps.hasOwnProperty("length");
   units = [
     'year',
@@ -105,9 +105,9 @@
     } else {
       fps.config.minDate = dstr;
     }
-    // time_setMIN.valueAsNumber = ~~(timestampNOWwOffs / 60000) * 60000;
-    // time_setMINtext.value = dstr;
-    // time_set.min = dstr;
+    // timebomb_time_setMIN.valueAsNumber = ~~(timestampNOWwOffs / 60000) * 60000;
+    // timebomb_time_setMINtext.value = dstr;
+    // timebomb_time_set.min = dstr;
   }, 5000);
 
   function time_ago(time) {

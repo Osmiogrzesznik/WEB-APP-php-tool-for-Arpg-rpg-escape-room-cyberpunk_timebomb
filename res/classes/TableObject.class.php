@@ -4,16 +4,22 @@ class TableObject
 {
   public $db = null;
   public $tablename;
-  public $columnNames;
+  public $columnNames = null;
   private $p_tableExists;
   public $lastAssembledSQL;
 
-  function __construct(PDO $db,String $tablename,array $columnNames)
+  function __construct(String $tablename)//,array $columnNames)
   {
-   // $this->db = getGLOB_DatabaseConnection();
-   $this->db = $db;
+    $this->db = getGLOB_DatabaseConnection();
     $this->tablename = $tablename;
+   // $this->columnNames = $columnNames;
+  }
+
+  public function setUpColumnNamesFromDB(){
+    $res = $this->db->query("PRAGMA table_info($this->tablename);");
+    $columnNames = $res->fetchAll(PDO::FETCH_COLUMN, 1);
     $this->columnNames = $columnNames;
+    return $columnNames;
   }
 
   public function exists()

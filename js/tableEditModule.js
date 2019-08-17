@@ -21,7 +21,7 @@
     }
 
     // update marker on map
-    updateMarkerStatus(fields.device_status, fields)
+    updateMarkerStatus(fields.timebomb_status, fields)
 
 
     fetch(UpdateUrl, {

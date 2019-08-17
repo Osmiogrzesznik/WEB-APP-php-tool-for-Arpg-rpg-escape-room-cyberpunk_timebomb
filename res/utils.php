@@ -117,9 +117,9 @@ In this case we will just include an error template.
   }
 }
 
-function fromGlobal($globArr, $name, $defIfSetButEmpty = true, $defIfNotSet = false)
+function in_($globArr, $name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
-  
+  if (func_num_args()=== 3) $defIfNotSet = $defIfSetButEmpty;
   if (isset($globArr[$name])) {
     if ($globArr[$name] === '') {
       return $defIfSetButEmpty;
@@ -134,31 +134,31 @@ function fromGlobal($globArr, $name, $defIfSetButEmpty = true, $defIfNotSet = fa
 function req($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
   if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
-  return fromGlobal($_REQUEST, $name, $defIfSetButEmpty, $defIfNotSet);
+  return in_($_REQUEST, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function get($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
  if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
-return fromGlobal($_GET, $name, $defIfSetButEmpty, $defIfNotSet);
+return in_($_GET, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function post($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
  if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
-return fromGlobal($_POST, $name, $defIfSetButEmpty, $defIfNotSet);
+return in_($_POST, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function cook($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
  if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
-return fromGlobal($_COOKIE, $name, $defIfSetButEmpty, $defIfNotSet);
+return in_($_COOKIE, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function sess($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
  if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
-return fromGlobal($_SESSION, $name, $defIfSetButEmpty, $defIfNotSet);
+return in_($_SESSION, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function print_me($var, $return = false)

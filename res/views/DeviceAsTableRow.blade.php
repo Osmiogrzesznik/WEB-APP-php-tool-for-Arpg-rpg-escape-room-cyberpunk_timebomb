@@ -49,7 +49,7 @@ if (!isset($row, $displayedColumns, $column_counter, $nonDisplayed, $nonEditable
         }
         //now outer if's elseif: editables
 
-      } elseif ($column_name == "time_set") {
+      } elseif ($column_name == "timebomb_time_set") {
         ?>
       <td class="uuu">
         <span id="smallcounter" class="digits digits-small">
@@ -60,8 +60,8 @@ if (!isset($row, $displayedColumns, $column_counter, $nonDisplayed, $nonEditable
           <span id="counter_colon2" class="flash">:</span>
           <span id="counter_sec">00</span>
         </span>
-        <label for="time_set">New:</label>
-        <input name="time_set" class="field-editable time_set" data-column-name="time_set" value="<?= $row["time_set"]; ?>">
+        <label for="timebomb_time_set">New:</label>
+        <input name="timebomb_time_set" class="field-editable timebomb_time_set" data-column-name="timebomb_time_set" value="<?= $row["timebomb_time_set"]; ?>">
         <label for="r<?= $row['device_id'] . $column_name ?>">Old:</label><span id="r<?= $row['device_id'] . $column_name ?>"><?= $row[$column_name] ?><span>
           <?php
           } else {

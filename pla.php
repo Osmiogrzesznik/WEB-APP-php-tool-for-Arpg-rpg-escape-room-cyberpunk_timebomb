@@ -4035,9 +4035,9 @@ if(!$target_table && !isset($_GET['confirm']) && (!isset($_GET['action']) || (is
 			}
 			echo "</ul><br/><br/>";
 		}
-		echo "<textarea style='width:100%; height:300px;' name='queryval' id='queryval' cols='50' rows='8'>".htmlencode($queryStr)."</textarea>";
+		echo "<textarea style='width:100%; height:300px;' onkeypress='window.e = event; event.ctrlKey && event.keyCode===10 && submitbtn000.click();' name='queryval' id='queryval' cols='50' rows='8'>".htmlencode($queryStr)."</textarea>";
 		echo $lang['delimit']." <input type='text' name='delimiter' value='".htmlencode($delimiter)."' style='width:50px;'/> ";
-		echo "<input type='submit' name='query' value='".$lang['go']."' class='btn'/>";
+		echo "<input type='submit' id='submitbtn000' name='query' value='".$lang['go']."' class='btn'/>";
 		echo "</form>";
 		echo "</fieldset>";
 	}
