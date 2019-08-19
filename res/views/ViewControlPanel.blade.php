@@ -3,7 +3,8 @@
 //name 	description  ip 	time_last_active 	location  functionalities	 / 	password  status 	timebomb_time_set 
 //                                                    |
 //separate loop or query?
-
+$effects = new TableObject("effect");
+$effectsAr = $effects->getAll()->toObjectsArray();
 
 // it will be an array passed here no $this
 $index_link = $_SERVER['SCRIPT_NAME'];
@@ -161,38 +162,7 @@ $devicesExist = (count($resultset) > 0);
     }
     ?>
 
-    <style>
-      .modal-container-on {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: auto;
-      }
 
-
-      /* HIDE RADIO */
-      [type=radio] {
-        position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
-      }
-
-      /* IMAGE STYLES */
-      [type=radio]+img {
-        cursor: pointer;
-      }
-
-      /* CHECKED STYLES */
-      [type=radio]:checked+img {
-        outline: 4px solid #f00;
-      }
-
-      .btn-rad-img {
-        width: 7vw;
-        border: 2px solid;
-      }
-    </style>
 
     <body>
       <div class="flex-row">
@@ -228,14 +198,51 @@ $devicesExist = (count($resultset) > 0);
 
 
       </div>
-      <input class="jscolor" id="jscolorInput" onchange="updateLastFeatureColor(this.jscolor)" data-jscolor="{closable:true,closeText:'Done'}">
-      <!-- careful if you change value fires changing value , does it lead to loopback? -->
-      <label for="featureNameInput">Object name:
-        <input type="text" id="featureNameInput" onchange="updateLastFeatureName(this)" onfocus="this.select(); this.selAll=1;" placeholder="Untitled" onmouseup="if(this.selAll==0) return true; this.selAll=0; return false;">
-        </input>
-      </label>
-      <button onclick='saveDrawnFeatures()'>Save</button>
+      <div class="flex-row feature-fields">
 
+        <div class="feature-field-column">
+          <label for="jscolorInput">Object color:
+            <input class="jscolor" id="jscolorInput" onchange="updateLastFeatureColor(this.jscolor)" data-jscolor="{closable:true,closeText:'Done'}">
+            <!-- careful if you change value fires changing value , does it lead to loopback? -->
+          </label>
+
+          <label for="featureNameInput">Object name:
+            <input type="text" id="featureNameInput" onchange="updateLastFeatureName(this)" onfocus="this.select(); this.selAll=1;" placeholder="Untitled" onmouseup="if(this.selAll==0) return true; this.selAll=0; return false;">
+            </input>
+          </label>
+        </div>
+
+
+        <label for="effectInput">Object effects:
+          <div class="flex-row">
+            <?php
+            foreach ($effectsAr as $ef) :
+              ?>
+            <label>
+              <input type="radio" class="effect_input_radio" name="MapEntityeffect" value="<?= $ef->effect_id; ?>"></input>
+              <img class="btn-checkbox-img small" src="img/created.png">
+              <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
+                <?= $ef->effect_name; ?>
+                <span class="more-info-content">
+                  <?= $ef->effect_description; ?>
+
+                </span></span>
+            </label>
+
+            <?php
+            endforeach;
+            ?>
+           </div>
+        </label>
+
+
+
+      </div>
+     
+      <button onclick='saveDrawnFeatures()'>Save</button>
+      WaS adding effect input and creating save drawn features in index.php
+            <!-- careful if you change value fires changing value , does it lead to loopback? -->
+          
 
       <div id="mapDIV" class="" style="border:1px solid red">
         <div id="map" class="map" tabindex="-1"></div>
@@ -313,57 +320,7 @@ $devicesExist = (count($resultset) > 0);
     <span class="validity">* required</span>
 
 
-    <style>
-      .flex-row>label {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
 
-      /* HIDE RADIO */
-      .functionality-checkbox {
-        position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
-        margin: 10px;
-      }
-
-      /* IMAGE STYLES */
-      .functionality-checkbox+img {
-        opacity: 0.4;
-        cursor: pointer;
-        border-color: black;
-        /* margin: 5px; */
-        border: 3px solid #80808036;
-        border-style: outset;
-        /* border-radius: 16%; */
-        background: #000000;
-      }
-
-      /* CHECKED STYLES */
-      .functionality-checkbox:checked+img {
-        outline-color: green;
-        outline-style: solid;
-        outline-width: 1px;
-        opacity: 1;
-        cursor: pointer;
-        border-color: green;
-        /* margin: 5px; */
-        border: 3px solid green;
-        border-style: outset;
-
-        /* border-radius: 16%; */
-        background: #000000;
-      }
-
-      .btn-checkbox-img {
-        width: 40px;
-        /* border: 2px solid; */
-        margin: 5px;
-        display: block;
-      }
-    </style>
     onclick display apprpopriate functionality settings
     effects may be fubctionalities with accompanying mapentity radius
     input for radius of effect or assign draw area where effect takes place

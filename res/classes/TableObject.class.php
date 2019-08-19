@@ -7,6 +7,7 @@ class TableObject
   public $columnNames = null;
   private $p_tableExists;
   public $lastAssembledSQL;
+  public $curQuery;
 
   function __construct(String $tablename)//,array $columnNames)
   {
@@ -106,9 +107,9 @@ class TableObject
       $sql = "SELECT $colsjoined FROM $this->tablename $tablejoin ";
       $query = $this->db->prepare($sql);
 
-      foreach ($columnNames as $ColumnName => $NewValue) {
-        $query->bindValue(":" . $ColumnName, $NewValue);
-      }
+      // foreach ($columnNames as $ColumnName => $NewValue) {
+      //   $query->bindValue(":" . $ColumnName, $NewValue);
+      // }
       $query->execute($columnNames);
       return true;
     } catch (PDOException $e) {
@@ -142,7 +143,12 @@ class TableObject
 
     }
   }
-
+/**
+ * gets all of table rows with headers
+ *
+ * @param string $where
+ * @return array TablereadyArray array("columnNames" => $columnNames,"rows" => $resultset);
+ */
   public function getAll($where="")
   {
     try {
@@ -154,11 +160,13 @@ class TableObject
     } catch (PDOException $e) {
       throw new PDOException($e . "SQL : " . $sql , null, $e);
     }
-    return $this::toTableReadyArray($query);
+    $this->curQuery = $query;
+    return $this;
   }
 
-  public static function toTableReadyArray(PDOStatement $query)//: array
+  public static function toTableReadyArray(PDOStatement $query = null)//: array
   {
+    $query = $query || $this->curQuery;
     $columnNames = array();
     $resultset = array();
     # Set columns and results array
@@ -174,5 +182,17 @@ class TableObject
     );
 
     return $ret;
+  }
+
+  public function toObjectsArray(PDOStatement $query = null)//: array
+  {
+    $query = $query ? $query : $this->curQuery;
+    $resultset = array();
+    # Set columns and results array
+    while ($row = $query->fetchObject()) {
+      $resultset[] = $row;
+    }
+
+    return $resultset;
   }
 }

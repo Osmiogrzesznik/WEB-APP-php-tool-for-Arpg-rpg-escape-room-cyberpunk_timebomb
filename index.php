@@ -163,16 +163,16 @@ class OneFileLoginApplication
    * @param [type] $user_id creatorOfDevices
    * @return array_assoc [columnNames=>[string],rows[values]]
    */
-  public function getAllDevices($user_id,$neededColumns="*")//$neededColumns)
+  public function getAllDevices($user_id, $neededColumns = "*") //$neededColumns)
   {
-	//$neededColumns = array();
-	//$neededColumnsString = join(",",$neededColumns);
+    //$neededColumns = array();
+    //$neededColumnsString = join(",",$neededColumns);
     $conn = $this->db;
-//TODO all have to have proper tablename prefixes
-//TODO CONSIDER USING string instead of array, less writing, easier to copy from sqls
-//TODO UNIFOrm way of naming properties :
-//device_name, functionality_name could help to get interesting 
-// us colums across tables
+    //TODO all have to have proper tablename prefixes
+    //TODO CONSIDER USING string instead of array, less writing, easier to copy from sqls
+    //TODO UNIFOrm way of naming properties :
+    //device_name, functionality_name could help to get interesting 
+    // us colums across tables
     $sql = "SELECT $neededColumns FROM device
 LEFT JOIN point 
 ON device.device_fk_location_point  = point.point_id
@@ -240,13 +240,13 @@ WHERE device.registered_by_user = :user_id"; // WHERE class = '$class'"; later  
 
     //what if no cookie on the device but it is registered(e.g.different browser opened)
     // set cookie when retrieved device by using ip?
-    $sess_token_from_cookie = cook('device_session_id',false);
+    $sess_token_from_cookie = cook('device_session_id', false);
     if ($sess_token_from_cookie) {
       $this->addFeedback("cookie accepted");
       //$sess_token_from_cookie = $_COOKIE['device_session_id'];
     } else {
       $this->addFeedback("you either not have cookies enabled or your cookie expired?");
-     // $sess_token_from_cookie = NO_COOKIE; //WHAT ELSE SHOULD I DO ? dont want to match anything wrong in queries below
+      // $sess_token_from_cookie = NO_COOKIE; //WHAT ELSE SHOULD I DO ? dont want to match anything wrong in queries below
     }
 
 
@@ -255,7 +255,7 @@ WHERE device.registered_by_user = :user_id"; // WHERE class = '$class'"; later  
     if ($this->createDatabaseConnection()) {
       // $dto = new TableObject("device");
       // $this->deviceTable = $dto;
-       /**
+      /**
        * limit1:
        * then IF there are two rows returned 
        *          it immediately means that device had changed its ip
@@ -263,7 +263,7 @@ WHERE device.registered_by_user = :user_id"; // WHERE class = '$class'"; later  
        *          everything is fine
        * 
        *   */
-      
+
       $sql = 'SELECT 
 device_id,device_ip,device_name,timebomb_status,
 timebomb_password,timebomb_time_set,user_timezone,
@@ -277,7 +277,7 @@ LEFT JOIN timebomb
 ON timebomb_device_id_fk = device_id
 WHERE device_ip = :connection_ip OR device_session_id = :sess_token_from_cookie
 LIMIT 1;';
-    
+
       $query = $this->db->prepare($sql);
       $query->bindValue(':connection_ip', $ip);
       $query->bindValue(':sess_token_from_cookie', $sess_token_from_cookie);
@@ -430,19 +430,19 @@ WHERE device_id = :device_id;
         $query->execute();
 
         return true;
-      } else {//no device registered
-        if ($sess_token_from_cookie){//not registered but some cookie from deleted device
-        setcookie(
-          "device_session_id",
-          cook('device_session_id') ,
-          1,
-          "",
-          "",
-          false,
-          true
-        );
-        $this->addFeedback("re - set cookie to zero it belonged to deleted device");
-      }
+      } else { //no device registered
+        if ($sess_token_from_cookie) { //not registered but some cookie from deleted device
+          setcookie(
+            "device_session_id",
+            cook('device_session_id'),
+            1,
+            "",
+            "",
+            false,
+            true
+          );
+          $this->addFeedback("re - set cookie to zero it belonged to deleted device");
+        }
         $this->addFeedback("($ip) is not registered yet in db.");
       }
       // default return
@@ -542,32 +542,33 @@ WHERE device_id = :device_id;
   }
 
 
-public function routeDeviceFeatures(){
-	$this->addFeedback("not routing device features yet- not implemented");
-	include("functionalities/timebomb/ViewBombInterface.html");
-	
-	exit();//this bomb is not modular maybe different version can be
-	$this->addFeedback("not routing device features yet- not implemented");
-		
-	
-	switch(get("type")):
-	//change switch to ForEach of device functionalities (from DB) 
-	//stored in an array of filepaths to folders in type directory
-		case("bomb"):
-	include("functionalities/timebomb/ViewBombInterface.html");
-	exit();//this bomb is not modular maybe different version can be
-	break;
+  public function routeDeviceFeatures()
+  {
+    $this->addFeedback("not routing device features yet- not implemented");
+    include("functionalities/timebomb/ViewBombInterface.html");
 
-	case("radar"):
-	include("functionalities/radar/ViewRadarMODULE.html");
-	break;
+    exit(); //this bomb is not modular maybe different version can be
+    $this->addFeedback("not routing device features yet- not implemented");
 
-	case("geiger"):
-	include("functionalities/geiger/ViewGeigerMODULE.html");
-	break;
-	
-	endswitch;
-	}
+
+    switch (get("type")):
+        //change switch to ForEach of device functionalities (from DB) 
+        //stored in an array of filepaths to folders in type directory
+      case ("bomb"):
+        include("functionalities/timebomb/ViewBombInterface.html");
+        exit(); //this bomb is not modular maybe different version can be
+        break;
+
+      case ("radar"):
+        include("functionalities/radar/ViewRadarMODULE.html");
+        break;
+
+      case ("geiger"):
+        include("functionalities/geiger/ViewGeigerMODULE.html");
+        break;
+
+    endswitch;
+  }
 
 
 
@@ -630,7 +631,7 @@ public function routeDeviceFeatures(){
 
         $this->showPageRegistration();
         //$this->doRegistration();
-        
+
         exit();
         break;
 
@@ -648,15 +649,89 @@ public function routeDeviceFeatures(){
     // dont show nothing yet, it will be taken care of later down in the code
     // if user is logged in and device was registered showpageloggedin will show all db
     endswitch;
-    
   }
 
+  public function getAllFeatures($user_id)
+  { 
 
+  }
+
+  public function saveAllFeatures($user_id)
+  { 
+    $fs = file_get_contents("php://input");
+    $fsphp = json_decode($fs);
+    $this->addFeedback("received features:");
+    $this->addFeedback(print_me($fsphp,true));
+  $fsnice = json_encode($fsphp, JSON_PRETTY_PRINT);
+  $succ = file_put_contents("aaaa.json", $fsnice);
+return $succ;
+  }
+
+  public function getAllEffects(){
+    $this->effects = new TableObject("effect");
+    return $this->effects->getAll();
+  }
 
 
   public function routeUserLoggedInActions($action)
   {
-    switch ($action): case ("updatedevice"):
+    switch ($action): case ("js_loadfeatures"):
+
+        if ($this->createDatabaseConnection()) {
+          $allFeatures = $this->getAllFeatures($this->user_id);
+          // echo "registering device by POST feedback: \n " . $this->feedback;
+          $this->addFeedback("not fully implemented feature load");
+          $rsp = array(
+            "ok" => false,
+            "feedback" => $this->feedback,
+            "features" => $allFeatures
+          );
+          echo json_encode($rsp);
+        } else {
+          $this->addFeedback("db connection could not be open ");
+          $rsp = array(
+            "ok" => false,
+            "feedback" => $this->feedback,
+            "POST" => $_POST
+          );
+          echo json_encode($rsp, JSON_PRETTY_PRINT);
+        }
+        exit();
+        break;
+
+      case ("js_savefeatures"):
+      $success = $this->saveAllFeatures($this->user_id);
+    $rsp = array(
+            "ok" => $success,
+            "feedback" => $this->feedback,
+
+          );
+          echo json_encode($rsp, JSON_PRETTY_PRINT);
+        exit();
+        break;
+
+
+      case ("js_getalldevices"):
+        // if (isset($_POST["js_getalldevices"])) {
+        if ($this->createDatabaseConnection()) {
+          $allDevices = $this->getAllDevices($this->user_id);
+          // echo "registering device by POST feedback: \n " . $this->feedback;
+          $allDevices['feedback'] = $this->feedback;
+          echo json_encode($allDevices, JSON_PRETTY_PRINT);
+        } else {
+          $this->addFeedback("db connection could not be open ");
+          $rsp = array(
+            "feedback" => $this->feedback,
+            "POST" => $_POST
+          );
+          echo json_encode($rsp, JSON_PRETTY_PRINT);
+        }
+        exit();
+        break;
+
+
+
+      case ("updatedevice"):
         if (post("updatedevice")) {
           $this->updateDevice();
         } else {
@@ -670,7 +745,7 @@ public function routeDeviceFeatures(){
         break;
 
       case ("registerdevice"):
-/**** */
+        /**** */
         $success = false;
         if (post("registerdevice")) {
           $success = $this->doDeviceRegistration();
@@ -710,23 +785,7 @@ WHERE user_id = :id";
         exit();
         break;
 
-      case ("js_getalldevices"):
-        // if (isset($_POST["js_getalldevices"])) {
-        if ($this->createDatabaseConnection()) {
-          $allDevices = $this->getAllDevices($this->user_id);
-          // echo "registering device by POST feedback: \n " . $this->feedback;
-          $allDevices['feedback'] = $this->feedback;
-          echo json_encode($allDevices, JSON_PRETTY_PRINT);
-        } else {
-          $this->addFeedback("db connection could not be open ");
-          $rsp = array(
-            "feedback" => $this->feedback,
-            "POST" => $_POST
-          );
-          echo json_encode($rsp, JSON_PRETTY_PRINT);
-        }
-        exit();
-        break;
+
 
       case ("delete"):
         $this->deleteDevice();
@@ -1213,14 +1272,14 @@ LIMIT 1';
         && !empty($_POST['timebomb_time_set'])
         && $this->validateFunctionalitiesRegistration($_POST)
       ) {
-	/*//$fncltyTbl = new TableObject("functionality");
+        /*//$fncltyTbl = new TableObject("functionality");
 	//$fncltyNms = $fncltyTbl->setUpColumnNamesFromDB();	
 ///functionaliy->runValidation())
 foreach($fncltyNms as $fnm){
 		$fncltyTbl->validate($fnm);p
 		} 
 	*/
-	  // only this case return true, only this case is valid
+        // only this case return true, only this case is valid
         return true;
       } elseif (empty($_POST['device_name'])) {
         $this->addFeedback("Empty device name");
@@ -1230,7 +1289,6 @@ foreach($fncltyNms as $fnm){
         //     $this->addFeedback("device name does not fit the name scheme: only a-z, A-Z  and numbers are allowed, 2 to 64 characters");
       } elseif (empty($_POST['device_ip'])) {
         $this->addFeedback("device ip cannot be empty");
-      
       } else {
         $this->addFeedback("An unknown error occurred.");
       }
@@ -1242,61 +1300,54 @@ foreach($fncltyNms as $fnm){
       return false;
     }
   }
-/**
+  /**
    * 
    * @return bool Success status of registration
    */
-public function validateFunctionalitiesRegistration($_DATA){
-  date_default_timezone_set($this->timezoneName);
-      if (!empty($_DATA['timebomb_time_set'])) {
-        $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT, $_DATA['timebomb_time_set'], $this->timezone);
-        $timestamp = $dateOFF->format('U');
-      } else {
-        $timestamp = 0;
-      }
-      $this->timebomb_time_set_timestamp = $timestamp;
-       //!!!! check if works date time set is later than now
-	$valid = true;
-	if (in_($_DATA,"timebomb")){
-		$valid = $valid 
-	    && !empty($_DATA['timebomb_password_new'])
+  public function validateFunctionalitiesRegistration($_DATA)
+  {
+    date_default_timezone_set($this->timezoneName);
+    if (!empty($_DATA['timebomb_time_set'])) {
+      $dateOFF = DateTime::createFromFormat(MY_DATE_FORMAT, $_DATA['timebomb_time_set'], $this->timezone);
+      $timestamp = $dateOFF->format('U');
+    } else {
+      $timestamp = 0;
+    }
+    $this->timebomb_time_set_timestamp = $timestamp;
+    //!!!! check if works date time set is later than now
+    $valid = true;
+    if (in_($_DATA, "timebomb")) {
+      $valid = $valid
+        && !empty($_DATA['timebomb_password_new'])
         && strlen($_DATA['timebomb_password_new']) >= 3
         && strlen($_DATA['timebomb_password_new']) <= 24
         && !empty($_DATA['timebomb_password_repeat'])
         && ($_DATA['timebomb_password_new'] === $_DATA['timebomb_password_repeat'])
         && !empty($_DATA['timebomb_time_set'])
         && $timestamp > time();
-      } elseif ($timestamp <= time()) {
-        $this->addFeedback("timebomb_time_set cannot be in the past");
-      } elseif (empty($_DATA['timebomb_password_new']) || empty($_DATA['timebomb_password_repeat'])) {
-        $this->addFeedback("Empty device Password");
-      } elseif ($_DATA['timebomb_password_new'] !== $_DATA['timebomb_password_repeat']) {
-        $this->addFeedback("Password and password repeat are not the same");
-      } elseif (strlen($_DATA['timebomb_password_new']) < 3) {
-        $this->addFeedback("Password has a minimum length of 3 characters");
-      } elseif (!preg_match('/^[a-z\d]{3,24}$/', $_DATA['timebomb_password_new'])) {
-        $this->addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 3 to 24 characters");
-      } elseif (empty($_DATA['timebomb_time_set'])) {
-        $this->addFeedback("timebomb_time_set cannot be empty");
-      }
-   if(post("timebomb_explosion_radius")){
-	}
-	if(post("timebomb_explosion_effect")){
+    } elseif ($timestamp <= time()) {
+      $this->addFeedback("timebomb_time_set cannot be in the past");
+    } elseif (empty($_DATA['timebomb_password_new']) || empty($_DATA['timebomb_password_repeat'])) {
+      $this->addFeedback("Empty device Password");
+    } elseif ($_DATA['timebomb_password_new'] !== $_DATA['timebomb_password_repeat']) {
+      $this->addFeedback("Password and password repeat are not the same");
+    } elseif (strlen($_DATA['timebomb_password_new']) < 3) {
+      $this->addFeedback("Password has a minimum length of 3 characters");
+    } elseif (!preg_match('/^[a-z\d]{3,24}$/', $_DATA['timebomb_password_new'])) {
+      $this->addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 3 to 24 characters");
+    } elseif (empty($_DATA['timebomb_time_set'])) {
+      $this->addFeedback("timebomb_time_set cannot be empty");
+    }
+    if (post("timebomb_explosion_radius")) { }
+    if (post("timebomb_explosion_effect")) { }
+
+
+    if (post("geiger")) { }
+    if (post("inventory")) { }
+
+    if (post("radar")) { }
+    return $valid;
   }
-  
-
-if(post("geiger")){
-	
-	}
-if(post("inventory")){
-	
-	}
-
-if(post("radar")){
-	
-	}
-return $valid;
-	}
 
   /**
    * Creates a new user.
@@ -1390,10 +1441,10 @@ VALUES(:user_name, :user_password_hash,:user_ip,:user_timezone)';
     $date_now = date('Y-m-d\TH:i:s'); // add seconds to datetime-locale provided value
     $registered_by_user = $this->user_id;
 
-      //FUNCTIONALITY DEPENDANT-------------------------------------------------------
+    //FUNCTIONALITY DEPENDANT-------------------------------------------------------
     $timebomb_password = htmlentities($_POST['timebomb_password_new'], ENT_QUOTES);
     $timebomb_time_set = $_POST['timebomb_time_set'];
-      //----------end ---------------- FUNCTIONALITY DEPENDANT-------------------------------------------------------
+    //----------end ---------------- FUNCTIONALITY DEPENDANT-------------------------------------------------------
 
     $sql = 'SELECT device_session_id,device_ip,device_name FROM device
 WHERE device_name = :device_name 
@@ -1439,7 +1490,7 @@ VALUES (:longitude,:latitude);'; //***
       $query->bindValue(":latitude", $latitude);
       $query->execute();
 
-   //   INSERT INTO <tablename> (<column1>, <column2>, ..., <columnN>)
+      //   INSERT INTO <tablename> (<column1>, <column2>, ..., <columnN>)
       //SELECT <value1>, <value2>, ..., <valueN> FROM ...
 
       $sql = 'INSERT INTO device 
@@ -1460,19 +1511,19 @@ VALUES
 
       $query->bindValue(':device_location', $location);
       $query->bindValue(':device_name', $device_name);
-      
+
       $query->bindValue(':device_ip', $device_ip);
       $query->bindValue(':device_description', $device_description);
-     
+
       $query->bindValue(':registered_by_user', $registered_by_user);
       $query->bindValue(':time_last_active', $date_now);
       $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
-$registration_success_state = $query->execute();
+      $registration_success_state = $query->execute();
 
 
-//----------------Timebomb
-$timebomb_mapentity_id_fk = 1;//musisz insertnac najpierw map entity
-$sql = 'INSERT INTO timebomb
+      //----------------Timebomb
+      $timebomb_mapentity_id_fk = 1; //musisz insertnac najpierw map entity
+      $sql = 'INSERT INTO timebomb
 (timebomb_device_id_fk,
   timebomb_status ,
   timebomb_time_set ,
@@ -1485,7 +1536,7 @@ last_insert_rowid(),
  :timebomb_time_set ,
  :timebomb_mapentity_id_fk ,
  :timebomb_password);';
-   $query = $this->db->prepare($sql);
+      $query = $this->db->prepare($sql);
 
       $query->bindValue(':timebomb_password', $timebomb_password);
       $query->bindValue(':timebomb_status', 'created');
@@ -1549,10 +1600,11 @@ last_insert_rowid(),
     if ($this->createDatabaseConnection()) {
       //$this->user_id = $this->user_id; // ???????????
       $allDevices = $this->getAllDevices($this->user_id);
+      
       $this->columns = $allDevices['columnNames'];
       $this->resultset = $allDevices['rows'];
       View("ViewStartHTML", $this);
-      
+
       View('ViewControlPanel', $this);
       View('ViewCPscripts', $this);
     } else {

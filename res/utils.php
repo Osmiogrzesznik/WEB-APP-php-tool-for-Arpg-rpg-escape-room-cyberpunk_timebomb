@@ -54,39 +54,29 @@ function getGLOB_DatabaseConnection()
   return $GLOB_DB_CONNECTION;
 }
 
-function objectToArray($d)
+function objectToArray($d,$recursive = false)
 {
   if (is_object($d)) {
     // Gets the properties of the given object 
     // with get_object_vars function 
     $d = get_object_vars($d);
   }
-  if (is_array($d)) {
+  if (is_array($d) && $recursive) {
     /* * Return array converted to object * Using __FUNCTION__ (Magic constant) * for recursive call */
-    return array_map(__FUNCTION__, $d);
+    return array_map(__FUNCTION__, $d,array($recursive));
   } else {
     // Return array
     return $d;
   }
 };
 
-function object_to_array($data)
-{
-  if (is_array($data) || is_object($data)) {
-    $result = array();
-    foreach ($data as $key => $value) {
-      $result[$key] = object_to_array($value);
-    }
-    return $result;
-  }
-  return $data;
-};
+
 // require_once(realpath(dirname(__FILE__) . "/../config.php"));
 //renders Layout With Content File
 function View($contentFile, $variables = array())
 {
   if (is_object($variables)) {
-    $variables = objectToArray($variables);
+    $variables = get_object_vars($variables);
   }
 
   //print_me($variables);
