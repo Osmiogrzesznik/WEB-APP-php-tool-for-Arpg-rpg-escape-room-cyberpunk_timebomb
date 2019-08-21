@@ -1,5 +1,5 @@
 <?php
-//$feedback = $this->feedback;
+//$feedback = getGlobalFeedback();
 ?>
 
 

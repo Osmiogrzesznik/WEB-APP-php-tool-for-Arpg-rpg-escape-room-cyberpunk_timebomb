@@ -156,10 +156,10 @@ LIMIT 1;';
         $location_old = $result_row->device_location;
         if (isset($_GET['latitude'], $_GET['longitude'])) {
           $location_new = $_GET['latitude'] . "/" . $_GET['longitude'];
-          $this->addFeedback("got location GET params");
+          addFeedback("got location GET params");
           if ($location_new != $location_old) {
             //update device location history
-            $this->addFeedback("location is new, storing old in history");
+            addFeedback("location is new, storing old in history");
             try {
               $sql = "INSERT INTO history_device_location (
         history_id,
@@ -179,32 +179,32 @@ LIMIT 1;';
               $query->bindValue(':time_last_active', $this->time_last_active); //old
               $success = $query->execute();
             } catch (Exception $e) {
-              $this->addFeedback("updating location history exception:" . $e->getMessage());
+              addFeedback("updating location history exception:" . $e->getMessage());
             }
-            $this->addFeedback($success ? "updated history" : "not updated history");
+            addFeedback($success ? "updated history" : "not updated history");
           }
         } else { //location not provided
-          $this->addFeedback("location not provided");
+          addFeedback("location not provided");
           //if last location was not provided and this one is still not provided
           if ($location_old === "no location") {
             $location_new = "no location";
           } else { //if location has not been provided but last location is valid 
             //just update it with old loc
             $location_new = $location_old;
-            $this->addFeedback("but previously you were sending location");
+            addFeedback("but previously you were sending location");
           }
         }
 
         date_default_timezone_set($this->timezoneName);
         $status_new = "active"; //default new value on any request came
         if ($status_old == "disarmed") {
-          $this->addFeedback("this device was already disarmed");
+          addFeedback("this device was already disarmed");
           $status_new = $status_old;
         } elseif ($status_old == "detonated") {
-          $this->addFeedback("this device was already detonated");
+          addFeedback("this device was already detonated");
           $status_new = $status_old;
         } elseif ($this->timebomb_time_set_timestamp <= time()) {
-          $this->addFeedback("this device just detonated");
+          addFeedback("this device just detonated");
           $status_new = "detonated";
           $this->timebomb_status_new = $status_new; // used by JSsettings.php
         }
@@ -234,7 +234,7 @@ WHERE device_id = :device_id;
 
         return true;
       } else {
-        $this->addFeedback("($ip) is not registered yet in db.");
+        addFeedback("($ip) is not registered yet in db.");
       }
       // default return
       return false;

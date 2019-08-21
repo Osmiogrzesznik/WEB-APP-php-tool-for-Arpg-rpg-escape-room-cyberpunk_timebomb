@@ -66,7 +66,7 @@ class OneFileLoginApplication
             $all = $deviceObject->getAllByUser(1);
             print_me($all);
 
-        echo $this->feedback;
+        echo getGlobalFeedback();
     }
 
     /**

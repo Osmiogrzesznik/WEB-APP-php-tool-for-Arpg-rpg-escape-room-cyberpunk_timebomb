@@ -365,6 +365,7 @@ function addInteractions(newMode) {
           'effect_on':false,
           'description':'empty desc'
         });
+        event.feature.setId(featureID);
         currentStyle.getText().setText(name); //this
         lastFeature.setStyle(currentStyle);
         lastFeature.getStyle().getText().setText(name); //and this is redundant ?
@@ -576,13 +577,19 @@ function saveDrawnFeatures() {
         say("response came");
         say(t);
         let j = JSON.parse(t);
-
         say(j.received);
-
-
+        window.j = j;
+        j.successStatuses.forEach(x=>{
+          if(!x.success){return}
+          u = drawnFeaturesSource.getFeatureById(x.oldId);
+          u.setId(x.DBId);
+          u.set("id",x.DBId);
+          });
       } catch (err) {
         say(err);
         say(t);
+        console.log("hahahah")
+        console.log(feedback.innerText);
       }
       // confirm("if device added succesfully , click ok to refresh window"+t)?
       // window.open(baseurl,"_self"):0; //try to display modal else say
@@ -640,7 +647,7 @@ function loadFeatures(j) {
   g = new ol.format.GeoJSON();
   //if (!confirm("Received response.sure to start loading features?")) return;
   j.forEach(f => {
-    if (f.properties.type === "Circle") {
+    if (f.geometry.type === "Circle") {
       alert("circle", 1);
       feat = new ol.Feature(
         new ol.geom.Circle(
@@ -668,6 +675,7 @@ function loadFeatures(j) {
       color: feat.getStyle().getStroke().getColor(),
       name: feat.getStyle().getText().getText(),
     }));
+    feat.setId(f.properties.id);
     drawnFeaturesSource.addFeature(feat);
   });
 
@@ -675,20 +683,20 @@ function loadFeatures(j) {
 }
 
 function setupMapControlsListeners() {
-  let rad = document.querySelectorAll(".radio-map-mode-input");
-  for (var i = 0; i < rad.length; i++) {
-    rad[i].addEventListener('change', function (ev) {
+  let radios = document.querySelectorAll(".radio-map-mode-input");
+  for (var i = 0; i < radios.length; i++) {
+    radios[i].addEventListener('change', function (ev) {
       drawingModeChange(this.value);
     });
   }
-  let rad2 = document.querySelectorAll(".radio-effect-input");
-  for (var i = 0; i < rad.length; i++) {
-    rad2[i].addEventListener('change', function (ev) {
+  let radios2 = document.querySelectorAll(".radio-effect-input");
+  for (var i = 0; i < radios2.length; i++) {
+    radios2[i].addEventListener('change', function (ev) {
       updateLastFeatureEffect(this.value);
     });
   }
 }
-
+window.addEventListener('load',setupMapControlsListeners);
 //------------------------------------------------------------------------REST OF MAP MODULE
 var map;
 var mapDefaultZoom = user.prefs.user_map_default_zoom;

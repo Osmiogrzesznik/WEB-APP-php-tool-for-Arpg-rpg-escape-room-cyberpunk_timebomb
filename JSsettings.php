@@ -8,7 +8,7 @@ if ($this->IsRegisteredDevice()){
         "timebomb_time_set" => $this->device_timebomb_time_set,
         "password_length" => $password_length,
         "password_contains_only_digits" => $password_contains_only_digits,
-        "feedback" => $this->feedback
+        "feedback" => getGlobalFeedback()
     );
 echo json_encode($response,JSON_PRETTY_PRINT);
 }

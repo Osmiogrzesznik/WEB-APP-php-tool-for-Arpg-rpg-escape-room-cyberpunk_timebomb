@@ -51,7 +51,7 @@ function getGLOB_DatabaseConnection()
   return $GLOB_DB_CONNECTION;
 }
 
-function objectToArray($d,$recursive = false)
+function objectToArray($d, $recursive = false)
 {
   if (is_object($d)) {
     // Gets the properties of the given object 
@@ -60,7 +60,7 @@ function objectToArray($d,$recursive = false)
   }
   if (is_array($d) && $recursive) {
     /* * Return array converted to object * Using __FUNCTION__ (Magic constant) * for recursive call */
-    return array_map(__FUNCTION__, $d,array($recursive));
+    return array_map(__FUNCTION__, $d, array($recursive));
   } else {
     // Return array
     return $d;
@@ -106,7 +106,7 @@ In this case we will just include an error template.
 
 function in_($globArr, $name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
-  if (func_num_args()=== 3) $defIfNotSet = $defIfSetButEmpty;
+  if (func_num_args() === 3) $defIfNotSet = $defIfSetButEmpty;
   if (isset($globArr[$name])) {
     if ($globArr[$name] === '') {
       return $defIfSetButEmpty;
@@ -120,32 +120,32 @@ function in_($globArr, $name, $defIfSetButEmpty = true, $defIfNotSet = false)
 
 function req($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
-  if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
+  if (func_num_args() === 2) $defIfNotSet = $defIfSetButEmpty;
   return in_($_REQUEST, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function get($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
- if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
-return in_($_GET, $name, $defIfSetButEmpty, $defIfNotSet);
+  if (func_num_args() === 2) $defIfNotSet = $defIfSetButEmpty;
+  return in_($_GET, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function post($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
- if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
-return in_($_POST, $name, $defIfSetButEmpty, $defIfNotSet);
+  if (func_num_args() === 2) $defIfNotSet = $defIfSetButEmpty;
+  return in_($_POST, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function cook($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
- if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
-return in_($_COOKIE, $name, $defIfSetButEmpty, $defIfNotSet);
+  if (func_num_args() === 2) $defIfNotSet = $defIfSetButEmpty;
+  return in_($_COOKIE, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function sess($name, $defIfSetButEmpty = true, $defIfNotSet = false)
 {
- if (func_num_args()=== 2) $defIfNotSet = $defIfSetButEmpty;
-return in_($_SESSION, $name, $defIfSetButEmpty, $defIfNotSet);
+  if (func_num_args() === 2) $defIfNotSet = $defIfSetButEmpty;
+  return in_($_SESSION, $name, $defIfSetButEmpty, $defIfNotSet);
 }
 
 function print_me($var, $return = false)
@@ -160,19 +160,40 @@ function print_me($var, $return = false)
 }
 
 function prep($x)
-  {
-    return ":" . $x;
-  }
+{
+  return ":" . $x;
+}
 
-  function col_eq_prep($colNm)
-  {
-    return $colNm . "= :" . $colNm;
-  }
+function col_eq_prep($colNm)
+{
+  return $colNm . "= :" . $colNm;
+}
 
+function toNumbersArray($s)
+{
+  $r = explode(',', $s);
+  foreach ($r as &$i) $i = 0 + $i;
+  return $r;
+}
 
-function startsWith($haystack, $needle) {
+function startsWith($haystack, $needle)
+{
   return substr_compare($haystack, $needle, 0, strlen($needle)) === 0;
 }
-function endsWith($haystack, $needle) {
+function endsWith($haystack, $needle)
+{
   return substr_compare($haystack, $needle, -strlen($needle)) === 0;
+}
+
+function getGlobalFeedback()
+{
+  global $feedback;
+  return $feedback;
+}
+
+
+function addFeedback($msg)
+{
+  global $feedback;
+    $feedback .= $msg . "\n";
 }

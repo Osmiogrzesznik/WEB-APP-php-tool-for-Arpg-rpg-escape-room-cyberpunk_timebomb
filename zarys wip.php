@@ -65,11 +65,11 @@ function routeUserNotLoggedInActions($action){
       $_ARR_response = array(
         'timebomb_status' => $this->timebomb_status_new,
         'timebomb_time_set' => $this->device_timebomb_time_set,
-        'feedback' => $this->feedback
+        'feedback' => getGlobalFeedback()
       );
     } else {
       $_ARR_response = array(
-        'feedback' => $this->feedback
+        'feedback' => getGlobalFeedback()
       );
     }
     echo json_encode($_ARR_response);
@@ -81,7 +81,7 @@ function routeUserNotLoggedInActions($action){
       'timebomb_status' => $this->timebomb_status_new,
       'timebomb_time_set' => $this->device_timebomb_time_set,
       'password_ok' => $password_ok,
-      'feedback' => $this->feedback
+      'feedback' => getGlobalFeedback()
     );
     echo json_encode($_ARR_response);
 
@@ -119,10 +119,10 @@ function routeUserLoggedInActions($action)
       if (post("updatedevice")) {
         $this->updateDevice();
       } else {
-        $this->addFeedback("no updatedevice form data entry - no POST param");
+        addFeedback("no updatedevice form data entry - no POST param");
       }
       $_ARR_response = array(
-        'feedback' => "updating device by POST feedback: " . $this->feedback
+        'feedback' => "updating device by POST feedback: " . getGlobalFeedback()
       );
       echo json_encode($_ARR_response);
       exit();
@@ -134,12 +134,12 @@ function routeUserLoggedInActions($action)
         $success = $this->doDeviceRegistration();
       } else {
         $success = false;
-        $this->addFeedback("missing updatedevice form data entry - no POST param");
-        $this->addFeedback(print_me($_POST, 1));
+        addFeedback("missing updatedevice form data entry - no POST param");
+        addFeedback(print_me($_POST, 1));
       }
       $_ARR_response = array(
         'ok' => $success,
-        'feedback' => "registering device by POST feedback: \n " . $this->feedback
+        'feedback' => "registering device by POST feedback: \n " . getGlobalFeedback()
       );
       echo json_encode($_ARR_response);
       exit();
@@ -172,13 +172,13 @@ WHERE user_id = :id";
       // if (isset($_POST["js_getalldevices"])) {
       if ($this->createDatabaseConnection()) {
         $allDevices = $this->getAllDevices($this->user_id);
-        // echo "registering device by POST feedback: \n " . $this->feedback;
-        $allDevices['feedback'] = $this->feedback;
+        // echo "registering device by POST feedback: \n " . getGlobalFeedback();
+        $allDevices['feedback'] = getGlobalFeedback();
         echo json_encode($allDevices, JSON_PRETTY_PRINT);
       } else {
-        $this->addFeedback("db connection could not be open ");
+        addFeedback("db connection could not be open ");
         $rsp = array(
-          "feedback" => $this->feedback,
+          "feedback" => getGlobalFeedback(),
           "POST" => $_POST
         );
         echo json_encode($rsp, JSON_PRETTY_PRINT);

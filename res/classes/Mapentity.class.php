@@ -20,13 +20,13 @@ class MapEntity
     "mapentity_name",
     "mapentity_description",
     "mapentity_style",
-    "mapentity_geometrytype",
+    "mapentity_geometry_type",
     "mapentity_center",
     "mapentity_radius",
     "mapentity_geometry_json"
   );
 
-  
+
 
 
   function __construct() //,array $columnNames)
@@ -37,6 +37,7 @@ class MapEntity
 
     // $this->columnNames = $columnNames;
   }
+  
 
   public function setUpColumnNamesFromDB()
   {
@@ -142,21 +143,48 @@ class MapEntity
     return false;
   }
 
-  public function insertWithDataAndGetProperId(array $mapentity, $user_id, $query)
+  public function preparePropsArr(array $mapentity, $user_id = null)
   {
-    print_me ($mapentity);
-    $s = $query->execute(array(
+    $props = array(
       "mapentity_effect_id_fk" => $mapentity["properties"]["effect_id_fk"],
       "mapentity_effect_on" => $mapentity["properties"]["effect_on"],
-      "user_id_fk" => $user_id,
       "mapentity_name" => $mapentity["properties"]["name"],
       "mapentity_description" => $mapentity["properties"]["description"],
-      "mapentity_style" => $mapentity["properties"]["color"],
-      "mapentity_geometrytype" => $mapentity["geometry"]["type"],
-      "mapentity_center" => $mapentity["geometry"]["center"],
-      "mapentity_radius" => $mapentity["geometry"]["radius"],
-      "mapentity_geometry_json" => json_encode($mapentity["geometry"])
-    ));
+      "mapentity_style" => join(",", $mapentity["properties"]["color"]),
+      "mapentity_geometry_type" => $mapentity["geometry"]["type"],
+      "mapentity_geometry_json" => json_encode($mapentity["geometry"]) //todo not save if circle
+    );
+
+    if ($user_id) {
+      $props["user_id_fk"] = $user_id;
+    }
+
+    if ($mapentity["geometry"]["type"] === "Circle") {
+      $typespecificprops = array(
+        "mapentity_center" => join(",", $mapentity["geometry"]["center"]),
+        "mapentity_radius" => $mapentity["geometry"]["radius"],
+      );
+    } else {
+      $typespecificprops = array(
+        "mapentity_center" => null,
+        "mapentity_radius" => null,
+      );
+    }
+    $arr = array_merge($props, $typespecificprops);
+    return $arr;
+  }
+
+  public function insertWithDataAndGetProperId(array $mapentity, $user_id, $query)
+  {
+    addFeedback( "inserting:\n");
+    addFeedback(print_me($mapentity,1));
+    $arr = $this->preparePropsArr($mapentity, $user_id);
+    try {
+      $s = $query->execute($arr);
+    } catch (PDOException $e) { 
+      $query->debugDumpParams();
+      throw $e;
+    }
     $this->lastResult = $s;
     $this->lastInsertedId = $this->db->lastInsertId();
     return $this->lastInsertedId;
@@ -164,20 +192,10 @@ class MapEntity
 
   public function updateWithData($mapentity, $query)
   {
-    
-    $s = $query->execute(array(
-      "mapentity_id" => $mapentity["properties"]["id"],
-      "mapentity_effect_id_fk" => $mapentity["properties"]["effectd_id_fk"],
-      "mapentity_effect_on" => $mapentity["properties"]["effect_on"],
-      //doesnt changes "user_id_fk" => $user_id,
-      "mapentity_name" => $mapentity["properties"]["name"],
-      "mapentity_description" => $mapentity["properties"]["description"],
-      "mapentity_style" => $mapentity["properties"]["color"],
-      "mapentity_geometrytype" => $mapentity["geometry"]["type"],
-      "mapentity_center" => $mapentity["geometry"]["center"],
-      "mapentity_radius" => $mapentity["geometry"]["radius"],
-      "mapentity_geometry_json" => json_encode($mapentity["geometry"])
-    ));
+    addFeedback( "updating:\n");
+    addFeedback(print_me($mapentity,1));
+    $arr = $this->preparePropsArr($mapentity);
+    $s = $query->execute($arr);
     $this->lastResult = $s;
     return $s;
   }
@@ -185,11 +203,12 @@ class MapEntity
   public function saveAllFeatures(array $allFeatures, $user_id) //, array $feat)
   {
     $preps = array_map('prep', $this->columns); //prepare array of ":column"
+    addFeedback(print_me($preps,1));
     $column_eq_preps = array_map('col_eq_prep', $this->columns); //prepare array of "column = :column"
 
     $this->updatesql = "UPDATE $this->tablename SET "
       . join(",", array_slice($column_eq_preps, 1)) //updates every column apart from id (slice)
-      . " WHERE $column_eq_preps[0] ;"; //where rowid = :rowid;
+      . " WHERE $column_eq_preps[0] ;"; //where rowid = :rowid; no need to check for user author
 
     $this->insertsql = "INSERT INTO $this->tablename ( "
       . join(",", $this->columns)
@@ -208,18 +227,57 @@ class MapEntity
     foreach ($allFeatures as $feat) {
       $featId = $feat["properties"]["id"];
       $isNewFeat = startsWith($featId, "tempId");
-      
-        if ($isNewFeat) {
-          $newId = $this->insertWithDataAndGetProperId($feat, $user_id, $insertquery);
-          $successStatuses[] = array("oldId" => $featId, "DBId" => $newId, "success" => $this->lastResult);
-        } else {
-          $s = $this->updateWithData($feat, $updatequery);
-          $successStatuses[] = array("oldId" => $featId, "DBId" => $newId, "success" => $s);
-        }
-     
+
+      if ($isNewFeat) {
+        $newId = $this->insertWithDataAndGetProperId($feat, $user_id, $insertquery);
+        $successStatuses[] = array("oldId" => $featId, "DBId" => $newId, "success" => $this->lastResult);
+      } else {
+        $s = $this->updateWithData($feat, $updatequery);
+        $successStatuses[] = array("oldId" => $featId, "DBId" => $newId, "success" => $s);
+      }
     }
     return $successStatuses;
   }
+
+  public function loadAllFeatures($user_id)
+  {
+    $allfeatsResult = $this->getAllByUser($user_id)->toTableReadyArray();
+    //$allfeatsCols = $allfeatsResult["columnNames"];
+    $feats = $allfeatsResult["rows"];
+    $outfs = array();
+
+    foreach ($feats as $m) {
+
+      $f = array("type" => "Feature");
+
+      $properties = array();
+      $properties["id"] = 0 + $m["mapentity_effect_id_fk"];
+      $properties["name"] = $m["mapentity_name"];
+      $properties["color"] = toNumbersArray($m["mapentity_style"]);
+      $properties["effect_on"] = $m["mapentity_effect_on"];
+      $properties["description"] = $m["mapentity_description"];
+      $properties["effectd_id_fk"] = $m["mapentity_effect_id_fk"];
+
+      if ($m["mapentity_geometry_type"] === "Circle") {
+        $geom = array();
+        $geom["radius"] = 0 + $m["mapentity_radius"];
+        $geom["center"] = toNumbersArray($m["mapentity_center"]);
+        $geom["type"] = $m["mapentity_geometry_type"];
+      } else {
+        $geom = json_decode($m["mapentity_geometry_json"]);
+      }
+
+      $f["geometry"] = $geom;
+      $f["properties"] = $properties;
+
+      $outfs[] = $f;
+    }
+
+    return $outfs;
+  }
+
+
+
   /**
    * gets all of table rows with headers
    *

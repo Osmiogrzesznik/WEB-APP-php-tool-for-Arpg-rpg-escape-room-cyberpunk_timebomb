@@ -2,10 +2,10 @@
     {
         "type": "Feature",
         "geometry": {
-            "radius": 1798887.857377782,
+            "radius": 978879.0254513766,
             "center": [
-                527553.8731654072,
-                3221529.052298136
+                1383204.2997324746,
+                3066653.89821385
             ],
             "type": "Circle"
         },
@@ -13,18 +13,153 @@
             "id": "tempId1",
             "name": "Untitled tempId1",
             "color": [
-                0,
-                0,
-                255
+                128,
+                255,
+                128
             ],
             "effect_id_fk": 1,
             "effect_on": false,
+            "description": "empty desc",
             "type": "Circle",
-            "radius": 1798887.857377782,
+            "radius": 978879.0254513766,
             "center": [
-                527553.8731654072,
-                3221529.052298136
+                1383204.2997324746,
+                3066653.89821385
             ]
-        }
+        },
+        "id": "tempId1"
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "radius": 870206.1825377084,
+            "center": [
+                3108735.5777418865,
+                1928158.9974345914
+            ],
+            "type": "Circle"
+        },
+        "properties": {
+            "id": "tempId2",
+            "name": "Untitled tempId2",
+            "color": [
+                128,
+                255,
+                128
+            ],
+            "effect_id_fk": 1,
+            "effect_on": false,
+            "description": "empty desc",
+            "type": "Circle",
+            "radius": 870206.1825377084,
+            "center": [
+                3108735.5777418865,
+                1928158.9974345914
+            ]
+        },
+        "id": "tempId2"
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [
+                        -1285142.7880640035,
+                        3422433.6293529035
+                    ],
+                    [
+                        -715895.3376743742,
+                        2586351.082026842
+                    ],
+                    [
+                        -1427454.7999524819,
+                        2034893.1556420205
+                    ],
+                    [
+                        -1640922.519203057,
+                        2355094.435935742
+                    ],
+                    [
+                        -2565949.4021495986,
+                        3191176.38609752
+                    ],
+                    [
+                        -1285142.7880640035,
+                        3422433.6293529035
+                    ]
+                ]
+            ]
+        },
+        "properties": {
+            "id": "tempId3",
+            "name": "Untitled tempId3",
+            "color": [
+                128,
+                255,
+                128
+            ],
+            "effect_id_fk": 1,
+            "effect_on": false,
+            "description": "empty desc"
+        },
+        "id": "tempId3"
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    4015973.2352657625,
+                    3813791.214173006
+                ],
+                [
+                    3304414.370151938,
+                    4311882.360036254
+                ],
+                [
+                    3660193.504126708,
+                    3315699.4711454744
+                ]
+            ]
+        },
+        "properties": {
+            "id": "tempId4",
+            "name": "Untitled tempId4",
+            "color": [
+                128,
+                255,
+                128
+            ],
+            "effect_id_fk": 1,
+            "effect_on": false,
+            "description": "empty desc"
+        },
+        "id": "tempId4"
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
+                1489937.8607756207,
+                1572379.2662955374
+            ]
+        },
+        "properties": {
+            "id": "tempId5",
+            "name": "Untitled tempId5",
+            "color": [
+                128,
+                255,
+                128
+            ],
+            "effect_id_fk": 1,
+            "effect_on": false,
+            "description": "empty desc"
+        },
+        "id": "tempId5"
     }
 ]

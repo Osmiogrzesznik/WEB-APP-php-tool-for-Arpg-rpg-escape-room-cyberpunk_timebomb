@@ -46,7 +46,7 @@ CREATE TABLE mapentity (
         mapentity_name TEXT NOT NULL,
         mapentity_description TEXT,
         mapentity_style text,
-        mapentity_geometrytype varchar(16) not null,
+        mapentity_geometry_type varchar(16) not null,
         mapentity_center DECIMAL,
         mapentity_radius DECIMAL,
         mapentity_geometry_json text,

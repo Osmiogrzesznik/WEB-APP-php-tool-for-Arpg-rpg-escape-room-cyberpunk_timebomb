@@ -113,7 +113,7 @@ class OneFileLoginApplication
     public function performMinimumRequirementsCheck()
     {
         if (version_compare(PHP_VERSION, '5.3.7', '<')) {
-            $this->addFeedback("Sorry, Simple PHP Login does not run on a PHP version older than 5.3.7 !");
+            addFeedback("Sorry, Simple PHP Login does not run on a PHP version older than 5.3.7 !");
         } elseif (version_compare(PHP_VERSION, '5.5.0', '<')) {
             require_once("libraries/password_compatibility_library.php");
             return true;
@@ -221,10 +221,10 @@ class OneFileLoginApplication
         // set cookie when retrieved device by using ip?
         
         if (isset($_COOKIE['device_session_id'])) {
-            $this->addFeedback("cookie accepted");
+            addFeedback("cookie accepted");
             $sess_token_from_cookie = $_COOKIE['device_session_id'];
         } else {
-            $this->addFeedback("you either not have cookies enabled or your cookie expired?");
+            addFeedback("you either not have cookies enabled or your cookie expired?");
             $sess_token_from_cookie = NO_COOKIE; //WHAT ELSE SHOULD I DO ? dont want to match anything wrong in queries below
         }
 
@@ -326,10 +326,10 @@ class OneFileLoginApplication
                 $location_old = $result_row->device_location;
                 if (isset($_GET['latitude'], $_GET['longitude'])) {
                     $location_new = $_GET['latitude'] . "/" . $_GET['longitude'];
-                    $this->addFeedback("got location GET params");
+                    addFeedback("got location GET params");
                     if ($location_new != $location_old) {
                         //update device location history
-                        $this->addFeedback("location is new, storing old in history");
+                        addFeedback("location is new, storing old in history");
                         try {
                             $sql = "INSERT INTO history_device_location (
                             history_id,
@@ -349,32 +349,32 @@ class OneFileLoginApplication
                             $query->bindValue(':time_last_active', $this->time_last_active); //old
                             $success = $query->execute();
                         } catch (Exception $e) {
-                            $this->addFeedback("updating location history exception:" . $e->getMessage());
+                            addFeedback("updating location history exception:" . $e->getMessage());
                         }
-                        $this->addFeedback($success ? "updated history" : "not updated history");
+                        addFeedback($success ? "updated history" : "not updated history");
                     }
                 } else { //location not provided
-                    $this->addFeedback("location not provided");
+                    addFeedback("location not provided");
                     //if last location was not provided and this one is still not provided
                     if ($location_old === "no location") {
                         $location_new = "no location";
                     } else { //if location has not been provided but last location is valid 
                         //just update it with old loc
                         $location_new = $location_old;
-                        $this->addFeedback("but previously you were sending location");
+                        addFeedback("but previously you were sending location");
                     }
                 }
 
                 date_default_timezone_set($this->timezoneName);
                 $status_new = "active"; //default new value on any request came
                 if ($status_old == "disarmed") {
-                    $this->addFeedback("this device was already disarmed");
+                    addFeedback("this device was already disarmed");
                     $status_new = $status_old;
                 } elseif ($status_old == "detonated") {
-                    $this->addFeedback("this device was already detonated");
+                    addFeedback("this device was already detonated");
                     $status_new = $status_old;
                 } elseif ($this->timebomb_time_set_timestamp <= time()) {
-                    $this->addFeedback("this device just detonated");
+                    addFeedback("this device just detonated");
                     $status_new = "detonated";
                     $this->timebomb_status_new = $status_new; // used by JSsettings.php
                 }
@@ -404,7 +404,7 @@ class OneFileLoginApplication
 
                 return true;
             } else {
-                $this->addFeedback("($ip) is not registered yet in db.");
+                addFeedback("($ip) is not registered yet in db.");
             }
             // default return
             return false;
@@ -425,11 +425,11 @@ class OneFileLoginApplication
             if ($this->IsRegisteredDevice()) {
                 //if ($_SESSION['device_password'] === $_GET["password"]) {
                 if (strtolower($_GET["password"]) === strtolower($this->device_password)) {
-                    $this->addFeedback("password correct");
+                    addFeedback("password correct");
                     // TODO: should check if its too late , even when device already 
                     // detonated, just to make sure nobody will fool admins
                     if ($this->timebomb_status_new == "detonated") {
-                        $this->addFeedback("however, sorry it is too late device is detonated already");
+                        addFeedback("however, sorry it is too late device is detonated already");
                         return false;
                     }
                     if ($this->createDatabaseConnection()) {
@@ -442,22 +442,22 @@ class OneFileLoginApplication
                         $query->bindValue(':already_checked_and_found_id', $this->device_id);
                         $query->execute();
                         $this->timebomb_status = "disarmed";
-                        $this->addFeedback("device disarmed");
+                        addFeedback("device disarmed");
                         return true;
                     }
-                    $this->addFeedback("db CONNECTION PROBLEM");
+                    addFeedback("db CONNECTION PROBLEM");
                     return false;
                 }
-                $this->addFeedback("password incorrect");
+                addFeedback("password incorrect");
                 return false;
             }
-            $this->addFeedback("dEVICE IS NOT REGISTERED?");
+            addFeedback("dEVICE IS NOT REGISTERED?");
             return false;
         } catch (Exception $e) {
-            $this->addFeedback($e->getMessage());
+            addFeedback($e->getMessage());
             return false;
         }
-        $this->addFeedback("no error have no idea");
+        addFeedback("no error have no idea");
         return false;
     }
     /**
@@ -466,7 +466,7 @@ class OneFileLoginApplication
     public function runApplication()
     {
         if(isset($_REQUEST['msg'])){
-            $this->addFeedback(htmlentities($_REQUEST['msg']));
+            addFeedback(htmlentities($_REQUEST['msg']));
         }
         //first check ip
         // echo "post";
@@ -518,11 +518,11 @@ class OneFileLoginApplication
                         $_ARR_response = array(
                             'timebomb_status' => $this->timebomb_status_new,
                             'timebomb_time_set' => $this->device_timebomb_time_set,
-                            'feedback' => $this->feedback
+                            'feedback' => getGlobalFeedback()
                         );
                     } else {
                         $_ARR_response = array(
-                            'feedback' => $this->feedback
+                            'feedback' => getGlobalFeedback()
                         );
                     }
                     echo json_encode($_ARR_response);
@@ -535,7 +535,7 @@ class OneFileLoginApplication
                         'timebomb_status' => $this->timebomb_status_new,
                         'timebomb_time_set' => $this->device_timebomb_time_set,
                         'password_ok' => $password_ok,
-                        'feedback' => $this->feedback
+                        'feedback' => getGlobalFeedback()
                     );
                     echo json_encode($_ARR_response);
                     exit();
@@ -575,11 +575,11 @@ class OneFileLoginApplication
 
             // if (isset($_POST["updatedevice"])) {
             //     $this->updateDevice();
-            //     echo "updating device by POST feedback: " . $this->feedback;
+            //     echo "updating device by POST feedback: " . getGlobalFeedback();
             //     exit();
             // } elseif (isset($_POST["registerdevice"])) {
             //     $this->doDeviceRegistration();
-            //     echo "registering device by POST feedback: \n " . $this->feedback;
+            //     echo "registering device by POST feedback: \n " . getGlobalFeedback();
             //     exit();
             // } else
             if (isset($_GET["action"])) {
@@ -588,10 +588,10 @@ class OneFileLoginApplication
                         if (isset($_POST["updatedevice"])) {
                             $this->updateDevice();
                         } else {
-                            $this->addFeedback("no updatedevice form data entry - no POST param");
+                            addFeedback("no updatedevice form data entry - no POST param");
                         }
                         $_ARR_response = array(
-                            'feedback' => "updating device by POST feedback: " . $this->feedback
+                            'feedback' => "updating device by POST feedback: " . getGlobalFeedback()
                         );
                         echo json_encode($_ARR_response);
                         exit();
@@ -603,12 +603,12 @@ class OneFileLoginApplication
                             $success = $this->doDeviceRegistration();
                         } else {
                             $success = false;
-                            $this->addFeedback("missing updatedevice form data entry - no POST param");
-                            $this->addFeedback(print_me($_POST, 1));
+                            addFeedback("missing updatedevice form data entry - no POST param");
+                            addFeedback(print_me($_POST, 1));
                         }
                         $_ARR_response = array(
                             'ok' => $success,
-                            'feedback' => "registering device by POST feedback: \n " . $this->feedback
+                            'feedback' => "registering device by POST feedback: \n " . getGlobalFeedback()
                         );
                         echo json_encode($_ARR_response);
                         exit();
@@ -641,13 +641,13 @@ class OneFileLoginApplication
                         // if (isset($_POST["js_getalldevices"])) {
                         if ($this->createDatabaseConnection()) {
                             $allDevices = $this->getAllDevices($this->user_id);
-                            // echo "registering device by POST feedback: \n " . $this->feedback;
-                            $allDevices['feedback'] = $this->feedback;
+                            // echo "registering device by POST feedback: \n " . getGlobalFeedback();
+                            $allDevices['feedback'] = getGlobalFeedback();
                             echo json_encode($allDevices, JSON_PRETTY_PRINT);
                         } else {
-                            $this->addFeedback("db connection could not be open ");
+                            addFeedback("db connection could not be open ");
                             $rsp = array(
-                                "feedback" => $this->feedback,
+                                "feedback" => getGlobalFeedback(),
                                 "POST" => $_POST
                             );
                             echo json_encode($rsp, JSON_PRETTY_PRINT);
@@ -676,7 +676,7 @@ class OneFileLoginApplication
 
             if ($this->device_is_logged_in) {
                 //this means usrr just added device 
-                $this->addFeedback("userAdmin is logged in and device is logged in ,
+                addFeedback("userAdmin is logged in and device is logged in ,
                 probably here user should have an option to logout");
 
                 $this->showPageLoggedIn();
@@ -716,7 +716,7 @@ class OneFileLoginApplication
     {
         if (!$this->user_is_logged_in) {
             // Hacker?
-            $this->addFeedback("You need to be logged in in order to delete your account");
+            addFeedback("You need to be logged in in order to delete your account");
             return false;
         } else {
             if ($this->createDatabaseConnection()) {
@@ -730,12 +730,12 @@ class OneFileLoginApplication
                 $query->execute();
                 $amnt = $query->rowCount();
                 if ($amnt > 0) {
-                    $this->addFeedback("\n $amnt user deleted successfully");
+                    addFeedback("\n $amnt user deleted successfully");
                 } else {
-                    $this->addFeedback("Deleting user with id: $id impossible. No such device");
+                    addFeedback("Deleting user with id: $id impossible. No such device");
                 }
             } else {
-                $this->addFeedback("Could not establish db connection");
+                addFeedback("Could not establish db connection");
             }
         }
     }
@@ -748,14 +748,14 @@ class OneFileLoginApplication
     {
         if (!$this->user_is_logged_in) {
             // Hacker?
-            $this->addFeedback("You need to be logged in in order to delete your devices");
+            addFeedback("You need to be logged in in order to delete your devices");
             return false;
         }
 
         if ($this->createDatabaseConnection()) {
 
             if (!isset($_GET["id"]) || empty($_GET["id"])) {
-                $this->addFeedback(print_r($_GET, true) . "device id not chosen");
+                addFeedback(print_r($_GET, true) . "device id not chosen");
             } else {
 
                 $sql = 'DELETE
@@ -768,27 +768,27 @@ class OneFileLoginApplication
                 $query->execute();
                 $amnt = $query->rowCount();
                 if ($amnt > 0) {
-                    $this->addFeedback("\n $amnt Device(s) deleted successfully");
+                    addFeedback("\n $amnt Device(s) deleted successfully");
                 } else {
-                    $this->addFeedback("Deleting device with id: $id impossible. No such device");
+                    addFeedback("Deleting device with id: $id impossible. No such device");
                 }
             }
         } else {
-            $this->addFeedback("Could not establish db connection");
+            addFeedback("Could not establish db connection");
         }
     }
 
     private function updateDevice()
     {
         if (!$this->checkDeviceUpdateData()) {
-            echo "bad data : " . $this->feedback;
+            echo "bad data : " . getGlobalFeedback();
             print_r($_POST);
             exit();
         }
         if ($this->createDatabaseConnection()) {
 
             if (!isset($_POST["device_id"])) {
-                $this->addFeedback("device id not chosen");
+                addFeedback("device id not chosen");
             } else {
 
                 $sql = 'UPDATE
@@ -821,13 +821,13 @@ class OneFileLoginApplication
                 $query->execute();
                 $amnt = $query->rowCount();
                 if ($amnt > 0) {
-                    $this->addFeedback("\n $amnt Device(s) updated successfully");
+                    addFeedback("\n $amnt Device(s) updated successfully");
                 } else {
-                    $this->addFeedback("updating device with id: $selected_id impossible. No such device");
+                    addFeedback("updating device with id: $selected_id impossible. No such device");
                 }
             }
         } else {
-            $this->addFeedback("Could not establish db connection");
+            addFeedback("Could not establish db connection");
         }
     }
 
@@ -882,30 +882,30 @@ class OneFileLoginApplication
                 // CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
                 // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
             } elseif (empty($_POST['device_name'])) {
-                $this->addFeedback("Empty device name");
+                addFeedback("Empty device name");
             } elseif (empty($_POST['device_password'])) {
-                $this->addFeedback("Empty device Password");
+                addFeedback("Empty device Password");
             } elseif (strlen($_POST['device_password']) < 3) {
-                $this->addFeedback("Password has a minimum length of 4 characters");
+                addFeedback("Password has a minimum length of 4 characters");
             } elseif (!preg_match('/^[a-z\d]{3,24}$/', $_POST['device_password'])) {
-                $this->addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 4 to 24 characters");
+                addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 4 to 24 characters");
             } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
-                $this->addFeedback("devicename cannot be shorter than 2 or longer than 64 characters");
+                addFeedback("devicename cannot be shorter than 2 or longer than 64 characters");
             } elseif (!preg_match('/^[a-zA-Z\d]{2,64}$/', $_POST['device_name'])) {
-                $this->addFeedback("device name does not fit the name scheme: only a-z and numbers are allowed, 2 to 64 characters");
+                addFeedback("device name does not fit the name scheme: only a-z and numbers are allowed, 2 to 64 characters");
             } elseif (empty($_POST['device_ip'])) {
-                $this->addFeedback("device ip cannot be empty");
+                addFeedback("device ip cannot be empty");
             } elseif (empty($_POST['timebomb_time_set'])) {
-                $this->addFeedback("timebomb_time_set cannot be empty");
+                addFeedback("timebomb_time_set cannot be empty");
             } elseif ($timestamp <= time()) {
-                $this->addFeedback("timebomb_time_set cannot be in the past");
+                addFeedback("timebomb_time_set cannot be in the past");
             } else {
-                $this->addFeedback("An unknown error occurred.");
+                addFeedback("An unknown error occurred.");
             }
         } else {
-            $this->addFeedback("no updatedevice POST\n");
+            addFeedback("no updatedevice POST\n");
 
-            $this->addFeedback("\n");
+            addFeedback("\n");
             // default return
             return false;
         }
@@ -927,11 +927,11 @@ class OneFileLoginApplication
             $this->db_connection = getGLOB_DatabaseConnection();
             return true;
         } catch (PDOException $e) {
-            $this->addFeedback("PDO database connection problem: " . $e->getMessage());
+            addFeedback("PDO database connection problem: " . $e->getMessage());
             file_put_contents('PDOErrors.txt', "\n" . $e->getMessage(), FILE_APPEND);
             return false;
         } catch (Exception $e) {
-            $this->addFeedback("General problem: " . $e->getMessage());
+            addFeedback("General problem: " . $e->getMessage());
             file_put_contents('PDOErrors.txt', "\n" . $e->getMessage(), FILE_APPEND);
             return false;
         }
@@ -1001,7 +1001,7 @@ class OneFileLoginApplication
         $_SESSION = array();
         session_destroy();
         $this->user_is_logged_in = false;
-        $this->addFeedback("You were just logged out.\n");
+        addFeedback("You were just logged out.\n");
     }
 
     /**
@@ -1014,12 +1014,12 @@ class OneFileLoginApplication
         if ($this->checkRegistrationData()) {
             if ($this->createDatabaseConnection()) {
                 $this->createNewUser();
-                $this->addFeedback("database connection ok ");
+                addFeedback("database connection ok ");
             } else {
-                $this->addFeedback("problem with db connection \n");
+                addFeedback("problem with db connection \n");
             }
         } else {
-            $this->addFeedback("registration data not ok ? \n");
+            addFeedback("registration data not ok ? \n");
 
             return false;
         }
@@ -1036,11 +1036,11 @@ class OneFileLoginApplication
                 return $this->createNewDevice();
                 
             } else {
-                $this->addFeedback("Problem with db connection \n");
+                addFeedback("Problem with db connection \n");
                 return false;
             }
         } else {
-            $this->addFeedback("Device registration data not ok ? \n");
+            addFeedback("Device registration data not ok ? \n");
 
             return false;
         }
@@ -1055,9 +1055,9 @@ class OneFileLoginApplication
         if (!empty($_POST['user_name']) && !empty($_POST['user_password'])) {
             return true;
         } elseif (empty($_POST['user_name'])) {
-            $this->addFeedback("Username field was empty.");
+            addFeedback("Username field was empty.");
         } elseif (empty($_POST['user_password'])) {
-            $this->addFeedback("Password field was empty.");
+            addFeedback("Password field was empty.");
         }
         // default return
         return false;
@@ -1101,10 +1101,10 @@ class OneFileLoginApplication
                 $this->user_is_logged_in = true;
                 return true;
             } else {
-                $this->addFeedback("Wrong password.");
+                addFeedback("Wrong password.");
             }
         } else {
-            $this->addFeedback("This user does not exist.");
+            addFeedback("This user does not exist.");
         }
         // default return
         return false;
@@ -1119,7 +1119,7 @@ class OneFileLoginApplication
     {
         // if no registration form submitted: exit the method
         if (!isset($_POST["register"])) {
-            $this->addFeedback("\n no POST used");
+            addFeedback("\n no POST used");
             return false;
         }
 
@@ -1139,23 +1139,23 @@ class OneFileLoginApplication
             // only this case return true, only this case is valid
             return true;
         } elseif (empty($_POST['user_name'])) {
-            $this->addFeedback("Empty Username");
+            addFeedback("Empty Username");
         } elseif (empty($_POST['user_password_new']) || empty($_POST['user_password_repeat'])) {
-            $this->addFeedback("Empty Password");
+            addFeedback("Empty Password");
         } elseif (empty($_POST['timezone'])) {
-            $this->addFeedback("Empty timezone");
+            addFeedback("Empty timezone");
         } elseif (!in_array($_POST['timezone'], timezone_identifiers_list())) {
-            $this->addFeedback("Timezone not valid");
+            addFeedback("Timezone not valid");
         } elseif ($_POST['user_password_new'] !== $_POST['user_password_repeat']) {
-            $this->addFeedback("Password and password repeat are not the same");
+            addFeedback("Password and password repeat are not the same");
         } elseif (strlen($_POST['user_password_new']) < 6) {
-            $this->addFeedback("Password has a minimum length of 6 characters");
+            addFeedback("Password has a minimum length of 6 characters");
         } elseif (strlen($_POST['user_name']) > 64 || strlen($_POST['user_name']) < 2) {
-            $this->addFeedback("Username cannot be shorter than 2 or longer than 64 characters");
+            addFeedback("Username cannot be shorter than 2 or longer than 64 characters");
         } elseif (!preg_match('/^[a-z\d]{2,64}$/i', $_POST['user_name'])) {
-            $this->addFeedback("Username does not fit the name scheme: only a-Z and numbers are allowed, 2 to 64 characters");
+            addFeedback("Username does not fit the name scheme: only a-Z and numbers are allowed, 2 to 64 characters");
         } else {
-            $this->addFeedback("An unknown error occurred.");
+            addFeedback("An unknown error occurred.");
         }
 
         // default return
@@ -1217,32 +1217,32 @@ class OneFileLoginApplication
                 // CREATE UNIQUE INDEX `device_ip_UNIQUE` ON device ( `device_ip` ASC);
                 // CREATE UNIQUE INDEX `device_name_UNIQUE` ON device ( `device_name` ASC);
             } elseif (empty($_POST['device_name'])) {
-                $this->addFeedback("Empty device name");
+                addFeedback("Empty device name");
             } elseif (empty($_POST['device_password_new']) || empty($_POST['device_password_repeat'])) {
-                $this->addFeedback("Empty device Password");
+                addFeedback("Empty device Password");
             } elseif ($_POST['device_password_new'] !== $_POST['device_password_repeat']) {
-                $this->addFeedback("Password and password repeat are not the same");
+                addFeedback("Password and password repeat are not the same");
             } elseif (strlen($_POST['device_password_new']) < 3) {
-                $this->addFeedback("Password has a minimum length of 3 characters");
+                addFeedback("Password has a minimum length of 3 characters");
             } elseif (!preg_match('/^[a-z\d]{3,24}$/', $_POST['device_password_new'])) {
-                $this->addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 3 to 24 characters");
+                addFeedback("password does not fit the scheme: only a-z and numbers are allowed, 3 to 24 characters");
             } elseif (strlen($_POST['device_name']) > 64 || strlen($_POST['device_name']) < 2) {
-                $this->addFeedback("devicename cannot be shorter than 2 or longer than 64 characters");
+                addFeedback("devicename cannot be shorter than 2 or longer than 64 characters");
                 // } elseif (!preg_match('/^{2,64}$/', $_POST['device_name'])) {
-                //     $this->addFeedback("device name does not fit the name scheme: only a-z, A-Z  and numbers are allowed, 2 to 64 characters");
+                //     addFeedback("device name does not fit the name scheme: only a-z, A-Z  and numbers are allowed, 2 to 64 characters");
             } elseif (empty($_POST['device_ip'])) {
-                $this->addFeedback("device ip cannot be empty");
+                addFeedback("device ip cannot be empty");
             } elseif (empty($_POST['timebomb_time_set'])) {
-                $this->addFeedback("timebomb_time_set cannot be empty");
+                addFeedback("timebomb_time_set cannot be empty");
             } elseif ($timestamp <= time()) {
-                $this->addFeedback("timebomb_time_set cannot be in the past");
+                addFeedback("timebomb_time_set cannot be in the past");
             } else {
-                $this->addFeedback("An unknown error occurred.");
+                addFeedback("An unknown error occurred.");
             }
         } else {
-            $this->addFeedback("no register POST or no update POST\n");
+            addFeedback("no register POST or no update POST\n");
 
-            $this->addFeedback("\n");
+            addFeedback("\n");
             // default return
             return false;
         }
@@ -1279,7 +1279,7 @@ class OneFileLoginApplication
         // If you meet the inventor of PDO, punch him. Seriously.
         $result_row = $query->fetchObject();
         if ($result_row) {
-            $this->addFeedback("Sorry, that username is already taken. Please choose another one.\n");
+            addFeedback("Sorry, that username is already taken. Please choose another one.\n");
         } else {
 
             $sql = 'INSERT INTO user (user_name, user_password_hash ,user_ip,user_timezone)
@@ -1306,7 +1306,7 @@ class OneFileLoginApplication
                 $result_row = $query->fetchObject();
                 
 
-                $this->addFeedback("Your account has been created successfully. You can now log in.");
+                addFeedback("Your account has been created successfully. You can now log in.");
                 $_SESSION['user_id'] = $result_row->user_id;;
                 $_SESSION['user_name'] = $user_name;
                 $_SESSION['user_timezone'] = $user_timezone;
@@ -1319,11 +1319,11 @@ class OneFileLoginApplication
                 $this->user_is_logged_in = true;
                 return true;
             } else {
-                $this->addFeedback("Sorry, your registration failed. Please go back and try again.");
+                addFeedback("Sorry, your registration failed. Please go back and try again.");
             }
         }
         // default return
-        $this->addFeedback("Sorry, your registration failed. I don't know why.");
+        addFeedback("Sorry, your registration failed. I don't know why.");
 
         return false;
     }
@@ -1338,7 +1338,7 @@ class OneFileLoginApplication
         // $device_http_user_agent = $_SERVER['HTTP_USER_AGENT'];
         $timebomb_time_set = $_POST['timebomb_time_set'];
         $device_session_id_from_logged_user_cookie_modified = $_COOKIE['PHPSESSID'] . "_device_name_" . $device_name;
-        // $this->addFeedback(
+        // addFeedback(
         //     print_r($this,true)
         // );
         date_default_timezone_set($this->timezoneName);
@@ -1375,7 +1375,7 @@ class OneFileLoginApplication
             $a=get_object_vars($result_row);
             foreach ($a as $k => $v) {
                 if($v == $given[$k]){
-                $this->addFeedback("$k : $v is already taken. Please choose another one.");
+                addFeedback("$k : $v is already taken. Please choose another one.");
                 }
             }
         } else {
@@ -1429,10 +1429,10 @@ class OneFileLoginApplication
             $registration_success_state = $query->execute();
 
             if ($registration_success_state) {
-                $this->addFeedback("Device has been registered successfully. You can now log out to see device page.");
+                addFeedback("Device has been registered successfully. You can now log out to see device page.");
                 return true;
             } else {
-                $this->addFeedback("Sorry, your registration failed. Please go back and try again.");
+                addFeedback("Sorry, your registration failed. Please go back and try again.");
             }
         }
         // default return
@@ -1473,7 +1473,7 @@ class OneFileLoginApplication
             View('ViewControlPanel',$this);
             View('ViewCPscripts',$this);
         } else {
-            $this->addFeedback("\nsorry cannot display all your devices due to db conn problem");
+            addFeedback("\nsorry cannot display all your devices due to db conn problem");
             View("ViewStartHTML",$this);
         }
     }

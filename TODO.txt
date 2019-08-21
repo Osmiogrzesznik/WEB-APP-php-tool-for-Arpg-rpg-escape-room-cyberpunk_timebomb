@@ -1,3 +1,5 @@
+TODO 19: change usage of feat.properties.id to feat.id // not very important 
+
 TODO 18: Need to solve id problem, drawing feature/mapentity adds to it an id 
 , but a db mapentity has independent mapentity_id 
   -- during saving in the response there should be set of id's
