@@ -19,9 +19,6 @@ function rafkaClassesAutoloader($class)
 
 spl_autoload_register('rafkaClassesAutoloader');
 
-// echo print_r(scandir(PROJ));
-//echo PROJ;
-//echo VIEWS;
 $db_type = "sqlite"; //
 
 /**
@@ -160,4 +157,22 @@ function print_me($var, $return = false)
   } else {
     return "<pre>" . print_r($var, true) . "</pre>";
   }
+}
+
+function prep($x)
+  {
+    return ":" . $x;
+  }
+
+  function col_eq_prep($colNm)
+  {
+    return $colNm . "= :" . $colNm;
+  }
+
+
+function startsWith($haystack, $needle) {
+  return substr_compare($haystack, $needle, 0, strlen($needle)) === 0;
+}
+function endsWith($haystack, $needle) {
+  return substr_compare($haystack, $needle, -strlen($needle)) === 0;
 }

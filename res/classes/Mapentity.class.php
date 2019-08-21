@@ -1,6 +1,6 @@
 <?php
 
-class TableObject
+class MapEntity
 {
   public $db = null;
   public $tablename;
@@ -8,11 +8,33 @@ class TableObject
   private $p_tableExists;
   public $lastAssembledSQL;
   public $curQuery;
+  public $insertsql;
+  public $lastInsertedId;
+  public $lastResult;
+  public $prepColumns;
+  public $columns = array(
+    "mapentity_id",
+    "mapentity_effect_id_fk",
+    "mapentity_effect_on",
+    "user_id_fk",
+    "mapentity_name",
+    "mapentity_description",
+    "mapentity_style",
+    "mapentity_geometrytype",
+    "mapentity_center",
+    "mapentity_radius",
+    "mapentity_geometry_json"
+  );
 
-  function __construct(String $tablename) //,array $columnNames)
+  
+
+
+  function __construct() //,array $columnNames)
   {
     $this->db = getGLOB_DatabaseConnection();
-    $this->tablename = $tablename;
+    $this->tablename = "mapentity";
+
+
     // $this->columnNames = $columnNames;
   }
 
@@ -75,12 +97,12 @@ class TableObject
 
 
 
-  public function set(string $where, array $columnNamesToNewValues)
+  public function set(string $where, array $feat)
   {
     try {
-      $keysCN = array_keys($columnNamesToNewValues);
+      $keysCN = array_keys($feat);
       $sql = "UPDATE $this->tablename SET ";
-      for ($i = 0; $i < count($columnNamesToNewValues) - 1; $i++) {
+      for ($i = 0; $i < count($feat) - 1; $i++) {
         $CN = $keysCN[$i];
         $sql .= $CN . " = :" . $CN . ", " . PHP_EOL;
       }
@@ -89,7 +111,7 @@ class TableObject
       $sql .= " WHERE " . $where . ";";
       $query = $this->db->prepare($sql);
 
-      foreach ($columnNamesToNewValues as $ColumnName => $NewValue) {
+      foreach ($feat as $ColumnName => $NewValue) {
         $query->bindValue(":" . $ColumnName, $NewValue);
       }
       $query->execute();
@@ -120,28 +142,83 @@ class TableObject
     return false;
   }
 
-  public function insert(array $columnNamesToNewValues)
+  public function insertWithDataAndGetProperId(array $mapentity, $user_id, $query)
   {
-    try {
-      $keysCN = array_keys($columnNamesToNewValues);
-      $sql = "INSERT INTO $this->tablename ( ";
-      for ($i = 0; $i < count($columnNamesToNewValues) - 1; $i++) {
-        $CN = $keysCN[$i];
-        $sql .= $CN .  ", ";
-      }
-      $CN = $keysCN[$i];
-      $sql .= $CN . " = :" . $CN;
-      $sql .= ";";
-      $query = $this->db->prepare($sql);
+    print_me ($mapentity);
+    $s = $query->execute(array(
+      "mapentity_effect_id_fk" => $mapentity["properties"]["effect_id_fk"],
+      "mapentity_effect_on" => $mapentity["properties"]["effect_on"],
+      "user_id_fk" => $user_id,
+      "mapentity_name" => $mapentity["properties"]["name"],
+      "mapentity_description" => $mapentity["properties"]["description"],
+      "mapentity_style" => $mapentity["properties"]["color"],
+      "mapentity_geometrytype" => $mapentity["geometry"]["type"],
+      "mapentity_center" => $mapentity["geometry"]["center"],
+      "mapentity_radius" => $mapentity["geometry"]["radius"],
+      "mapentity_geometry_json" => json_encode($mapentity["geometry"])
+    ));
+    $this->lastResult = $s;
+    $this->lastInsertedId = $this->db->lastInsertId();
+    return $this->lastInsertedId;
+  }
 
-      foreach ($columnNamesToNewValues as $ColumnName => $NewValue) {
-        $query->bindValue(":" . $ColumnName, $NewValue);
-      }
-      $s = $query->execute();
-      return $s;
-    } catch (PDOException $e) {
-      throw new PDOException($e . "SQL : " . $sql, null, $e);
+  public function updateWithData($mapentity, $query)
+  {
+    
+    $s = $query->execute(array(
+      "mapentity_id" => $mapentity["properties"]["id"],
+      "mapentity_effect_id_fk" => $mapentity["properties"]["effectd_id_fk"],
+      "mapentity_effect_on" => $mapentity["properties"]["effect_on"],
+      //doesnt changes "user_id_fk" => $user_id,
+      "mapentity_name" => $mapentity["properties"]["name"],
+      "mapentity_description" => $mapentity["properties"]["description"],
+      "mapentity_style" => $mapentity["properties"]["color"],
+      "mapentity_geometrytype" => $mapentity["geometry"]["type"],
+      "mapentity_center" => $mapentity["geometry"]["center"],
+      "mapentity_radius" => $mapentity["geometry"]["radius"],
+      "mapentity_geometry_json" => json_encode($mapentity["geometry"])
+    ));
+    $this->lastResult = $s;
+    return $s;
+  }
+
+  public function saveAllFeatures(array $allFeatures, $user_id) //, array $feat)
+  {
+    $preps = array_map('prep', $this->columns); //prepare array of ":column"
+    $column_eq_preps = array_map('col_eq_prep', $this->columns); //prepare array of "column = :column"
+
+    $this->updatesql = "UPDATE $this->tablename SET "
+      . join(",", array_slice($column_eq_preps, 1)) //updates every column apart from id (slice)
+      . " WHERE $column_eq_preps[0] ;"; //where rowid = :rowid;
+
+    $this->insertsql = "INSERT INTO $this->tablename ( "
+      . join(",", $this->columns)
+      . " )  VALUES (null, "
+      . join(",", array_slice($preps, 1)) //inserts every column apart from id (slice), id will be auto
+      . ");";
+
+    $insertquery = $this->db->prepare($this->insertsql);
+    $updatequery = $this->db->prepare($this->updatesql);
+
+
+    // TODO: to mozna zrobic array_filter() albo po prostu dzielac je na dwa arraye i kazdy jesli ma length>0 
+    // intializuje swoj wlasny query, wtedy oszczedzimy tworzenie query i sqlow,
+
+    $successStatuses = array();
+    foreach ($allFeatures as $feat) {
+      $featId = $feat["properties"]["id"];
+      $isNewFeat = startsWith($featId, "tempId");
+      
+        if ($isNewFeat) {
+          $newId = $this->insertWithDataAndGetProperId($feat, $user_id, $insertquery);
+          $successStatuses[] = array("oldId" => $featId, "DBId" => $newId, "success" => $this->lastResult);
+        } else {
+          $s = $this->updateWithData($feat, $updatequery);
+          $successStatuses[] = array("oldId" => $featId, "DBId" => $newId, "success" => $s);
+        }
+     
     }
+    return $successStatuses;
   }
   /**
    * gets all of table rows with headers

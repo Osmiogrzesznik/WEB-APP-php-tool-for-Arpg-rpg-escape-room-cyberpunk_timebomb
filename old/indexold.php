@@ -164,7 +164,7 @@ class OneFileLoginApplication
     $sql = "SELECT * FROM device
 INNER JOIN point 
 ON device.device_fk_location_point  = point.point_id
-WHERE registered_by_user = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
+WHERE user_id_fk = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
 
     $query = $db->prepare($sql);
     $query->bindValue(':user_id', $user_id);
@@ -247,7 +247,7 @@ time_last_active, point_longitude, point_latitude
 FROM device
 INNER jOIN point 
 ON  point.point_id = device.device_fk_location_point
-INNER jOIN user ON registered_by_user = user_id 
+INNER jOIN user ON user_id_fk = user_id 
 WHERE device_ip = :connection_ip OR device_session_id = :sess_token_from_cookie
 LIMIT 1;';
 
@@ -1354,7 +1354,7 @@ VALUES(:user_name, :user_password_hash,:user_ip,:user_timezone)';
     // );
     date_default_timezone_set($this->timezoneName);
     $date_now = date('Y-m-d\TH:i:s'); // add seconds to datetime-locale provided value
-    $registered_by_user = $this->user_id;
+    $user_id_fk = $this->user_id;
 
 
 
@@ -1413,13 +1413,13 @@ VALUES (:longitude,:latitude);'; //***
 (device_id,device_name, timebomb_password, 
 device_ip,
 device_description, timebomb_status,timebomb_time_set, 
-registered_by_user, time_last_active,
+user_id_fk, time_last_active,
 device_session_id, device_location,device_fk_location_point)
 VALUES
 (null ,:device_name, :timebomb_password, 
 :device_ip,
 :device_description, :timebomb_status,:timebomb_time_set,
-:registered_by_user, :time_last_active,
+:user_id_fk, :time_last_active,
 :device_session_id, :device_location,last_insert_rowid())';
       $query = $this->db->prepare($sql);
 
@@ -1432,7 +1432,7 @@ VALUES
       $query->bindValue(':device_description', $device_description);
       $query->bindValue(':timebomb_status', 'created');
       $query->bindValue(':timebomb_time_set', $timebomb_time_set);
-      $query->bindValue(':registered_by_user', $registered_by_user);
+      $query->bindValue(':user_id_fk', $user_id_fk);
       $query->bindValue(':time_last_active', $date_now);
       $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
 

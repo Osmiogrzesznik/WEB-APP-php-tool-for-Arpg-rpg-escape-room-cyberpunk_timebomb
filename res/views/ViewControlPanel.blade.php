@@ -16,8 +16,8 @@ date_default_timezone_set($timezoneName);
 $minimum_timebomb_time_set_date = date(MY_DATE_FORMAT, time());
 $default_timebomb_time_set_date = date(MY_DATE_FORMAT, time() + 60 * 30); //in 30 minutes
 $column_name_prefix = "device_";
-$nonDisplayed = array("device_id", "registered_by_user", "device_session_id", "device_http_user_agent", "point_longitude", "point_latitude", "fk_location_point", "point_id");
-$nonEditables = array("device_id", "registered_by_user", "time_last_active", "device_location", "device_session_id");
+$nonDisplayed = array("device_id", "user_id_fk", "device_session_id", "device_http_user_agent", "point_longitude", "point_latitude", "fk_location_point", "point_id");
+$nonEditables = array("device_id", "user_id_fk", "time_last_active", "device_location", "device_session_id");
 
 
 //TODO 10: 
@@ -41,7 +41,7 @@ $devicesExist = (count($resultset) > 0);
       user_map_srv: <?= isset($_SESSION["user_map_srv"]) ? $_SESSION["user_map_srv"] : 0 ?>,
       user_green_filter: <?= isset($_SESSION["green_filter"]) ? $_SESSION["green_filter"] : 1 ?>,
       user_image_filter: <?= isset($SESSION["image_filter"]) ? $_SESSION["image_filter"] : 0 ?>,
-      user_map_default_zoom: <?= isset($SESSION["user_map_default_zoom"]) ? $_SESSION["user_map_default_zoom"] : 15 ?>
+      user_map_default_zoom: <?= isset($SESSION["user_map_default_zoom"]) ? $_SESSION["user_map_default_zoom"] : 3 ?>
     },
     savePreferences() {
       getparams = "?action=savepreferences";
@@ -167,32 +167,32 @@ $devicesExist = (count($resultset) > 0);
     <body>
       <div class="flex-row">
         <label>
-          <input type="radio" class="radiowithimage" name="type" value="Circle" checked>
+          <input type="radio" class="radio-map-mode-input" name="type" value="Circle" checked>
           <img class="btn-rad-img" src="img/CircleFeature.png">
         </label>
 
         <label>
-          <input type="radio" class="radiowithimage" name="type" value="Point">
+          <input type="radio" class="radio-map-mode-input" name="type" value="Point">
           <img class="btn-rad-img" src="img/PointFeature.png">
         </label>
 
         <label>
-          <input type="radio" class="radiowithimage" name="type" value="Polygon">
+          <input type="radio" class="radio-map-mode-input" name="type" value="Polygon">
           <img class="btn-rad-img" src="img/PolygonFeature.png">
         </label>
 
         <label>
-          <input type="radio" class="radiowithimage" name="type" value="LineString">
+          <input type="radio" class="radio-map-mode-input" name="type" value="LineString">
           <img class="btn-rad-img" src="img/LineStringFeature.png">
         </label>
 
         <label>
-          <input type="radio" class="radiowithimage" name="type" value="SelectAndEdit">
+          <input type="radio" class="radio-map-mode-input" name="type" value="SelectAndEdit">
           <img class="btn-rad-img" src="img/edit.png">
         </label>
 
         <label>
-          <input type="radio" class="radiowithimage" name="type" value="SelectAndDelete">
+          <input type="radio" class="radio-map-mode-input" name="type" value="SelectAndDelete">
           <img class="btn-rad-img" src="img/delete.png">
         </label>
 
@@ -219,7 +219,7 @@ $devicesExist = (count($resultset) > 0);
             foreach ($effectsAr as $ef) :
               ?>
             <label>
-              <input type="radio" class="effect_input_radio" name="MapEntityeffect" value="<?= $ef->effect_id; ?>"></input>
+              <input type="radio" class="radio-effect-input" name="MapEntityeffect" value="<?= $ef->effect_id; ?>"></input>
               <img class="btn-checkbox-img small" src="img/created.png">
               <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
                 <?= $ef->effect_name; ?>

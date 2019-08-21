@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `user2` (
 
 CREATE TABLE IF NOT EXISTS device (
         'device_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        'registered_by_user' integer not null,
+        'user_id_fk' integer not null,
         'device_session_id' TEXT NOT NULL,
         'device_name' TEXT NOT NULL,
         'device_description' TEXT,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS device (
         'time_last_active' DATETIME NOT NULL,
         'device_location' varchar(255),
         CONSTRAINT fk_user
-        FOREIGN KEY(registered_by_user) 
+        FOREIGN KEY(user_id_fk) 
         REFERENCES user (user_id)
         ON DELETE CASCADE
                       );

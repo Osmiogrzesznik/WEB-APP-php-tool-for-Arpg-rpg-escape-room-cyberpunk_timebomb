@@ -1,5 +1,6 @@
  <?php
 $installation_sql_file = "install.sql";
+//$installation_sql_file = "rafka_timebomb.sqlite.sql";
 $installation_sql_file2 = "install2.sql";
 /**
  * This is the installation file for the 0-one-file version of the php-login script.
@@ -12,7 +13,7 @@ error_reporting(E_ALL);
 // config
 $db_type = "sqlite";
 $db_sqlite_path = "../rafka_timebomb.sqlite";
-
+unlink($db_sqlite_path);
 // create new database file / connection (the file will be automatically created the first time a connection is made up)
 $db_connection = new PDO($db_type . ':' . $db_sqlite_path);
 //make errors explicit to figure out wtf

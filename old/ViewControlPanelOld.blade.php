@@ -15,8 +15,8 @@ date_default_timezone_set($timezoneName);
 $minimum_timebomb_time_set_date = date(MY_DATE_FORMAT, time());
 $default_timebomb_time_set_date = date(MY_DATE_FORMAT, time() + 60 * 30); //in 30 minutes
 $column_name_prefix = "device_";
-$nonDisplayed = array("device_id", "registered_by_user", "device_session_id", "device_http_user_agent", "point_longitude", "point_latitude","fk_location_point","point_id");
-$nonEditables = array("device_id", "registered_by_user", "time_last_active", "device_location", "device_session_id");
+$nonDisplayed = array("device_id", "user_id_fk", "device_session_id", "device_http_user_agent", "point_longitude", "point_latitude","fk_location_point","point_id");
+$nonEditables = array("device_id", "user_id_fk", "time_last_active", "device_location", "device_session_id");
 
 
 //TODO 10: 

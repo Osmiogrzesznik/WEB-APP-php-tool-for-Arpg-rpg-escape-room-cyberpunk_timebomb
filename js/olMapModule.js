@@ -217,6 +217,23 @@ function updateLastFeatureColor(jscolorpicker) {
   }); // cant do this - moves the brwoser view
 }
 
+
+function updateLastFeatureEffect(effect_id) {
+  let selectedFeatures = selectToEditInteraction.getFeatures().getArray()
+  if (!selectedFeatures.length) {
+    // if no features selected apply changes to array made of last edited element
+    selectedFeatures = lastFeature ? [lastFeature] : [];
+  }
+
+  selectedFeatures.forEach(feat => {
+    lastFeature.set("effectd_id_fk", effect_id);
+  });
+
+  map.getTargetElement().focus({
+    preventScroll: true
+  }); // cant do this - moves the brwoser view
+}
+
 function updateLastFeatureName(input) {
   lll("updating text style")
   niuname = input.value;
@@ -338,12 +355,15 @@ function addInteractions(newMode) {
         lastFeature = event.feature;
         currentStyle = window.lastStyle ? lastStyle.clone() : defaultStyle.clone();
         color = currentStyle.getStroke().getColor();
-        featureID = featureCounter;
+        featureID = "tempId" + featureCounter;
         name = featureNameInput.value || "Untitled " + featureID;
         event.feature.setProperties({
           'id': featureID,
           'name': name,
           'color': color,
+          'effect_id_fk':1,
+          'effect_on':false,
+          'description':'empty desc'
         });
         currentStyle.getText().setText(name); //this
         lastFeature.setStyle(currentStyle);
@@ -494,28 +514,44 @@ function drawingModeChange(newDrawingModeName) {
   map.removeInteraction(selectToEditInteraction);
   map.removeInteraction(selectToDeleteInteraction);
   addInteractions(newDrawingModeName);
+
+  map.getTargetElement().focus({
+    preventScroll: true
+  });
 };
 
 
 function saveDrawnFeatures() {
   feats = drawnFeaturesSource.getFeatures(); //.getArray();
-  g = new ol.format.GeoJSON();
+  g = new ol.format.GeoJSON(); //undefined???
   ret = [];
   feats.forEach(feat => {
     let o = {};
     o.color = feat.get("color").map(x => ~~x);
     o.name = feat.get("name");
     o.id = feat.get("id");
-    o.effect = feat.get("effect");
+    o.effect_id = feat.get("effect_id");
+    o.effect_on = feat.get("effect_on");
+    o.description = feat.get("description");
     if (feat.getGeometry().getType() === "Circle") {
       o.type = "Circle";
       let gm = feat.getGeometry();
       o.radius = gm.getRadius(); //remeber to use setRadius() not use options radius?
       o.center = gm.getCenter();
-
     }
     feat.setProperties(o);
     jsonifiedfeat = g.writeFeature(feat);
+
+    if (feat.getGeometry().getType() === "Circle") {
+      jsoncircle = JSON.parse(jsonifiedfeat);
+      gmt = {
+        radius: o.radius,
+        center: o.center,
+        type: "Circle"
+      };
+      jsoncircle.geometry = gmt;
+      jsonifiedfeat = JSON.stringify(jsoncircle);
+    }
     ret.push(jsonifiedfeat);
   });
 
@@ -608,8 +644,8 @@ function loadFeatures(j) {
       alert("circle", 1);
       feat = new ol.Feature(
         new ol.geom.Circle(
-          f.properties.center,
-          f.properties.radius))
+          f.geometry.center,
+          f.geometry.radius))
       feat.setProperties(f.properties);
     } else {
       feat = g.readFeature(f);
@@ -633,16 +669,24 @@ function loadFeatures(j) {
       name: feat.getStyle().getText().getText(),
     }));
     drawnFeaturesSource.addFeature(feat);
-
   });
+
   map.getView().fit(drawnFeaturesSource.getExtent(), map.getSize());
 }
 
-rad = document.querySelectorAll(".radiowithimage");
-for (var i = 0; i < rad.length; i++) {
-  rad[i].addEventListener('change', function (ev) {
-    drawingModeChange(this.value);
-  });
+function setupMapControlsListeners() {
+  let rad = document.querySelectorAll(".radio-map-mode-input");
+  for (var i = 0; i < rad.length; i++) {
+    rad[i].addEventListener('change', function (ev) {
+      drawingModeChange(this.value);
+    });
+  }
+  let rad2 = document.querySelectorAll(".radio-effect-input");
+  for (var i = 0; i < rad.length; i++) {
+    rad2[i].addEventListener('change', function (ev) {
+      updateLastFeatureEffect(this.value);
+    });
+  }
 }
 
 //------------------------------------------------------------------------REST OF MAP MODULE
@@ -980,7 +1024,7 @@ function initializeMapAndShowDevices(devices) {
   if (devices.length < 1) {
     alert("NO DEVICES")
     say("No devices created yet. Do you want to Locate your current device to show map correctly?");
-    return;
+    //return;
   }
 
   isThereAnyDeviceWithLocation = false;
@@ -998,7 +1042,7 @@ function initializeMapAndShowDevices(devices) {
   window.devicesWithLocation = [];
   for (let i = 0; i < devices.length; i++) {
     let dv = devices[i];
-    doesDvHaveLocation = ![null, "no location", undefined].includes(dv.device_location);
+    doesDvHaveLocation = ![null, "no location", "/", undefined].includes(dv.device_location);
 
     if (doesDvHaveLocation) {
       locOb = {};
@@ -1017,11 +1061,9 @@ function initializeMapAndShowDevices(devices) {
   }
   tileLayer = NuTileLayer(SELECTED_TILE_SERVER);
 
- 
+
   //musisz policzyc srednia albo znalesc na necie position map to see all markers
-  window.map = NuMap(devicesWithLocation[0].location.latitude,
-    devicesWithLocation[0].location.longitude,
-    mapDefaultZoom, tileLayer);
+  window.map = NuMap(1, 1, mapDefaultZoom, tileLayer);
 
   // from OLDRAW-----------------{
   map.getTargetElement().addEventListener("keydown", keyDownListener);
@@ -1039,14 +1081,14 @@ function initializeMapAndShowDevices(devices) {
     unique: true
   })
 
- allDevicesSource = new ol.source.Vector({
+  allDevicesSource = new ol.source.Vector({
     features: allDevicesCollection,
     wrapX: false
   });
   window.allDevicesLayer = new ol.layer.Vector({
     source: allDevicesSource
   });
-  
+
   window.arrayOfFeaturesAll = devicesWithLocation.map(dv => {
     feature = NuFeature(dv.device_name, dv.timebomb_status, dv.location.latitude, dv.location.longitude)
     allLocatedDeviceFeaturesCollection[dv.device_id] = feature;
@@ -1065,9 +1107,14 @@ function initializeMapAndShowDevices(devices) {
   // allDevicesLayer.forEach(function(layer) {
   //   ol.extent.extend(extent, layer.getSource().getExtent());
   // });
-  if(allDevicesSource.getFeatures().getLength() > 0){
-  map.getView().fit(allDevicesSource.getExtent(), map.getSize());
+  //alert(allDevicesSource.getFeatures());
+  if (allDevicesSource.getFeatures().length > 0) {
+    map.getView().fit(allDevicesSource.getExtent(), map.getSize());
+  } else {
+    //say("setting zoom to 10");
+    //map.getView().setZoom(10);
   }
+  //map.changed();
   //map.getView().fit(map.getView().calculateExtent(),map.getSize());
 
   return "map creation in progress"; //no use just for me to indicate that it is async logic

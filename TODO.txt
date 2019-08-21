@@ -1,3 +1,12 @@
+TODO 18: Need to solve id problem, drawing feature/mapentity adds to it an id 
+, but a db mapentity has independent mapentity_id 
+  -- during saving in the response there should be set of id's
+   from database returned that will have to be updated in order for later 
+   figuring out which feature is which mapentity  during editing or changes of their state
+
+TODO 17: polling db geiger counter will happen onle in location watch()
+so each time device moves
+
 TODO 13: MAP draw features(mapentities)
 TODO 14: Bomb detonation adds mapentity
 todo 15: display functionalities for each device
@@ -116,7 +125,7 @@ ________________________________________________________________________________
 
 DONE : change time_last uppdated to time last updated in whole project needs db restart
 
-DONE !!!!registered_by_user is NULL ?!!
+DONE !!!!user_id_fk is NULL ?!!
 DONE      $_Session has no user id check index.php
 
 

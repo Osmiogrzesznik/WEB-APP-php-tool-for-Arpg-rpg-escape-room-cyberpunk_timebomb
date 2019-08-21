@@ -163,7 +163,7 @@ class OneFileLoginApplication
     public function getAllDevices($user_id)
     {
         $conn = $this->db_connection;
-        $sql = "SELECT * FROM device WHERE registered_by_user = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
+        $sql = "SELECT * FROM device WHERE user_id_fk = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
 
         $query = $conn->prepare($sql);
         $query->bindValue(':user_id', $user_id);
@@ -242,7 +242,7 @@ class OneFileLoginApplication
             device_session_id,device_location,
             time_last_active
             FROM device
-            INNER jOIN user ON registered_by_user = user_id 
+            INNER jOIN user ON user_id_fk = user_id 
             WHERE device_ip = :connection_ip OR device_session_id = :sess_token_from_cookie
             LIMIT 1;';
 
@@ -1343,7 +1343,7 @@ class OneFileLoginApplication
         // );
         date_default_timezone_set($this->timezoneName);
         $date_now = date('Y-m-d\TH:i:s'); // add seconds to datetime-locale provided value
-        $registered_by_user = $this->user_id;
+        $user_id_fk = $this->user_id;
 
 
 
@@ -1384,13 +1384,13 @@ class OneFileLoginApplication
             (device_id,device_name, device_password, 
              device_ip,
             device_description, timebomb_status,timebomb_time_set, 
-            registered_by_user, time_last_active,
+            user_id_fk, time_last_active,
              device_session_id, device_location)
                     VALUES
              (null ,:device_name, :device_password, 
              :device_ip,
             :device_description, :timebomb_status,:timebomb_time_set,
-            :registered_by_user, :time_last_active,
+            :user_id_fk, :time_last_active,
              :device_session_id, :device_location)';
             $query = $this->db_connection->prepare($sql);
 
@@ -1407,7 +1407,7 @@ class OneFileLoginApplication
             $query->bindValue(':device_description', $device_description);
             $query->bindValue(':timebomb_status', 'created');
             $query->bindValue(':timebomb_time_set', $timebomb_time_set);
-            $query->bindValue(':registered_by_user', $registered_by_user);
+            $query->bindValue(':user_id_fk', $user_id_fk);
             $query->bindValue(':time_last_active', $date_now);
             $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
 

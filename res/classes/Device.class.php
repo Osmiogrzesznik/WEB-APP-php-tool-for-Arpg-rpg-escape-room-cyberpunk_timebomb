@@ -18,7 +18,7 @@ class Device extends TableObject{
         $sql = "SELECT * FROM device
                 INNER JOIN point 
                 ON device.device_fk_location_point  = point.point_id
-                WHERE registered_by_user = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
+                WHERE user_id_fk = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
 
         $query = $conn->prepare($sql);
         $query->bindValue(':user_id', $user_id);
@@ -65,7 +65,7 @@ time_last_active, point_longitude, point_latitude
 FROM device
 INNER jOIN point 
 ON  point.point_id = device.device_fk_location_point
-INNER jOIN user ON registered_by_user = user_id 
+INNER jOIN user ON user_id_fk = user_id 
 WHERE device_ip = :connection_ip OR device_session_id = :sess_token_from_cookie
 LIMIT 1;';
 

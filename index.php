@@ -184,7 +184,7 @@ LEFT JOIN mapentity_device
 ON mapentity_device.device_id_fk = device.device_id
 LEFT JOIN mapentity
 ON mapentity.mapentity_id = mapentity_device.mapentity_id_fk
-WHERE device.registered_by_user = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
+WHERE device.user_id_fk = :user_id"; // WHERE class = '$class'"; later  -> WHERE user_creator_id = :logged_user_id
 
     $query = $conn->prepare($sql);
     $query->bindValue(':user_id', $user_id);
@@ -265,14 +265,14 @@ WHERE device.registered_by_user = :user_id"; // WHERE class = '$class'"; later  
        *   */
 
       $sql = 'SELECT 
-device_id,device_ip,device_name,timebomb_status,
+device_id,device_ip,device_name,timebomb.timebomb_status,
 timebomb_password,timebomb_time_set,user_timezone,
 device_session_id,device_location,
 time_last_active, point_longitude, point_latitude
 FROM device
 LEFT jOIN point 
 ON  point.point_id = device.device_fk_location_point
-INNER jOIN user ON registered_by_user = user_id 
+INNER jOIN user ON user_id_fk = user_id 
 LEFT JOIN timebomb
 ON timebomb_device_id_fk = device_id
 WHERE device_ip = :connection_ip OR device_session_id = :sess_token_from_cookie
@@ -651,38 +651,80 @@ WHERE device_id = :device_id;
     endswitch;
   }
 
-  public function getAllFeatures($user_id)
-  { 
+  public function getAllFeaturesMock($user_id)
+  {
+    $fs = file_get_contents("aaaa.json");
+    //$fs = file_get_contents("php://input");
+    $fsphp = json_decode($fs);
+    $this->addFeedback("loading features from db:");
+    $this->addFeedback(print_me($fsphp, true));
 
+    return $fsphp;
+  }
+
+  public function saveAllFeaturesMock($user_id)
+  {
+    $input = "php://input";
+    //$input="aaaa.json";
+    $fs = file_get_contents($input);
+    $fsphp = json_decode($fs);
+    $this->addFeedback("received features:");
+    $this->addFeedback(print_me($fsphp, true));
+    $fsnice = json_encode($fsphp, JSON_PRETTY_PRINT);
+    $succ = file_put_contents("aaaa.json", $fsnice);
+    return $succ;
+
+    $tb = new TableObject("mapentity");
+    foreach ($fsphp as $feature) { }
   }
 
   public function saveAllFeatures($user_id)
-  { 
-    $fs = file_get_contents("php://input");
-    $fsphp = json_decode($fs);
+  {
+    $input = "php://input";
+    //$input="aaaa.json";
+    $fs = file_get_contents($input);
+    $fsphp = json_decode($fs,JSON_OBJECT_AS_ARRAY);
     $this->addFeedback("received features:");
-    $this->addFeedback(print_me($fsphp,true));
-  $fsnice = json_encode($fsphp, JSON_PRETTY_PRINT);
-  $succ = file_put_contents("aaaa.json", $fsnice);
-return $succ;
-  }
+    $this->addFeedback(print_me($fsphp, true));
+    $fsnice = json_encode($fsphp, JSON_PRETTY_PRINT);
+    $succ = file_put_contents("lastreceivedfeatures.json", $fsnice);
 
-  public function getAllEffects(){
-    $this->effects = new TableObject("effect");
-    return $this->effects->getAll();
+    $tb = new MapEntity();
+    return $tb->saveAllFeatures($fsphp,$this->user_id);
   }
-
 
   public function routeUserLoggedInActions($action)
   {
+
+    /*CREATE TABLE mapentity (
+        mapentity_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        user_id_fk integer not null,
+        mapentity_name TEXT NOT NULL,
+        mapentity_description TEXT,
+        mapentity_style text,
+        mapentity_effect_id_fk integer not null,
+        mapentity_effect_ison BOOLEAN,
+        mapentity_json text,
+        CONSTRAINT fk_user
+        FOREIGN KEY(user_id_fk) 
+        REFERENCES user (user_id)
+        ON DELETE CASCADE
+        CONSTRAINT fk_effect
+        FOREIGN KEY(mapentity_effect_id_fk) 
+        REFERENCES effect (effect_id)
+        ON DELETE CASCADE
+                      );*/
     switch ($action): case ("js_loadfeatures"):
+        $mapentTbl = new TableObject("mapentity");
+        $allByUsr = $mapentTbl->getAllByUser($this->user_id)->toTableReadyArray();
 
         if ($this->createDatabaseConnection()) {
-          $allFeatures = $this->getAllFeatures($this->user_id);
+
+          $allFeatures = $this->getAllFeaturesMock($this->user_id);
           // echo "registering device by POST feedback: \n " . $this->feedback;
           $this->addFeedback("not fully implemented feature load");
           $rsp = array(
-            "ok" => false,
+            "ok" => true,
             "feedback" => $this->feedback,
             "features" => $allFeatures
           );
@@ -700,13 +742,14 @@ return $succ;
         break;
 
       case ("js_savefeatures"):
-      $success = $this->saveAllFeatures($this->user_id);
-    $rsp = array(
-            "ok" => $success,
-            "feedback" => $this->feedback,
+        $successStatuses = $this->saveAllFeatures($this->user_id);
+        $rsp = array(
+          "ok" => true,
+          "successStatuses" => $successStatuses,
+          "feedback" => $this->feedback,
 
-          );
-          echo json_encode($rsp, JSON_PRETTY_PRINT);
+        );
+        echo json_encode($rsp, JSON_PRETTY_PRINT);
         exit();
         break;
 
@@ -1439,7 +1482,7 @@ VALUES(:user_name, :user_password_hash,:user_ip,:user_timezone)';
     // );
     date_default_timezone_set($this->timezoneName);
     $date_now = date('Y-m-d\TH:i:s'); // add seconds to datetime-locale provided value
-    $registered_by_user = $this->user_id;
+    $user_id_fk = $this->user_id;
 
     //FUNCTIONALITY DEPENDANT-------------------------------------------------------
     $timebomb_password = htmlentities($_POST['timebomb_password_new'], ENT_QUOTES);
@@ -1497,13 +1540,13 @@ VALUES (:longitude,:latitude);'; //***
 (device_id,device_name, 
 device_ip,
 device_description, 
-registered_by_user, time_last_active,
+user_id_fk, time_last_active,
 device_session_id, device_location,device_fk_location_point)
 VALUES
 (null ,:device_name, 
 :device_ip,
 :device_description,
-:registered_by_user, :time_last_active,
+:user_id_fk, :time_last_active,
 :device_session_id, :device_location,last_insert_rowid())';
       $query = $this->db->prepare($sql);
 
@@ -1515,7 +1558,7 @@ VALUES
       $query->bindValue(':device_ip', $device_ip);
       $query->bindValue(':device_description', $device_description);
 
-      $query->bindValue(':registered_by_user', $registered_by_user);
+      $query->bindValue(':user_id_fk', $user_id_fk);
       $query->bindValue(':time_last_active', $date_now);
       $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
       $registration_success_state = $query->execute();
@@ -1600,7 +1643,7 @@ last_insert_rowid(),
     if ($this->createDatabaseConnection()) {
       //$this->user_id = $this->user_id; // ???????????
       $allDevices = $this->getAllDevices($this->user_id);
-      
+
       $this->columns = $allDevices['columnNames'];
       $this->resultset = $allDevices['rows'];
       View("ViewStartHTML", $this);

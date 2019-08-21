@@ -658,7 +658,7 @@ var doNotUpdateLastFeatureColor = false;
 
 
      
-      rad = document.querySelectorAll(".radiowithimage");
+      rad = document.querySelectorAll(".radio-map-mode-input");
       for (var i = 0; i < rad.length; i++) {
         rad[i].addEventListener('change', function (ev) {
           drawingModeChange(this.value);

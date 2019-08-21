@@ -1,0 +1,30 @@
+[
+    {
+        "type": "Feature",
+        "geometry": {
+            "radius": 1798887.857377782,
+            "center": [
+                527553.8731654072,
+                3221529.052298136
+            ],
+            "type": "Circle"
+        },
+        "properties": {
+            "id": "tempId1",
+            "name": "Untitled tempId1",
+            "color": [
+                0,
+                0,
+                255
+            ],
+            "effect_id_fk": 1,
+            "effect_on": false,
+            "type": "Circle",
+            "radius": 1798887.857377782,
+            "center": [
+                527553.8731654072,
+                3221529.052298136
+            ]
+        }
+    }
+]

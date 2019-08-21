@@ -15,12 +15,12 @@ CREATE TABLE IF NOT EXISTS device (
         'device_http_user_agent' TEXT NOT NULL, 
         'timebomb_password' TEXT NOT NULL ,
         'timebomb_status' TEXT,
-        'registered_by_user' integer not null,
+        'user_id_fk' integer not null,
         'timebomb_time_set' INTEGER,
         'time_last_active' DATETIME NOT NULL,
         'device_location' varchar(255),
         CONSTRAINT fk_user
-        FOREIGN KEY(registered_by_user) 
+        FOREIGN KEY(user_id_fk) 
         REFERENCES user (user_id)
         ON DELETE CASCADE
                       );
