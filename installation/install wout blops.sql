@@ -1,39 +1,33 @@
 ----
 -- phpLiteAdmin database dump (http://www.phpliteadmin.org/)
 -- phpLiteAdmin version: 1.9.7.1
--- Exported: 10:12pm on August 19, 2019 (CEST)
+-- Exported: 5:53am on August 21, 2019 (CEST)
 -- database file: .\rafka_timebomb.sqlite
 ----
 BEGIN TRANSACTION;
 
 ----
--- Drop table for effect
-----
-DROP TABLE IF EXISTS "effect";
-
-----
 -- Table structure for effect
 ----
-CREATE TABLE "effect" (
-	"effect_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-	"effect_name"	TEXT NOT NULL,
-	"effect_description"	TEXT,
-	"effect_destroys_types"	TEXT,
-	"effect_interference"	integer,
-	"effect_radioactivity"	integer
+CREATE TABLE effect (
+	effect_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	effect_name	TEXT NOT NULL,
+	effect_description	TEXT,
+	effect_destroys_types	TEXT,
+	effect_interference	integer,
+	effect_radioactivity	integer
 );
 
 ----
--- Data dump for effect, a total of 2 rows
+-- Data dump for effect, a total of 3 rows
 ----
-INSERT INTO "effect" ("effect_id","effect_name","effect_description","effect_destroys_types","effect_interference","effect_radioactivity") VALUES ('1','High Radiation','Dead Zone. Earth is almost glowing. Only mutants 
-   AND alike can survive. This effect can kill a human being, AND damage devices.','Human, Radar, Food','10','10');
-INSERT INTO "effect" ("effect_id","effect_name","effect_description","effect_destroys_types","effect_interference","effect_radioactivity") VALUES ('2','Medium Radiation','fodfndovndv vpdvpdksfdsf','','5','5');
 
-----
--- Drop table for mapentity
-----
-DROP TABLE IF EXISTS "mapentity";
+INSERT INTO "effect" ("effect_id","effect_name","effect_description","effect_destroys_types","effect_interference","effect_radioactivity") VALUES ('1','NO EFFECT','no effect, map object is just informational drawing','','0','0');
+INSERT INTO "effect" ("effect_id","effect_name","effect_description","effect_destroys_types","effect_interference","effect_radioactivity") VALUES ('2','Medium Radiation','fodfndovndv vpdvpdksfdsf','','5','5');
+INSERT INTO "effect" ("effect_id","effect_name","effect_description","effect_destroys_types","effect_interference","effect_radioactivity") VALUES ('3','High Radiation','Dead Zone. Earth is almost glowing. Only mutants and alike can survive.
+ This effect can kill a human being, AND damage devices.','Human, Radar, Food','10','10');
+
+
 
 ----
 -- Table structure for mapentity
@@ -41,7 +35,7 @@ DROP TABLE IF EXISTS "mapentity";
 CREATE TABLE mapentity (
         mapentity_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         mapentity_effect_id_fk integer not null,
-        mapentity_effect_on BOOLEAN,
+        mapentity_effect_on BOOLEAN NOT NULL,
         user_id_fk integer not null,
         mapentity_name TEXT NOT NULL,
         mapentity_description TEXT,
@@ -61,45 +55,12 @@ CREATE TABLE mapentity (
                       );
 
 ----
--- Data dump for mapentity, a total of 0 rows
+-- Data dump for mapentity, a total of 4 rows
 ----
 
-----
--- Drop table for mapentity_point
-----
-DROP TABLE IF EXISTS "mapentity_point";
 
-----
--- Table structure for mapentity_point
-----
-CREATE TABLE mapentity_point (
-        point_fk_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        mapentity_fk_id INTEGER NOT NULL,
-        point_location varchar(255),
-        CONSTRAINT fk_mapentity_id,
-        FOREIGN KEY(mapentity_fk_id) 
-        REFERENCES mapentity (mapentity_id)
-        ON DELETE CASCADE,
 
-CONSTRAINT fk_point_id,
-        FOREIGN KEY(point_fk_id) 
-        REFERENCES point (point_id)
-        ON DELETE CASCADE
 
-  CONSTRAINT fk_mapentity_id,
-        FOREIGN KEY(mapentity_fk_id) 
-        REFERENCES point (mapentity_id)
-        ON DELETE CASCADE
-                      );
-
-----
--- Data dump for mapentity_point, a total of 0 rows
-----
-
-----
--- Drop table for device
-----
-DROP TABLE IF EXISTS "device";
 
 ----
 -- Table structure for device
@@ -132,11 +93,6 @@ CONSTRAINT fk_location_point,
 ----
 
 ----
--- Drop table for functionality
-----
-DROP TABLE IF EXISTS "functionality";
-
-----
 -- Table structure for functionality
 ----
 CREATE TABLE functionality (
@@ -151,17 +107,12 @@ CREATE TABLE functionality (
 ----
 
 ----
--- Drop table for timebomb
-----
-DROP TABLE IF EXISTS "timebomb";
-
-----
 -- Table structure for timebomb
 ----
 CREATE TABLE timebomb (
   timebomb_device_id_fk integer not null,
   timebomb_status TEXT,
-  timebomb_timebomb_time_set varchar(19),
+  timebomb_time_set varchar(19),
   timebomb_mapentity_id_fk integer not null,
   timebomb_password TEXT NOT NULL
   );
@@ -169,11 +120,6 @@ CREATE TABLE timebomb (
 ----
 -- Data dump for timebomb, a total of 0 rows
 ----
-
-----
--- Drop table for geiger
-----
-DROP TABLE IF EXISTS "geiger";
 
 ----
 -- Table structure for geiger
@@ -187,11 +133,6 @@ CREATE TABLE geiger (
 ----
 -- Data dump for geiger, a total of 0 rows
 ----
-
-----
--- Drop table for radar
-----
-DROP TABLE IF EXISTS "radar";
 
 ----
 -- Table structure for radar
@@ -208,11 +149,6 @@ CREATE TABLE radar (
 ----
 
 ----
--- Drop table for inventory
-----
-DROP TABLE IF EXISTS "inventory";
-
-----
 -- Table structure for inventory
 ----
 CREATE TABLE inventory (
@@ -225,11 +161,6 @@ CREATE TABLE inventory (
 ----
 -- Data dump for inventory, a total of 0 rows
 ----
-
-----
--- Drop table for functionality_device
-----
-DROP TABLE IF EXISTS "functionality_device";
 
 ----
 -- Table structure for functionality_device
@@ -258,11 +189,6 @@ CONSTRAINT fk_functionality_id,
 ----
 
 ----
--- Drop table for mapentity_device
-----
-DROP TABLE IF EXISTS "mapentity_device";
-
-----
 -- Table structure for mapentity_device
 ----
 CREATE TABLE mapentity_device (
@@ -287,11 +213,6 @@ ON DELETE CASCADE,
 ----
 
 ----
--- Drop table for history_device_location
-----
-DROP TABLE IF EXISTS "history_device_location";
-
-----
 -- Table structure for history_device_location
 ----
 CREATE TABLE history_device_location (
@@ -310,11 +231,6 @@ CREATE TABLE history_device_location (
 ----
 
 ----
--- Drop table for point
-----
-DROP TABLE IF EXISTS "point";
-
-----
 -- Table structure for point
 ----
 CREATE TABLE point ( point_id INTEGER PRIMARY KEY,
@@ -324,11 +240,6 @@ CREATE TABLE point ( point_id INTEGER PRIMARY KEY,
 ----
 -- Data dump for point, a total of 0 rows
 ----
-
-----
--- Drop table for user
-----
-DROP TABLE IF EXISTS "user";
 
 ----
 -- Table structure for user
@@ -351,36 +262,11 @@ CONSTRAINT fk_location_point,
         );
 
 ----
--- Data dump for user, a total of 0 rows
+-- Data dump for user, a total of 1 rows
 ----
+INSERT INTO "user" ("user_id","user_ip","user_name","user_password_hash","user_timezone","user_location","user_fk_location_point","user_map_srv","user_green_filter") VALUES ('1','127.0.0.1','qq','$2y$10$8OQYWoI96CI76SJHmyCR9OkIg9g9vdzhAEBSWZ0EHgM0syZH9jo4i','Europe/London',NULL,NULL,'0','1');
 
-----
--- Drop table for drawnfeature3
-----
-DROP TABLE IF EXISTS "drawnfeature3";
 
-----
--- Table structure for drawnfeature3
-----
-CREATE TABLE drawnfeature3 (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-       creator_fk integer,
-       creator integer not null,
-       name TEXT,
-       description TEXT,
-       type varchar(16),
-       geometryjson TEXT,
-       effect_FK integer,
-       color TEXT,
-       pseudo_id TEXT not null);
-
-----
--- Data dump for drawnfeature3, a total of 0 rows
-----
-
-----
--- Drop index for device_ip_UNIQUE
-----
-DROP INDEX IF EXISTS "device_ip_UNIQUE";
 
 ----
 -- structure for index device_ip_UNIQUE on table device
@@ -388,19 +274,9 @@ DROP INDEX IF EXISTS "device_ip_UNIQUE";
 CREATE UNIQUE INDEX device_ip_UNIQUE ON device ( device_ip ASC);
 
 ----
--- Drop index for device_session_id_UNIQUE
-----
-DROP INDEX IF EXISTS "device_session_id_UNIQUE";
-
-----
 -- structure for index device_session_id_UNIQUE on table device
 ----
 CREATE UNIQUE INDEX device_session_id_UNIQUE ON device ( device_session_id ASC);
-
-----
--- Drop index for user_name_UNIQUE
-----
-DROP INDEX IF EXISTS "user_name_UNIQUE";
 
 ----
 -- structure for index user_name_UNIQUE on table user

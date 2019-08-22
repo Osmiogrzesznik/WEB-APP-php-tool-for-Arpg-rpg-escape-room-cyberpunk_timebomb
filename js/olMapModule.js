@@ -672,8 +672,9 @@ function loadFeatures(j) {
     feat.setStyle(currentStyle);
     feat.getStyle().getText().setText(name); //and this is redundant ?
     alert("\n feature loaded " + JSON.stringify({
-      color: feat.getStyle().getStroke().getColor(),
-      name: feat.getStyle().getText().getText(),
+      F:f.properties,id:feat.getId()
+      // color: feat.getStyle().getStroke().getColor(),
+      // name: feat.getStyle().getText().getText(),
     }));
     feat.setId(f.properties.id);
     drawnFeaturesSource.addFeature(feat);

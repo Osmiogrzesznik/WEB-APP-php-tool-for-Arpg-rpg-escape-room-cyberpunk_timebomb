@@ -37,7 +37,7 @@ class MapEntity
 
     // $this->columnNames = $columnNames;
   }
-  
+
 
   public function setUpColumnNamesFromDB()
   {
@@ -176,12 +176,12 @@ class MapEntity
 
   public function insertWithDataAndGetProperId(array $mapentity, $user_id, $query)
   {
-    addFeedback( "inserting:\n");
-    addFeedback(print_me($mapentity,1));
+    addFeedback("inserting:\n");
+    addFeedback(print_me($mapentity, 1));
     $arr = $this->preparePropsArr($mapentity, $user_id);
     try {
       $s = $query->execute($arr);
-    } catch (PDOException $e) { 
+    } catch (PDOException $e) {
       $query->debugDumpParams();
       throw $e;
     }
@@ -192,8 +192,8 @@ class MapEntity
 
   public function updateWithData($mapentity, $query)
   {
-    addFeedback( "updating:\n");
-    addFeedback(print_me($mapentity,1));
+    addFeedback("updating:\n");
+    addFeedback(print_me($mapentity, 1));
     $arr = $this->preparePropsArr($mapentity);
     $s = $query->execute($arr);
     $this->lastResult = $s;
@@ -203,7 +203,7 @@ class MapEntity
   public function saveAllFeatures(array $allFeatures, $user_id) //, array $feat)
   {
     $preps = array_map('prep', $this->columns); //prepare array of ":column"
-    addFeedback(print_me($preps,1));
+    addFeedback(print_me($preps, 1));
     $column_eq_preps = array_map('col_eq_prep', $this->columns); //prepare array of "column = :column"
 
     $this->updatesql = "UPDATE $this->tablename SET "
@@ -248,15 +248,18 @@ class MapEntity
 
     foreach ($feats as $m) {
 
-      $f = array("type" => "Feature");
+      $f = array(
+        "type" => "Feature",
+        "id" => 0 + $m["mapentity_id"]
+      );
 
       $properties = array();
-      $properties["id"] = 0 + $m["mapentity_effect_id_fk"];
+      $properties["id"] = $f["id"];
       $properties["name"] = $m["mapentity_name"];
       $properties["color"] = toNumbersArray($m["mapentity_style"]);
       $properties["effect_on"] = $m["mapentity_effect_on"];
       $properties["description"] = $m["mapentity_description"];
-      $properties["effectd_id_fk"] = $m["mapentity_effect_id_fk"];
+      $properties["effect_id_fk"] = $m["mapentity_effect_id_fk"];
 
       if ($m["mapentity_geometry_type"] === "Circle") {
         $geom = array();

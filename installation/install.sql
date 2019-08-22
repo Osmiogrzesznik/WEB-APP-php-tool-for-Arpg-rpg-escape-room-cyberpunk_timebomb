@@ -319,4 +319,24 @@ CREATE UNIQUE INDEX device_session_id_UNIQUE ON device ( device_session_id ASC);
 -- structure for index user_name_UNIQUE on table user
 ----
 CREATE UNIQUE INDEX user_name_UNIQUE ON user (user_name ASC);
+
+
+
+
+
+
+
+
+
+INSERT INTO "mapentity" ("mapentity_id","mapentity_effect_id_fk","mapentity_effect_on","user_id_fk","mapentity_name","mapentity_description","mapentity_style","mapentity_geometry_type","mapentity_center","mapentity_radius","mapentity_geometry_json") VALUES ('1','1','','1','rad','empty desc','255,222,6','Circle','1792350.8113931,2301727.5061231','503508.45430062','{"radius":503508.45430061873,"center":[1792350.8113931008,2301727.5061230985],"type":"Circle"}');
+INSERT INTO "mapentity" ("mapentity_id","mapentity_effect_id_fk","mapentity_effect_on","user_id_fk","mapentity_name","mapentity_description","mapentity_style","mapentity_geometry_type","mapentity_center","mapentity_radius","mapentity_geometry_json") VALUES ('2','1','','1','pt','empty desc','255,0,0','Point',NULL,NULL,'{"type":"Point","coordinates":[5721046.859251786,3903569.489715363]}');
+INSERT INTO "mapentity" ("mapentity_id","mapentity_effect_id_fk","mapentity_effect_on","user_id_fk","mapentity_name","mapentity_description","mapentity_style","mapentity_geometry_type","mapentity_center","mapentity_radius","mapentity_geometry_json") VALUES ('3','1','','1','ii','empty desc','0,255,255','Polygon',NULL,NULL,'{"type":"Polygon","coordinates":[[[-1999370.6789428312,4366083.379061846],[-3475855.7868563365,4010303.6479227925],[-2693140.6172161307,2320350.223594429],[918022.2803674117,3547790.355740593],[-1999370.6789428312,4366083.379061846]]]}');
+INSERT INTO "mapentity" ("mapentity_id","mapentity_effect_id_fk","mapentity_effect_on","user_id_fk","mapentity_name","mapentity_description","mapentity_style","mapentity_geometry_type","mapentity_center","mapentity_radius","mapentity_geometry_json") VALUES ('4','1','','1','pilinia','empty desc','255,222,6','LineString',NULL,NULL,'{"type":"LineString","coordinates":[[6183560.151433986,1537635.053954224],[4920543.359935341,1324167.3347036485],[4493606.727105623,1911203.7119338019],[3853204.1665181797,3263166.331963636],[3479634.9113743193,3779047.0018316926],[2216618.119875673,4152615.6598112704],[1238224.1578254178,4490605.866945516],[402141.61049935594,4508394.7937860405],[-611830.2052319497,4330504.928216514],[-1999370.6789428312,4366083.379061846]]}');
+COMMIT;
+
+
+
+
+
+
 COMMIT;
