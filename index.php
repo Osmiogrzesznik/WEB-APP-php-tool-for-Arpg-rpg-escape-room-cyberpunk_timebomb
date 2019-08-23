@@ -662,32 +662,21 @@ WHERE device_id = :device_id;
     return $fsphp;
   }
 
-  public function getAllFeaturesNOTNEEDED($user_id)
-  {
-    //$fs = file_get_contents("aaaa.json");
-    //$fs = file_get_contents("php://input");
-    $fsphp = json_decode($fs);
-    addFeedback("loading features from db:");
-    addFeedback(print_me($fsphp, true));
-
-    return $fsphp;
-  }
 
 
-  public function saveAllFeaturesMock($user_id)
+
+  public function deleteFeatures($user_id)
   {
     $input = "php://input";
     //$input="aaaa.json";
-    $fs = file_get_contents($input);
-    $fsphp = json_decode($fs);
-    addFeedback("received features:");
-    addFeedback(print_me($fsphp, true));
-    $fsnice = json_encode($fsphp, JSON_PRETTY_PRINT);
-    $succ = file_put_contents("aaaa.json", $fsnice);
-    return $succ;
-
-    $tb = new TableObject("mapentity");
-    foreach ($fsphp as $feature) { }
+    $delIds = file_get_contents($input);
+    $delIdsphp = json_decode($delIds);
+    addFeedback("received deletion request:");
+    addFeedback(print_me($delIdsphp, true));
+    $delIdsnice = json_encode($delIdsphp, JSON_PRETTY_PRINT);
+    file_put_contents("lastdeletionrequest.json", $delIdsnice);
+    $mapentTbl = new MapEntity;
+    return $mapentTbl->deleteFeatures($delIdsphp,$this->user_id);
   }
 
   public function saveAllFeatures($user_id)
@@ -755,6 +744,17 @@ WHERE device_id = :device_id;
         exit();
         break;
 
+        case ("js_deletefeatures"):
+        $successStatuses = $this->deleteFeatures($this->user_id);
+        $rsp = array(
+          "ok" => true,
+          "successStatuses" => $successStatuses,
+          "feedback" => getGlobalFeedback(),
+
+        );
+        echo json_encode($rsp, JSON_PRETTY_PRINT);
+        exit();
+        break;
 
       case ("js_getalldevices"):
         // if (isset($_POST["js_getalldevices"])) {

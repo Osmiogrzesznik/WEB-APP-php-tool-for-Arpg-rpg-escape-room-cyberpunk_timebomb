@@ -9,7 +9,7 @@
 //--
 loadDrawnFeaturesUrl = "?action=js_loadfeatures";
 saveDrawnFeaturesUrl = "?action=js_savefeatures";
-
+deleteFeaturesURL = "?action=js_deletefeatures";
 function lll(...msg) {
   console.log(msg);
   say(msg, 1)
@@ -387,10 +387,7 @@ function selectAll(ev, kbl) {
   return true;
 }
 
-function deleteFeature2(event) {
-  lll("deleting");
-  return true;
-}
+
 
 var KeyboardListeners = {
   keyUp(event) {
@@ -430,7 +427,7 @@ var KeyboardListeners = {
   },
   onKeyUpHandlers: {},
   onKeyDownHandlers: {
-    Delete: (e, t) => deleteFeature2(e, t),
+    Delete: (e, t) => deleteFeature(e, t),
     a: (e, t) => {
       e.preventDefault();
       return t.isPressed("Control") && selectAll(e, t);
@@ -495,13 +492,55 @@ function deleteFeature(event) {
       default:
         break;
   }
+  let idsForDBDeletion = [];
   featuresToDelete.forEach(feat => {
-    console.log("deleting no" + feat.get("id") + " name:" + feat.get("name"));
+    let id = feat.getId();
+    if (!(id+"").startsWith("tempId")){
+      idsForDBDeletion.push(id);
+    }
+     
+    console.log("deleting no" + feat.getId() + " name:" + feat.get("name"));
     drawnFeaturesSource.removeFeature(feat);
     allDrawnFeaturesCollection.remove(feat);
   })
   selectToEditInteraction.getFeatures().clear();
   selectToDeleteInteraction.getFeatures().clear();
+  if (idsForDBDeletion.length){
+    let jsonids = JSON.stringify(idsForDBDeletion)
+    alert("deleting from DB"+jsonids)
+    fetch(deleteFeaturesURL, {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      // mode: 'cors', // no-cors, cors, *same-origin
+      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: 'include', // include, *same-origin, omit
+      // headers: {
+      'Content-Type': 'application/json',
+      //       'Content-Type': 'application/x-www-form-urlencoded'
+      // },
+      //redirect: 'manual', // manual, *follow, error
+      // referrer: 'no-referrer', // no-referrer, *client
+      body: jsonids // body data type must match "Content-Type" header
+    })
+    .then(response => response.text())
+    .then(t => {
+      try {
+        say("deletion response came");
+        say(t);
+        let j = JSON.parse(t);
+        window.j = j;
+        say(j.successStatuses);
+      } catch (err) {
+        say(err);
+        say(t);
+        console.log("hahahah")
+        console.log(feedback.innerText);
+      }
+      // confirm("if device added succesfully , click ok to refresh window"+t)?
+      // window.open(baseurl,"_self"):0; //try to display modal else say
+
+    })
+    .catch(err => say(err));
+  }
 }
 
 

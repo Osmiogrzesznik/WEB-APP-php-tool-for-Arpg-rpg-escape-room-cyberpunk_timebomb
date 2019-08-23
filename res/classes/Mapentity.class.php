@@ -143,7 +143,7 @@ class MapEntity
     return false;
   }
 
-  public function preparePropsArr(array $mapentity, $user_id = null)
+  public function preparePropsArr(array $mapentity, $user_id = null, $isnew)
   {
     $props = array(
       "mapentity_effect_id_fk" => $mapentity["properties"]["effect_id_fk"],
@@ -155,9 +155,14 @@ class MapEntity
       "mapentity_geometry_json" => json_encode($mapentity["geometry"]) //todo not save if circle
     );
 
-    if ($user_id) {
+    if ($isnew) { //$user_id should be stored in goejson aswell and here just check for it
       $props["user_id_fk"] = $user_id;
+      $props['mapentity_id'] = null;
+    } else {
+      $props["user_id_fk"] = $user_id;
+      $props['mapentity_id'] = $mapentity["id"];
     }
+
 
     if ($mapentity["geometry"]["type"] === "Circle") {
       $typespecificprops = array(
@@ -178,42 +183,126 @@ class MapEntity
   {
     addFeedback("inserting:\n");
     addFeedback(print_me($mapentity, 1));
-    $arr = $this->preparePropsArr($mapentity, $user_id);
+    $arr = $this->preparePropsArr($mapentity, $user_id, "is new");
     try {
       $s = $query->execute($arr);
     } catch (PDOException $e) {
+      //todo: factor out to a function
+      //---------------------------factor out to a function
       $query->debugDumpParams();
+      $arrKeys = array_map('prep',array_keys($arr));
+      $preps = $this->insertPreps;
+      $preps_hasmissingarg = count($preps) < count($arr);
+      $arr_hasmissingarg = count($arr) < count($preps);
+      
+      if($preps_hasmissingarg) {
+        $name = '$arr';
+        $howmany = count($arr) - count($preps);
+        echo "preps has $howmany less elements than values array\n";
+        echo "values array has then $howmany elements that have not been prepared\n";
+        $danglArr = array_diff($arrKeys,$preps);
+
+        
+      }else if($arr_hasmissingarg){
+        $name = '$preps';
+        $howmany = count($preps) - count($arr);
+         echo "values array has $howmany less elements than preps\n";
+        echo "there is $howmany elements that have been prepared but not assigned to in execute\n";
+        $danglArr = array_diff($preps, $arrKeys);
+      }
+      if (count($danglArr) > $howmany){
+        echo "there are some keys that have been mismatched (look for typos)\n";
+      }
+      echo "$name has following dangling elements : \n";
+      echo join(",",$danglArr);
+      // foreach($this->insertPreps as $prep){
+        
+//         echo str_repeat("------",20);
+//         $preps_hasmissingarg = count($this->insertPreps) < count($arr);
+//         $arr_hasmissingarg = count($arr) < count($this->insertPreps);
+//         for($i=0; $i<count($this->insertPreps) || $i<count($arr);$i++){
+//           echo "-\n";
+//           $prep = $this->insertPreps[$i] ?? "NO PREP";
+//           if ($prep === "NO PREP"){
+
+//           }
+//           else{
+//             $a = in_array()
+//             $prepscheckedAlready[]
+//           }
+//           $arrKey = $arrKeys[$prep] ?? "NO KEY";
+       
+//         $prepk = $prep;
+// // zrob najpierw porownaj count obydwu arrayow 
+// // potem mapuj prepsy zeby nie mialy znaczka : potem zrob 
+// // array_diff wiekszy od mniejszego pamietajac ktory jest ktory
+// // jesli pozostaje cos to wtedy wyswietl juz jako normalne imie 
+// // i napisz ze nie ma pary
+//         if ($prepk[0] = ':') $prepk = ltrim($prep,':');
+// $danglingValue = $arr[$arrKey] ?? "NO VALUE";
+// $danglingKey = $arrKey;
+// $danglingpair = $danglingKey . $danglingValue;
+// if (isset($arr[$prepk])){
+// 	$pair = $arrKey . " -----" . $arr[$prepk];
+// 	}
+// 	else{
+// 		$pair = $danglingpair;
+// 		}
+// //
+// $uuu = $pair;
+//         echo "prep is " . $prep . " value is " . $uuu;
+//         $prepValpairs[$i] = "prep is " . $prep . " value is " . $uuu;
+//       }
+      // print_me($prepValpairs);
+      //-END--------------------------factor out to a function
+      echo "values:\n";
+      print_me($arr);
+      echo "preps: \n";
+      print_me($this->insertPreps);
+
+      echo sql_debug($this->insertsql, $arr);
       throw $e;
     }
+
     $this->lastResult = $s;
     $this->lastInsertedId = $this->db->lastInsertId();
     return $this->lastInsertedId;
   }
 
-  public function updateWithData($mapentity, $query)
+  public function updateWithData($mapentity, $user_id, $query)
   {
     addFeedback("updating:\n");
     addFeedback(print_me($mapentity, 1));
-    $arr = $this->preparePropsArr($mapentity);
-    $s = $query->execute($arr);
+    $arr = $this->preparePropsArr($mapentity, $user_id, false); //false means is not new 
+    try {
+      $s = $query->execute($arr);
+    } catch (PDOException $e) {
+      $query->debugDumpParams();
+      print_me($arr);
+      echo sql_debug($this->insertsql, $arr);
+      throw $e;
+    }
     $this->lastResult = $s;
     return $s;
   }
 
   public function saveAllFeatures(array $allFeatures, $user_id) //, array $feat)
   {
+    //todo what if feat has been deleted
+    //todo features geometry  dont get updated 
     $preps = array_map('prep', $this->columns); //prepare array of ":column"
-    addFeedback(print_me($preps, 1));
+    //addFeedback(print_me($preps, 1));
     $column_eq_preps = array_map('col_eq_prep', $this->columns); //prepare array of "column = :column"
 
     $this->updatesql = "UPDATE $this->tablename SET "
       . join(",", array_slice($column_eq_preps, 1)) //updates every column apart from id (slice)
       . " WHERE $column_eq_preps[0] ;"; //where rowid = :rowid; no need to check for user author
-
+    $this->insertPreps = $preps;
+    
     $this->insertsql = "INSERT INTO $this->tablename ( "
       . join(",", $this->columns)
-      . " )  VALUES (null, "
-      . join(",", array_slice($preps, 1)) //inserts every column apart from id (slice), id will be auto
+      . " )  VALUES ("
+      . join(",", $this->insertPreps) //inserts every column apart from id (slice), id will be auto
       . ");";
 
     $insertquery = $this->db->prepare($this->insertsql);
@@ -232,10 +321,25 @@ class MapEntity
         $newId = $this->insertWithDataAndGetProperId($feat, $user_id, $insertquery);
         $successStatuses[] = array("oldId" => $featId, "DBId" => $newId, "success" => $this->lastResult);
       } else {
-        $s = $this->updateWithData($feat, $updatequery);
-        $successStatuses[] = array("oldId" => $featId, "DBId" => $newId, "success" => $s);
+        $s = $this->updateWithData($feat, $user_id, $updatequery);
+        //$updatequery->debugDumpParams();
+        $successStatuses[] = array("oldId" => $featId, "DBId" => $featId, "success" => $s);
       }
     }
+    return $successStatuses;
+  }
+
+  public function deleteFeatures(array $featIDs, $user_id) //, array $feat)
+  {
+    $preps = array_fill(0, count($featIDs), "?"); //generate array of ?s
+
+    $this->deletesql = "DELETE FROM $this->tablename WHERE mapentity_id IN ("
+      . join(",", $preps) // (?,?,?) as many as given IDs
+      . ");";
+
+    $deletequery = $this->db->prepare($this->deletesql);
+    $successStatuses = $deletequery->execute($featIDs);
+    echo " S|successStatuses = " . $successStatuses;
     return $successStatuses;
   }
 
