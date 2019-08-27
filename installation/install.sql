@@ -74,6 +74,7 @@ CREATE TABLE device (
        device_session_id TEXT NOT NULL,
        device_name TEXT NOT NULL,
        device_description TEXT,
+       device_track_location BOOLEAN NOT NULL,
        device_ip TEXT NOT NULL,
        time_last_active DATETIME NOT NULL,
        timebomb_status TEXT,
@@ -100,14 +101,31 @@ CONSTRAINT fk_location_point,
 ----
 CREATE TABLE functionality (
         functionality_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        functionality_folder TEXT NOT NULL,
         functionality_name TEXTuniq_index not null,
+        functionality_description TEXT,
         functionality_battery_depletion integer 
         );
 
 ----
 -- Data dump for functionality, a total of 0 rows
 ----
+INSERT INTO functionality(
+functionality_id,
+functionality_name,
+functionality_description,
+functionality_battery_depletion
+)
+VALUES
+(1,"timebomb","Timebomb - not visible on Radars .
+Options
+May be nuclear , dirty or simple .
+ Creates radioactive map entity around after explosion. 
+Destroys devices or inventory around .",1),
+(2,"geiger","Geiger counter gets the location of radioactive map entities and by calculating
+            distance to their area indicates the radiation level. Needs MAP and ol modules for calculations",3),
+(3,"radar","Radar gets the location of any registered devices and shows them on map. Radars may have different ranges set below. Needs MAP and ol modules for calculations",3),
+(4,"inventory","Inventory . There's option to extend it to Shop.",1)
+;
 
 ----
 -- Table structure for timebomb
@@ -171,10 +189,9 @@ CREATE TABLE inventory (
 CREATE TABLE functionality_device (
         functionality_id_fk INTEGER not null,
         added_by_device_id_fk integer,
-        device_id_fk TEXT NOT NULL,
+        device_id_fk INTEGER NOT NULL,
         functionality_status TEXT,
-        settings_JSON TEXT,
-        time_added varchar(19) NOT NULL,
+        time_added DATETIME NOT NULL DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')),
 
 CONSTRAINT fk_functionality_id,
         FOREIGN KEY( functionality_id_fk)
@@ -190,6 +207,7 @@ CONSTRAINT fk_functionality_id,
 ----
 -- Data dump for functionality_device, a total of 0 rows
 ----
+
 
 ----
 -- Table structure for mapentity_device

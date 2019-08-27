@@ -1,5 +1,5 @@
 //-
-var doNotUpdateLastFeatureColor = false;
+var doNotsetPropertyOfSelectedOrLastFeatures_Color = false;
       var featureCounter = 0;
       var lastFeature;
       //   import Map from 'ol/Map.js';
@@ -176,7 +176,7 @@ var doNotUpdateLastFeatureColor = false;
         //selection going on
       })
 
-      function updateLastFeatureColor(jscolorpicker) {
+      function setPropertyOfSelectedOrLastFeatures_Color(jscolorpicker) {
         lll("updating color style" + jscolorpicker.toHEXString());
         let selectedFeatures = selectToEditInteraction.getFeatures().getArray()
         if (!selectedFeatures.length) {
@@ -213,7 +213,7 @@ var doNotUpdateLastFeatureColor = false;
         }); // cant do this - moves the brwoser view
       }
 
-      function updateLastFeatureName(input) {
+      function setPropertyOfSelectedOrLastFeatures_Name(input) {
         lll("updating text style")
         niuname = input.value;
 

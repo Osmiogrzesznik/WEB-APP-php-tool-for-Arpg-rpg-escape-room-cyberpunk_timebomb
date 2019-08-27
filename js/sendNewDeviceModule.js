@@ -1,7 +1,17 @@
 function sendNewDevice() {
+  let latitude,
+  longitutde;
+
     var FD = new FormData(document.querySelector("#new_device_form"));
     let fields = [];
+    if (devLocate.isOKtoSend()){
     DEV_LOCATION = devLocate.getLocationObject();
+    }else if(initial_device_location.value){
+      let a = initial_device_location.value.split(",")
+      DEV_LOCATION = {latitude:a[0],longitude:a[1]};
+      
+    }
+
     //say(JSON.stringify(DEV_LOCATION));
     FD.append("latitude", DEV_LOCATION.latitude + "");
     FD.append("longitude", DEV_LOCATION.longitude + "");

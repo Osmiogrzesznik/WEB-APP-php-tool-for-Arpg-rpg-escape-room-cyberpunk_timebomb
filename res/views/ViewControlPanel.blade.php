@@ -5,6 +5,9 @@
 //separate loop or query?
 $effects = new TableObject("effect");
 $effectsAr = $effects->getAll()->toObjectsArray();
+$functionalities = new TableObject("functionality");
+$functionalitiesAr = $functionalities->getAll()->toObjectsArray();
+
 
 // it will be an array passed here no $this
 $index_link = $_SERVER['SCRIPT_NAME'];
@@ -63,7 +66,7 @@ $devicesExist = (count($resultset) > 0);
   say("settings script OK");
 </script>
 <a href="<?= $index_link ?>?action=logout"><button>Log out</button></a>
-<a href="<?= $index_link . '?action=deleteme' ?>" onclick="if(!confirm('are you sure? All your devices will be deleted too'))
+<a href="<?= $index_link . '?action=deleteme' ?>" onclick="if(!prompt('are you sure? All your devices will be deleted too . Enter word yes below')==='yes')
   {event.stopPropagation();event.preventDefault()}else{}">
   <button>Delete Account</button></a>
 
@@ -202,12 +205,12 @@ $devicesExist = (count($resultset) > 0);
 
         <div class="feature-field-column">
           <label for="jscolorInput">Object color:
-            <input class="jscolor" id="jscolorInput" onchange="updateLastFeatureColor(this.jscolor)" data-jscolor="{closable:true,closeText:'Done'}">
+            <input class="jscolor" id="jscolorInput" data-jscolor="{closable:true,closeText:'Done'}">
             <!-- careful if you change value fires changing value , does it lead to loopback? -->
           </label>
 
           <label for="featureNameInput">Object name:
-            <input type="text" id="featureNameInput" onchange="updateLastFeatureName(this)" onfocus="this.select(); this.selAll=1;" placeholder="Untitled" onmouseup="if(this.selAll==0) return true; this.selAll=0; return false;">
+            <input type="text" id="featureNameInput" onfocus="this.select(); this.selAll=1;" placeholder="Untitled" onmouseup="if(this.selAll==0) return true; this.selAll=0; return false;">
             </input>
           </label>
         </div>
@@ -232,17 +235,17 @@ $devicesExist = (count($resultset) > 0);
             <?php
             endforeach;
             ?>
-           </div>
+          </div>
         </label>
 
 
 
       </div>
-     
+
       <button onclick='saveDrawnFeatures()'>Save</button>
       WaS adding effect input and creating save drawn features in index.php
-            <!-- careful if you change value fires changing value , does it lead to loopback? -->
-          
+      <!-- careful if you change value fires changing value , does it lead to loopback? -->
+
 
       <div id="mapDIV" class="" style="border:1px solid red">
         <div id="map" class="map" tabindex="-1"></div>
@@ -291,6 +294,14 @@ $devicesExist = (count($resultset) > 0);
       device_description:
     </label>
     <textarea id="device_description" name="device_description" rows="5" cols="60" name="description" placeholder="...put something more in here in case device has no location services or anything that helps you identify it in table "></textarea><br>
+    <label for="initial_device_location">
+      initial_device_location:<span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">optional
+        <span class="more-info-content">
+          this will be used as location of device if no location services will be available
+        </span></span>
+      <input id="initial_device_location" type="text" name="initial_device_location" value="838590.6373166684,2091221.5475970656" />
+    </label>
+    <button id="initial_device_location_button" onclick="pick_location_on_map('initial_device_location')">Pick On Map</button>
 
     <label for="is_sending_device_location">
       track device location:<span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
@@ -326,56 +337,27 @@ $devicesExist = (count($resultset) > 0);
     input for radius of effect or assign draw area where effect takes place
     functionality type :inventory for items or selling
     <div class="flex-row">
+      <?php
+     // print_me($functionalitiesAr);
+      foreach ($functionalitiesAr as $fc) :
+        ?>
       <label>
-        <input type="checkbox" class="functionality-checkbox" name="geiger" value="true" checked></input>
-        <img class="btn-checkbox-img" src="img/geiger.png">
-
+        <input type="checkbox" 
+        class="functionality-checkbox" 
+        name="<?= $fc->functionality_name; ?>" 
+        value="<?= "$fc->functionality_id"; ?>"></input>
+        <img class="btn-checkbox-img small" src="img/<?= $fc->functionality_name; ?>.png">
         <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
-          Geiger Counter
+          <?= $fc->functionality_name; ?>
           <span class="more-info-content">
-            Geiger counter gets the location of radioactive map entities and by calculating
-            distance to their area indicates the radiation level. Needs MAP and ol modules for calculations
-          </span></span>
+            <?= $fc->functionality_description; ?>
 
-      </label>
-
-      <label>
-        <input type="checkbox" class="functionality-checkbox" name="radar" value="true"></input>
-        <img class="btn-checkbox-img" src="img/radar.png">
-        <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
-          Radar
-          <span class="more-info-content">
-            Radar gets the location of any registered devices and shows them on map. Radars may have different ranges set below. Needs MAP and ol modules for calculations
           </span></span>
       </label>
 
-      <label>
-        <input type="checkbox" class="functionality-checkbox" name="timebomb" value="true"></input>
-        <img class="btn-checkbox-img" src="img/timebomb.png">
-        <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
-          Timebomb
-          <span class="more-info-content">
-            <pre>
-Timebomb - not visible on Radars .
-Options
-May be nuclear , dirty or simple .
- Creates radioactive map entity around after explosion. 
-Destroys devices or inventory around . 
-</pre>
-          </span></span>
-      </label>
-
-      <label>
-        <input type="checkbox" class="functionality-checkbox" name="inventory" value="true"></input>
-        <img class="btn-checkbox-img" src="img/inventory.png">
-        <span class="more-info-btn" onclick="this.classList.toggle('more-info-show')">
-          Inventory
-          <span class="more-info-content">
-            Inventory . There's option to extend it to Shop.
-          </span></span>
-      </label>
-
-
+      <?php
+      endforeach;
+      ?>
     </div>
 
 

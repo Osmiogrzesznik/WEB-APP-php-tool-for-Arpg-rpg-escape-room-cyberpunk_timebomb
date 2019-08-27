@@ -1,6 +1,6 @@
 <?php
 
-class MapEntity
+class MapEntity extends TableObject
 {
   public $db = null;
   public $tablename;

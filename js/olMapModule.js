@@ -1,21 +1,17 @@
-//----------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------
-//--------------------------MAP MODULE--------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------
+//-------------------------MAP MODULE------------------------------------frdddrdd--------------------------------------
+//----------------------------------------------------------------------------------------------------$$$#$rfrrsďfsffrrddr$4
+//--------------------------------------------------------------------------------------------$------44$#$""$$$$$-
 
-//--
 loadDrawnFeaturesUrl = "?action=js_loadfeatures";
-saveDrawnFeaturesUrl = "?action=js_savefeatures";
+saveDrawnFreaturesUrl = "?action=js_savefeatures";
 deleteFeaturesURL = "?action=js_deletefeatures";
+
 function lll(...msg) {
-  console.log(msg);
-  say(msg, 1)
+  console.log(...msg);
+  say(...msg, 1);
 }
 
-var doNotUpdateLastFeatureColor = false;
+var doNotsetPropertyOfSelectedOrLastFeatures_Color = false;
 var featureCounter = 0;
 var lastFeature;
 //   import Map from 'ol/Map.js';
@@ -143,7 +139,7 @@ selectToEditInteraction.on("select", ev => {
   let lfs = lastFeature.getStyle() || defaultStyle;
   ccc = lfs.getStroke().getColor() || DEFAULT_STROKE_COLOR;
   console.log(ccc)
-  jscolorInput.jscolor.fromRGB(ccc[0], ccc[1], ccc[2]);
+  jscolorInput.jscolor.fromRGB(ccc[0], ccc[1], ccc[2]);//no ...ccc operator so it is compatible with old browsers
   featureNameInput.value = lfs.getText().getText() || "";
   //----------------------------------------------------------------
   ed = ev;
@@ -180,97 +176,111 @@ selectToEditInteraction.on("select", ev => {
   //selection going on
 })
 
-function updateLastFeatureColor(jscolorpicker) {
-  lll("updating color style" + jscolorpicker.toHEXString());
-  let selectedFeatures = selectToEditInteraction.getFeatures().getArray()
-  if (!selectedFeatures.length) {
-    // if no features selected apply changes to array made of last edited element
-    selectedFeatures = lastFeature ? [lastFeature] : [];
-  }
-
+function getLastStyle(){
   if (window.lastFeature && lastFeature.getStyle()) {
     lastStyle = lastFeature.getStyle().clone();
   } else if (!window.lastStyle) {
     lastStyle = defaultStyle.clone();
   }
-
-  c = jscolorpicker.rgb;
-  lastStyle.getStroke().setColor(c);
-  lastStyle.getFill().setColor([c[0], c[1], c[2], DEFAULT_FILL_OPACITY]);
-  // lastStyle.getText().getStroke().setColor("black")
-  lastStyle.getText().getFill().setColor(c);
-  lastStyle.getStroke().setWidth(DEFAULT_STROKE_WIDTH);
-
-  selectedFeatures.forEach(feat => {
-    if (feat.getGeometry().getType() === "Point") {
-      circleImage = NuDefaultPointCircleImage(c);
-      lastStyle.setImage(circleImage);
-    }
-
-    lastFeature.setStyle(lastStyle.clone());
-    lastFeature.set("color", c)
-  })
-
-  jscolorpicker.hide();
-  map.getTargetElement().focus({
-    preventScroll: true
-  }); // cant do this - moves the brwoser view
+  return lastStyle;
 }
 
-
-function updateLastFeatureEffect(effect_id) {
-  let selectedFeatures = selectToEditInteraction.getFeatures().getArray()
-  if (!selectedFeatures.length) {
-    // if no features selected apply changes to array made of last edited element
-    selectedFeatures = lastFeature ? [lastFeature] : [];
-  }
-
-  selectedFeatures.forEach(feat => {
-    lastFeature.set("effectd_id_fk", effect_id);
-  });
-
-  map.getTargetElement().focus({
-    preventScroll: true
-  }); // cant do this - moves the brwoser view
-}
-
-function updateLastFeatureName(input) {
-  lll("updating text style")
+function setPropertyOfSelectedOrLastFeatures_Name(input) {
+  lastStyle = getLastStyle();
   niuname = input.value;
-
-  //this part is the same  factor it out ?
-  let selectedFeatures = selectToEditInteraction.getFeatures().getArray()
-  if (!selectedFeatures.length) {
-    // if no features selected apply changes to array made of last edited element
-    selectedFeatures = lastFeature ? [lastFeature] : [];
-  }
-
-  if (window.lastFeature && lastFeature.getStyle()) {
-    lastStyle = lastFeature.getStyle().clone();
-  } else if (!window.lastStyle) {
-    lastStyle = defaultStyle.clone();
-  }
-
-
+  input.blur();
+ //to do can this be perforemd in foreach? laststyle is for changing more than text, color applies as well
   var textStyle = defaultDrawnTextStyle.clone();
   textStyle.setText(niuname);
   textStyle.getFill().setColor(lastStyle.getStroke().getColor());
   lastStyle.setText(textStyle.clone()); // will all features below have the same object as their text?
   ///check!!! should you use smth like 
   //let feattextstyle = textStyle.clone(); 
-  lastStyle.getStroke().setWidth(DEFAULT_STROKE_WIDTH);
+  lastStyle.getStroke().setWidth(DEFAULT_STROKE_WIDTH); //just to make sure selection style is removed
 
-  selectedFeatures.forEach(feat => {
-    feat.set("name", niuname);
+  setPropertyOfSelectedOrLastFeatures("name",niuname,feat => {
     feat.setStyle(lastStyle.clone());
-  })
-
-
-  input.blur();
-  map.getTargetElement().focus({
-    preventScroll: true
   });
 }
+
+
+function setPropertyOfSelectedOrLastFeatures_Color(jscolorpicker) {
+  lastStyle = getLastStyle();
+  c = jscolorpicker.rgb;
+  jscolorpicker.hide();
+  let stroke = lastStyle.getStroke()
+  stroke.setColor(c);
+  stroke.setWidth(DEFAULT_STROKE_WIDTH);
+  lastStyle.getFill().setColor(c.concat(DEFAULT_FILL_OPACITY));
+  // lastStyle.getText().getStroke().setColor("black")
+  lastStyle.getText().getFill().setColor(c);
+
+  setPropertyOfSelectedOrLastFeatures("color",c,feat => {
+    if (feat.getGeometry().getType() === "Point") {
+      circleImage = NuDefaultPointCircleImage(c);
+      lastStyle.setImage(circleImage);
+    }
+    feat.setStyle(lastStyle.clone());
+  });
+}
+
+function getSelectedFeaturesArray() {
+  let selectedFeatures = selectToEditInteraction.getFeatures().getArray()
+  if (!selectedFeatures.length) {
+    // if no features selected apply changes to array made of last edited element
+    selectedFeatures = lastFeature ? [lastFeature] : [];
+  }
+  return selectedFeatures;
+}
+
+/**
+ * 
+ * @param {string} what property name
+ * @param {any} nuVal new value that {what} will be set to
+ * @param {function} (feature,what, nuVal)=> void} callback function called on each selected feature after setting property
+ */
+function setPropertyOfSelectedOrLastFeatures(what, nuVal, callback = NO_OP) {
+  let selectedFeatures = getSelectedFeaturesArray();
+
+  selectedFeatures.forEach(feat => {
+    feat.set(what, nuVal);
+    callback(feat,what, nuVal);
+  });
+
+  map.getTargetElement().focus({
+    preventScroll: true
+  }); // cant do this - moves the brwoser view
+}
+
+
+
+
+function setupMapControlsListeners() {
+
+  jscolorInput.onchange = function () {
+    setPropertyOfSelectedOrLastFeatures_Color(this.jscolor);
+  }
+  featureNameInput.onchange = function () {
+    setPropertyOfSelectedOrLastFeatures_Name(this);
+  }
+  featureNameInput.onkeyup = function (ev) {
+    if (ev.keyCode === 13) setPropertyOfSelectedOrLastFeatures_Name(this);
+  }
+  
+  let radios = document.querySelectorAll(".radio-map-mode-input");
+  for (var i = 0; i < radios.length; i++) {
+    radios[i].addEventListener('change', function (ev) {
+      drawingModeChange(this.value);
+    });
+  }
+  let radios2 = document.querySelectorAll(".radio-effect-input");
+  for (var i = 0; i < radios2.length; i++) {
+    radios2[i].addEventListener('change', function (ev) {
+      setPropertyOfSelectedOrLastFeatures("effectd_id_fk", this.value);
+    });
+  }
+}
+
 
 var modifyInteraction = new ol.interaction.Modify({
   features: selectToEditInteraction.getFeatures(),
@@ -285,7 +295,6 @@ modifyInteraction.on("modifyend", ev => {
   console.log("ending modification")
 });
 
-var typeSelect = document.getElementById('type');
 
 // map.addInteraction(modifyInteraction);
 
@@ -309,14 +318,13 @@ function addInteractions(newMode) {
 
   settings = {
     source: drawnFeaturesSource,
-    //features: allDrawnFeaturesCollection,
-    type: newMode,
-  }
+    type: newMode
+  };
 
   switch (newMode) {
     case 'SelectAndDelete':
       // do nothing 
-      map.addInteraction(snap)
+      map.addInteraction(snap);
       map.addInteraction(selectToDeleteInteraction);
       selectToDeleteInteraction.on("select", deleteFeature);
       break;
@@ -325,7 +333,13 @@ function addInteractions(newMode) {
       // do nothing 
       map.addInteraction(selectToEditInteraction);
       map.addInteraction(modifyInteraction);
-
+modifyInteraction.on("modifystart",ev=>{
+	map.addInteraction(snap);
+	})
+	
+	modifyInteraction.on("modifyend",ev=>{
+	map.removeInteraction(snap);
+	})
       //selectInteraction.getFeatures().on("add",x=>{lastFeature=x.element})
 
       break;
@@ -333,7 +347,9 @@ function addInteractions(newMode) {
     case 'Point':
       settings.style = null;
       //continues to default
-    default:
+    case 'LineString':
+    case 'Polygon':
+    case 'Circle':
       draw = new ol.interaction.Draw(settings);
       map.addInteraction(draw);
       /*     snap = new ol.interaction.Snap({
@@ -342,13 +358,118 @@ function addInteractions(newMode) {
                         });
 */
 
-      draw.on("drawstart", ev => {
-        lastStyle.getStroke().setWidth(DEFAULT_STROKE_WIDTH);
-        lastStyle.getStroke().setLineDash([]);
-        console.log("starting drawing")
+      draw.on("drawstart", standardDrawStart)
+      draw.on("drawend", standardDrawEnd)
 
-      })
-      draw.on("drawend", (event) => {
+      map.addInteraction(snap);
+      break;
+      
+      case('pick_location_on_map'):
+
+      settings={
+source:allDevicesSource,
+type:'Point'};
+
+      draw = new ol.interaction.Draw(settings);
+      
+      draw.on("drawend",pick_location_on_map_Handler);
+map.addInteraction(draw);
+      break;
+      
+      
+      
+      default:
+      alert("mode unrecognized:"+newMode);
+      break;
+
+  }
+  //map.addInteraction(selectInteraction);
+}
+
+function pick_location_on_map(inputId){ 
+	map.getTargetElement().focus();
+	window.currentInput = document.getElementById(inputId);
+	drawingModeChange("pick_location_on_map")
+	
+	}
+function pick_location_on_map_Handler(ev){
+	ss= Object.keys(ev);
+	if (!window.currentInput) throw Error("currentInput has to be set for picking location"); 
+	alert(ss.join(","));
+	
+	feat = ev.feature;
+	//delete last picked location;
+	if ( window.pick_location_Helper_feature){
+	deleteFeature({type:"pick"}, allDevicesSource, pick_location_Helper_feature );
+	}
+	pick_location_Helper_feature = feat;
+	feat.setId("tempId"+currentInput.id);
+	color = [255,255,255];
+	loc_currentStyle = defaultStyle.clone();
+	//create color setter ? l
+	loc_currentStyle.getText().setText(currentInput.id); //this
+        if (feat.getGeometry().getType() === "Point") {
+          circleImage = NuDefaultPointCircleImage(color);
+          // todo insted of a circle point static devices 
+//may have triangle regular polygon(3) 
+          loc_currentStyle.setImage(circleImage);
+        }
+	ss= getMethods(feat);
+	alert(ss.join(","));
+
+loc_currentStyle.getText().setText(device_name.value || currentInput.id || "location"); 
+
+        feat.setStyle(loc_currentStyle);
+        
+        //todo get location and set input
+	draw.un("drawend",pick_location_on_map_Handler);
+	map.removeInteraction(draw);
+	currentInput.value = feat.getGeometry().getCoordinates().join(",");
+	currentInput.focus();
+	}
+	
+	function getMethods(obj) {
+  var result = [];
+  for (var id in obj) {
+    try {
+      if (typeof(obj[id]) == "function") {
+        result.push(id + ": " )// obj[id].toString());
+      }
+    } catch (err) {
+      result.push(id + ": inaccessible");
+    }
+  }
+  return result;
+}
+	
+	
+	
+/**
+ * Handle change event.
+ */
+function drawingModeChange(newDrawingModeName,callbackOnEnd = NO_OP) {
+  resetMode();
+  addInteractions(newDrawingModeName,callbackOnEnd);
+//todo callback on general draw method and on general select method
+  map.getTargetElement().focus({
+    preventScroll: true
+  });
+};
+
+function resetMode(){
+	if (draw){
+	draw.un("drawstart", standardDrawStart);
+  draw.un("drawend", standardDrawEnd);
+draw.un("drawend",pick_location_on_map_Handler);
+}
+map.removeInteraction(draw);
+  map.removeInteraction(snap);
+  map.removeInteraction(modifyInteraction);
+  map.removeInteraction(selectToEditInteraction);
+  map.removeInteraction(selectToDeleteInteraction);
+	}
+
+function standardDrawEnd(event){
         console.log("ending drawing")
         //rememberLastEditedFeature(event)
         featureCounter++;
@@ -361,26 +482,27 @@ function addInteractions(newMode) {
           'id': featureID,
           'name': name,
           'color': color,
-          'effect_id_fk':1,
-          'effect_on':false,
-          'description':'empty desc'
+          'effect_id_fk': 1,
+          'effect_on': false,
+          'description': 'empty desc'
         });
         event.feature.setId(featureID);
         currentStyle.getText().setText(name); //this
+        if (event.feature.getGeometry().getType() === "Point") {
+          circleImage = NuDefaultPointCircleImage(color);
+          currentStyle.setImage(circleImage);
+        }
         lastFeature.setStyle(currentStyle);
         lastFeature.getStyle().getText().setText(name); //and this is redundant ?
-      })
+      }
+      
+      
+ function standardDrawStart(  ev ) {
+        lastStyle.getStroke().setWidth(DEFAULT_STROKE_WIDTH);
+        lastStyle.getStroke().setLineDash([]);
+        console.log("starting drawing")
+      }
 
-      map.addInteraction(snap);
-      break;
-
-  }
-
-
-
-  //map.addInteraction(selectInteraction);
-
-}
 
 function selectAll(ev, kbl) {
   lll("selecting all");
@@ -462,7 +584,7 @@ function keyUpListener(event) {
   //console.log(event.key + " up " + event.keyCode);
 }
 
-function deleteFeature(event) {
+function deleteFeature(event, source = drawnFeaturesSource,feat) {
   ed = event;
   let featuresToDelete = [];
   switch (event.type) {
@@ -490,75 +612,60 @@ function deleteFeature(event) {
         featuresToDelete = [];
       }
       default:
+      featuresToDelete = [feat];
+      //source have to be changed as well
         break;
   }
   let idsForDBDeletion = [];
   featuresToDelete.forEach(feat => {
     let id = feat.getId();
-    if (!(id+"").startsWith("tempId")){
+    if (!(id + "").startsWith("tempId")) {
       idsForDBDeletion.push(id);
     }
-     
+
     console.log("deleting no" + feat.getId() + " name:" + feat.get("name"));
-    drawnFeaturesSource.removeFeature(feat);
+    source.removeFeature(feat);
     allDrawnFeaturesCollection.remove(feat);
   })
   selectToEditInteraction.getFeatures().clear();
   selectToDeleteInteraction.getFeatures().clear();
-  if (idsForDBDeletion.length){
+  if (idsForDBDeletion.length) {
     let jsonids = JSON.stringify(idsForDBDeletion)
-    alert("deleting from DB"+jsonids)
+    alert("deleting from DB" + jsonids)
     fetch(deleteFeaturesURL, {
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      // mode: 'cors', // no-cors, cors, *same-origin
-      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: 'include', // include, *same-origin, omit
-      // headers: {
-      'Content-Type': 'application/json',
-      //       'Content-Type': 'application/x-www-form-urlencoded'
-      // },
-      //redirect: 'manual', // manual, *follow, error
-      // referrer: 'no-referrer', // no-referrer, *client
-      body: jsonids // body data type must match "Content-Type" header
-    })
-    .then(response => response.text())
-    .then(t => {
-      try {
-        say("deletion response came");
-        say(t);
-        let j = JSON.parse(t);
-        window.j = j;
-        say(j.successStatuses);
-      } catch (err) {
-        say(err);
-        say(t);
-        console.log("hahahah")
-        console.log(feedback.innerText);
-      }
-      // confirm("if device added succesfully , click ok to refresh window"+t)?
-      // window.open(baseurl,"_self"):0; //try to display modal else say
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        // mode: 'cors', // no-cors, cors, *same-origin
+        // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: 'include', // include, *same-origin, omit
+        // headers: {
+        'Content-Type': 'application/json',
+        //       'Content-Type': 'application/x-www-form-urlencoded'
+        // },
+        //redirect: 'manual', // manual, *follow, error
+        // referrer: 'no-referrer', // no-referrer, *client
+        body: jsonids // body data type must match "Content-Type" header
+      })
+      .then(response => response.text())
+      .then(t => {
+        try {
+          say("deletion response came");
+          say(t);
+          let j = JSON.parse(t);
+          window.j = j;
+          say(j.successStatuses);
+        } catch (err) {
+          say(err);
+          say(t);
+          console.log("hahahah")
+          console.log(feedback.innerText);
+        }
+        // confirm("if device added succesfully , click ok to refresh window"+t)?
+        // window.open(baseurl,"_self"):0; //try to display modal else say
 
-    })
-    .catch(err => say(err));
+      })
+      .catch(err => say(err));
   }
 }
-
-
-/**
- * Handle change event.
- */
-function drawingModeChange(newDrawingModeName) {
-  map.removeInteraction(draw);
-  map.removeInteraction(snap);
-  map.removeInteraction(modifyInteraction)
-  map.removeInteraction(selectToEditInteraction);
-  map.removeInteraction(selectToDeleteInteraction);
-  addInteractions(newDrawingModeName);
-
-  map.getTargetElement().focus({
-    preventScroll: true
-  });
-};
 
 
 function saveDrawnFeatures() {
@@ -618,12 +725,14 @@ function saveDrawnFeatures() {
         let j = JSON.parse(t);
         say(j.received);
         window.j = j;
-        j.successStatuses.forEach(x=>{
-          if(!x.success){return}
+        j.successStatuses.forEach(x => {
+          if (!x.success) {
+            return
+          }
           u = drawnFeaturesSource.getFeatureById(x.oldId);
           u.setId(x.DBId);
-          u.set("id",x.DBId);
-          });
+          u.set("id", x.DBId);
+        });
       } catch (err) {
         say(err);
         say(t);
@@ -711,7 +820,8 @@ function loadFeatures(j) {
     feat.setStyle(currentStyle);
     feat.getStyle().getText().setText(name); //and this is redundant ?
     alert("\n feature loaded " + JSON.stringify({
-      F:f.properties,id:feat.getId()
+      F: f.properties,
+      id: feat.getId()
       // color: feat.getStyle().getStroke().getColor(),
       // name: feat.getStyle().getText().getText(),
     }));
@@ -722,21 +832,8 @@ function loadFeatures(j) {
   map.getView().fit(drawnFeaturesSource.getExtent(), map.getSize());
 }
 
-function setupMapControlsListeners() {
-  let radios = document.querySelectorAll(".radio-map-mode-input");
-  for (var i = 0; i < radios.length; i++) {
-    radios[i].addEventListener('change', function (ev) {
-      drawingModeChange(this.value);
-    });
-  }
-  let radios2 = document.querySelectorAll(".radio-effect-input");
-  for (var i = 0; i < radios2.length; i++) {
-    radios2[i].addEventListener('change', function (ev) {
-      updateLastFeatureEffect(this.value);
-    });
-  }
-}
-window.addEventListener('load',setupMapControlsListeners);
+
+window.addEventListener('load', setupMapControlsListeners);
 //------------------------------------------------------------------------REST OF MAP MODULE
 var map;
 var mapDefaultZoom = user.prefs.user_map_default_zoom;

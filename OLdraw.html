@@ -186,11 +186,11 @@ FEEDBACK:<?= $feedback; ?>
 
 
     </div>
-    <input class="jscolor" id="jscolorInput" onchange="updateLastFeatureColor(this.jscolor)"
+    <input class="jscolor" id="jscolorInput" onchange="setPropertyOfSelectedOrLastFeatures_Color(this.jscolor)"
       data-jscolor="{closable:true,closeText:'Done'}">
     <!-- careful if you change value fires changing value , does it lead to loopback? -->
     <label for="featureNameInput">Object name:
-      <input type="text" id="featureNameInput" onchange="updateLastFeatureName(this)"
+      <input type="text" id="featureNameInput" onchange="setPropertyOfSelectedOrLastFeatures_Name(this)"
         onfocus="this.select(); this.selAll=1;" placeholder="Untitled"
         onmouseup="if(this.selAll==0) return true; this.selAll=0; return false;">
       </input>

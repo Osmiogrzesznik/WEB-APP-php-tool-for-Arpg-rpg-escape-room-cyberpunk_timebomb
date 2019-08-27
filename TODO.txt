@@ -1,16 +1,35 @@
+TODO 19.1: implement connecting mapentity and its effect to bomb  
+TODO 19.2: update mapentity effect to on if bomb just detonated
+TODO 18.1 : line 415 index.php - not sure - auto bomb detection (no reactive to particular request) , on any request
+//global timebomb search query,
+//where condition is for timebomb_time_set to be less than current supplied date
+//then doing actions below for each just timed_out timebomb, activating their virtual explosion mapentities
+
+TODO 15.1: clean-up olMapModule.js 
+refactor
+
+setPropertyOfSelectedOrLastFeatures_Color,setPropertyOfSelectedOrLastFeatures_Effect,setPropertyOfSelectedOrLastFeatures_Name contain same logic
+DONE 
+TODO 15.2: regression test; 
+TODO 14.2: during Bomb creation  effect mapentity UI
+TODO 14.3: OBJECTs with no location can be placed on map by organizator.
+        so that devices even without gps can still be used
+        - while drawing you can snap the area to the device then a prompt would show up
+on modify.on("modifyend") checking if it is still snapped to device asking :
+	      DO YOU WANT TO attach effect to the device?
+	- second option is just select input (updated on each bomb creation with names of devices) 
+	allowing to choose which device area is attached to.
+TODO 14.1: Bomb detonation adds mapentity/or activates entity effect (easier)
+TODO 14.4 :   insted of a circle point static devices 
+//may have triangle regular polygon(3) 
+
 TODO 19: change usage of feat.properties.id to feat.id // not very important 
 
-TODO 18: Need to solve id problem, drawing feature/mapentity adds to it an id 
-, but a db mapentity has independent mapentity_id 
-  -- during saving in the response there should be set of id's
-   from database returned that will have to be updated in order for later 
-   figuring out which feature is which mapentity  during editing or changes of their state
 
 TODO 17: polling db geiger counter will happen onle in location watch()
 so each time device moves
 
 TODO 13: MAP draw features(mapentities)
-TODO 14: Bomb detonation adds mapentity
 todo 15: display functionalities for each device
 todo 16: separate Control panel table view properties 
   //needed visible
@@ -365,3 +384,8 @@ rewrote timebomb.js devLocate module : prepared for TODO-1: server sets up the d
 DONE: TODO - clock controller should create its components on its own
 user just creates counterCNT'ainer
 
+DONE TODO 18: Need to solve id problem, drawing feature/mapentity adds to it an id 
+, but a db mapentity has independent mapentity_id 
+  -- during saving in the response there should be set of id's
+   from database returned that will have to be updated in order for later 
+   figuring out which feature is which mapentity  during editing or changes of their state

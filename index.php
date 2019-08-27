@@ -224,6 +224,7 @@ WHERE device.user_id_fk = :user_id"; // WHERE class = '$class'"; later  -> WHERE
   public function IsRegisteredDevice()
   {
     if ($this->device_is_logged_in) {
+      addFeedback("function IsRegisteredDevice has been called twice? index.php 227");
       return true;
     }
 
@@ -407,14 +408,34 @@ LIMIT 1;';
         }
         $this->timebomb_status_new = $status_new;
 
+        if (
+          $this->timebomb_status_new !== $status_old
+          && $this->timebomb_status_new == "detonated" //if detonation just occured 
+        ) {
+          // TODO 18.1 not sure - auto bomb detection (no reactive to particular request) , on any request
+          //global timebomb search query,
+          //where condition is for timebomb_time_set to be less than current supplied date
+          //then doing actions below for each just timed_out timebomb, activating their virtual explosion mapentities
+
+          $sql = 'UPDATE timebomb
+SET 
+timebomb_status = :timebomb_status, 
+WHERE timebomb_device_id_fk = :timebomb_device_id_fk;
+';
+          $query = $this->db->prepare($sql);
+          $query->bindValue(':timebomb_status', $status_new);
+          $query->bindValue(':timebomb_device_id_fk', $this->device_id);
+          $query->execute();
+          // TODO 19.2: Now update connected mapentity.
+        }
+
         //-------------------------------------------------------------------------------------
         //END
         //-------------------------------------------------------------------------------------
 
         //everything should be updated here based on the _new variables provided by device_type class
         $sql = 'UPDATE device
-SET time_last_active = :date_now, 
-timebomb_status = :timebomb_status, 
+SET time_last_active = :date_now,  
 device_location = :device_location,
 device_ip = :connection_ip
 WHERE device_id = :device_id;
@@ -423,7 +444,6 @@ WHERE device_id = :device_id;
         $date_now = date('Y-m-d\TH:i:s');
         $query = $this->db->prepare($sql);
         $query->bindValue(':date_now', $date_now);
-        $query->bindValue(':timebomb_status', $status_new);
         $query->bindValue(':device_id', $this->device_id);
         $query->bindValue(':connection_ip', $ip);
         $query->bindValue(':device_location', $location_new);
@@ -546,12 +566,13 @@ WHERE device_id = :device_id;
   {
     addFeedback("not routing device features yet- not implemented");
     include("functionalities/timebomb/ViewBombInterface.html");
+    //needs to be changed on addModuleInterface or something
 
     exit(); //this bomb is not modular maybe different version can be
     addFeedback("not routing device features yet- not implemented");
 
 
-    switch (get("type")):
+    switch (get("type")): //not from get but from DB device_functionalities
         //change switch to ForEach of device functionalities (from DB) 
         //stored in an array of filepaths to folders in type directory
       case ("bomb"):
@@ -672,11 +693,11 @@ WHERE device_id = :device_id;
     $delIds = file_get_contents($input);
     $delIdsphp = json_decode($delIds);
     addFeedback("received deletion request:");
-    addFeedback(print_me($delIdsphp, true));
+    addFeedback(json_encode($delIdsphp, JSON_PRETTY_PRINT));
     $delIdsnice = json_encode($delIdsphp, JSON_PRETTY_PRINT);
     file_put_contents("lastdeletionrequest.json", $delIdsnice);
     $mapentTbl = new MapEntity;
-    return $mapentTbl->deleteFeatures($delIdsphp,$this->user_id);
+    return $mapentTbl->deleteFeatures($delIdsphp, $this->user_id);
   }
 
   public function saveAllFeatures($user_id)
@@ -720,7 +741,7 @@ WHERE device_id = :device_id;
         $allByUsr = $mapentTbl->loadAllFeatures($this->user_id);
         //instead you have to write Mapentity method getAllByUserAsGeoJson($user_id);
         //above method may use hetAllByUsr first and build a JSON
-        file_put_contents("fromDB.json", json_encode($allByUsr,JSON_PRETTY_PRINT));
+        file_put_contents("fromDB.json", json_encode($allByUsr, JSON_PRETTY_PRINT));
         $rsp = array(
           "ok" => true,
           // "features" => $allFeatures,
@@ -744,7 +765,7 @@ WHERE device_id = :device_id;
         exit();
         break;
 
-        case ("js_deletefeatures"):
+      case ("js_deletefeatures"):
         $successStatuses = $this->deleteFeatures($this->user_id);
         $rsp = array(
           "ok" => true,
@@ -1474,101 +1495,123 @@ VALUES(:user_name, :user_password_hash,:user_ip,:user_timezone)';
 
   private function createNewDevice()
   {
-    $device_name = htmlentities($_POST['device_name'], ENT_QUOTES);
-    $device_ip = htmlentities($_POST['device_ip'], ENT_QUOTES);
-    $device_description = htmlentities($_POST['device_description'], ENT_QUOTES);
-    // $device_functionalities = ?????
-    $device_session_id_from_logged_user_cookie_modified = $_COOKIE['PHPSESSID'] . "_device_name_" . $device_name;
-    // addFeedback(
-    //     print_r($this,true)
-    // );
-    date_default_timezone_set($this->timezoneName);
-    $date_now = date('Y-m-d\TH:i:s'); // add seconds to datetime-locale provided value
-    $user_id_fk = $this->user_id;
+    try {
+      $device_name = htmlentities($_POST['device_name'], ENT_QUOTES);
+      $device_ip = htmlentities($_POST['device_ip'], ENT_QUOTES);
+      $device_description = htmlentities($_POST['device_description'], ENT_QUOTES);
+      // $device_functionalities = ?????
+      $device_session_id_from_logged_user_cookie_modified = $_COOKIE['PHPSESSID'] . "_device_name_" . $device_name;
+      // addFeedback(
+      //     print_r($this,true)
+      // );
+      date_default_timezone_set($this->timezoneName);
+      $date_now = date('Y-m-d\TH:i:s'); // add seconds to datetime-locale provided value
+      $user_id_fk = $this->user_id;
 
-    //FUNCTIONALITY DEPENDANT-------------------------------------------------------
-    $timebomb_password = htmlentities($_POST['timebomb_password_new'], ENT_QUOTES);
-    $timebomb_time_set = $_POST['timebomb_time_set'];
-    //----------end ---------------- FUNCTIONALITY DEPENDANT-------------------------------------------------------
+      //FUNCTIONALITY DEPENDANT-------------------------------------------------------
+      $timebomb_password = htmlentities($_POST['timebomb_password_new'], ENT_QUOTES);
+      $timebomb_time_set = $_POST['timebomb_time_set'];
+      //----------end ---------------- FUNCTIONALITY DEPENDANT-------------------------------------------------------
 
-    $sql = 'SELECT device_session_id,device_ip,device_name FROM device
+      $sql = 'SELECT device_session_id,device_ip,device_name FROM device
 WHERE device_name = :device_name 
 OR device_ip = :device_ip
 OR device_session_id = :device_session_id';
-    $dbcon = $this->db;
-    $query = $dbcon->prepare($sql);
-    $query->bindValue(':device_name', $device_name);
-    $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
-    $query->bindValue(':device_ip', $device_ip);
-    $query->execute();
-
-    // As there is no numRows() in SQLite/PDO (!!) we have to do it this way:
-    // If you meet the inventor of PDO, punch him. Seriously.
-    $result_row = $query->fetchObject();
-    if ($result_row) {
-      $given = array(
-        'device_name' => $device_name,
-        'device_ip' => $device_ip,
-        'device_session_id' =>  $device_session_id_from_logged_user_cookie_modified
-      );
-      $a = get_object_vars($result_row);
-      foreach ($a as $k => $v) {
-        if ($v == $given[$k]) {
-          addFeedback("$k : $v is already taken. Please choose another one.");
-        }
-      }
-    } else {
-      if (isset($_POST['latitude'], $_POST['longitude'])) {
-        $location = $_POST['latitude'] . "/" . $_POST['longitude'];
-      } else {
-        $location = "no location";
-      }
-
-      $latitude = post("latitude", "no location", "no location");
-      $longitude = post("longitude", "no location", "no location");
-
-      //insert point
-      $sql = 'INSERT INTO point(point_longitude,point_latitude)
-VALUES (:longitude,:latitude);'; //***
-      $query = $this->db->prepare($sql);
-      $query->bindValue(":longitude", $longitude);
-      $query->bindValue(":latitude", $latitude);
+      $dbcon = $this->db;
+      $query = $dbcon->prepare($sql);
+      $query->bindValue(':device_name', $device_name);
+      $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
+      $query->bindValue(':device_ip', $device_ip);
       $query->execute();
 
-      //   INSERT INTO <tablename> (<column1>, <column2>, ..., <columnN>)
-      //SELECT <value1>, <value2>, ..., <valueN> FROM ...
+      // As there is no numRows() in SQLite/PDO (!!) we have to do it this way:
+      // If you meet the inventor of PDO, punch him. Seriously.
+      $result_row = $query->fetchObject();
+      if ($result_row) {
+        $given = array(
+          'device_name' => $device_name,
+          'device_ip' => $device_ip,
+          'device_session_id' =>  $device_session_id_from_logged_user_cookie_modified
+        );
+        $a = get_object_vars($result_row);
+        foreach ($a as $k => $v) {
+          if ($v == $given[$k]) {
+            addFeedback("$k : $v is already taken. Please choose another one.");
+          }
+        }
+      } else {
+        if (isset($_POST['latitude'], $_POST['longitude'])) {
+          $location = $_POST['latitude'] . "/" . $_POST['longitude'];
+        } else {
+          $location = "no location";
+        }
 
-      $sql = 'INSERT INTO device 
+        $latitude = post("latitude", "no location", "no location");
+        $longitude = post("longitude", "no location", "no location");
+        $device_track_location = post("device_track_location");
+        //insert point
+        $sql = 'INSERT INTO point(point_longitude,point_latitude)
+VALUES (:longitude,:latitude);'; //***
+        $query = $this->db->prepare($sql);
+        $query->bindValue(":longitude", $longitude);
+        $query->bindValue(":latitude", $latitude);
+        $registration_success_state = $query->execute();
+        //   INSERT INTO <tablename> (<column1>, <column2>, ..., <columnN>)
+        //SELECT <value1>, <value2>, ..., <valueN> FROM ...
+
+        $sql = 'INSERT INTO device 
 (device_id,device_name, 
 device_ip,
 device_description, 
-user_id_fk, time_last_active,
-device_session_id, device_location,device_fk_location_point)
+user_id_fk, time_last_active, device_track_location,
+device_session_id, device_location, device_fk_location_point)
 VALUES
 (null ,:device_name, 
 :device_ip,
 :device_description,
-:user_id_fk, :time_last_active,
-:device_session_id, :device_location,last_insert_rowid())';
-      $query = $this->db->prepare($sql);
+:user_id_fk, :time_last_active, :device_track_location,
+:device_session_id, :device_location, last_insert_rowid())';
+        $query = $this->db->prepare($sql);
+        $query->bindValue(':device_track_location', $device_track_location);
+        $query->bindValue(':device_location', $location);
+        $query->bindValue(':device_name', $device_name);
+        $query->bindValue(':device_ip', $device_ip);
+        $query->bindValue(':device_description', $device_description);
+        $query->bindValue(':user_id_fk', $user_id_fk);
+        $query->bindValue(':time_last_active', $date_now);
+        $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
+        $registration_success_state = $registration_success_state && $query->execute();
+        $this->device_id = $this->db->lastInsertId();
+        // ADDING FUNCTIONALITY 
+        $functionalityNamesArray = array(
+          "timebomb", "geiger", "radar", "inventory"
+        );
 
+        $sqlFor_functionality_device = "
+INSERT INTO functionality_device (
+        functionality_id_fk,
+        device_id_fk,
+        functionality_status)
+VALUES (?,?,?);";
+        $insertFunctionalityPDOStatement = $this->db->prepare($sqlFor_functionality_device);
+        $active_functionalitiesAr = array();
+        foreach ($functionalityNamesArray as $fncnm) {
+          $fncId = post($fncnm);
+          if ($fncId) {
+            $insertFunctionalityPDOStatement->execute(array(
+              $fncId, $this->device_id, "turned_on"
+            ));
+            $active_functionalitiesAr[] = $fncnm;
+          }
+        }
 
+        // now just use post checking separately if each functionality name is on and 
+        // depending on the type fill it with default/customised option values
 
-      $query->bindValue(':device_location', $location);
-      $query->bindValue(':device_name', $device_name);
-
-      $query->bindValue(':device_ip', $device_ip);
-      $query->bindValue(':device_description', $device_description);
-
-      $query->bindValue(':user_id_fk', $user_id_fk);
-      $query->bindValue(':time_last_active', $date_now);
-      $query->bindValue(':device_session_id', $device_session_id_from_logged_user_cookie_modified);
-      $registration_success_state = $query->execute();
-
-
-      //----------------Timebomb
-      $timebomb_mapentity_id_fk = 1; //musisz insertnac najpierw map entity
-      $sql = 'INSERT INTO timebomb
+        if (post("timebomb")) {
+          //----------------Timebomb
+          $timebomb_mapentity_id_fk = 1; //musisz insertnac najpierw map entity
+          $sql = 'INSERT INTO timebomb
 (timebomb_device_id_fk,
   timebomb_status ,
   timebomb_time_set ,
@@ -1576,45 +1619,110 @@ VALUES
   timebomb_password)
 VALUES
 (
-last_insert_rowid(),
+ :timebomb_device_id_fk,
  :timebomb_status ,
  :timebomb_time_set ,
  :timebomb_mapentity_id_fk ,
  :timebomb_password);';
-      $query = $this->db->prepare($sql);
+          $query = $this->db->prepare($sql);
+          $query->bindValue(':timebomb_device_id_fk', $this->device_id);
+          $query->bindValue(':timebomb_password', $timebomb_password);
+          $query->bindValue(':timebomb_status', 'created');
+          $query->bindValue(':timebomb_time_set', $timebomb_time_set);
+          $query->bindValue(':timebomb_mapentity_id_fk', $timebomb_mapentity_id_fk);
+          $registration_success_state = $registration_success_state && $query->execute();
+        }
 
-      $query->bindValue(':timebomb_password', $timebomb_password);
-      $query->bindValue(':timebomb_status', 'created');
-      $query->bindValue(':timebomb_time_set', $timebomb_time_set);
-      $query->bindValue(':timebomb_mapentity_id_fk', $timebomb_mapentity_id_fk);
+        if (post("geiger")) {
+          $sql = 'INSERT INTO geiger
+  (geiger_device_id_fk,
+    geiger_status ,
+    geiger_on )
+  VALUES
+  (
+   :geiger_device_id_fk,
+   :geiger_status ,
+   :geiger_on);';
+          $query = $this->db->prepare($sql);
+          $query->bindValue(':geiger_device_id_fk', $this->device_id);
+          $query->bindValue(':geiger_status', 'created'); // should be customisable (broken etc)
+          $query->bindValue(':geiger_on', 1);
+          $registration_success_state = $registration_success_state && $query->execute();
+        }
 
 
-      //dodgy
-      $_SESSION['device_session_id'] = $device_session_id_from_logged_user_cookie_modified;
-      $expire = $this->timebomb_time_set_timestamp;
-      setcookie(
-        "device_session_id",
-        $this->device_session_id,
-        $expire,
-        "",
-        "",
-        false,
-        true
-      );
+        if (post("radar")) {
+          $sql = 'INSERT INTO radar
+  (radar_device_id_fk,
+    radar_status ,
+    radar_on,
+    radar_radius )
+  VALUES
+  (
+   :radar_device_id_fk,
+   :radar_status ,
+   :radar_on,
+   :radar_radius);';
+          $query = $this->db->prepare($sql);
+          $query->bindValue(':radar_device_id_fk', $this->device_id);
+          $query->bindValue(':radar_status', 'created'); // should be customisable (broken etc)
+          $query->bindValue(':radar_on', 1);
+          $query->bindValue(':radar_radius', 1); // should be customisable 
+          $registration_success_state = $registration_success_state && $query->execute();
+        }
 
-      // PDO's execute() gives back TRUE when successful, FALSE when not
-      // @link http://stackoverflow.com/q/1661863/1114320
-      $registration_success_state = $query->execute();
+        if (post("inventory")) {
+          $sql = 'INSERT INTO inventory
+  (inventory_device_id_fk,
+    inventory_status ,
+    inventory_on,
+    inventory_itemsJSON )
+  VALUES
+  (
+   :inventory_device_id_fk,
+   :inventory_status ,
+   :inventory_on,
+   :inventory_itemsJSON);';
+          $query = $this->db->prepare($sql);
+          $query->bindValue(':inventory_device_id_fk', $this->device_id);
+          $query->bindValue(':inventory_status', 'created'); // should be customisable (broken etc)
+          $query->bindValue(':inventory_on', 1);
+          $query->bindValue(':inventory_itemsJSON', 1); // should be customisable 
+          $registration_success_state = $registration_success_state && $query->execute();
+        }
 
-      if ($registration_success_state) {
-        addFeedback("Device has been registered successfully. You can now log out to see device page.");
-        return true;
-      } else {
-        addFeedback("Sorry, your registration failed. Please go back and try again.");
+
+
+        // PDO's execute() gives back TRUE when successful, FALSE when not
+        // @link http://stackoverflow.com/q/1661863/1114320
+
+
+        if ($registration_success_state) {
+          //dodgy
+          $_SESSION['device_session_id'] = $device_session_id_from_logged_user_cookie_modified;
+          $expire = $this->timebomb_time_set_timestamp;
+          setcookie(
+            "device_session_id",
+            $this->device_session_id,
+            $expire,
+            "",
+            "",
+            false,
+            true
+          );
+          addFeedback("Device has been registered successfully. You can now log out to see device page.");
+          return true;
+        } else {
+          addFeedback("Sorry, your registration failed. Please go back and try again.");
+        }
       }
+      // default return
+      return false;
+    } catch (Exception $e) {
+      print_me($_POST);
+      throw $e;
+      exit;
     }
-    // default return
-    return false;
   }
 
   /**

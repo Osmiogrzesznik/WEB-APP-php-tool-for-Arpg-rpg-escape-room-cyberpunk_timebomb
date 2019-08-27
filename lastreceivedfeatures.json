@@ -2,31 +2,202 @@
     {
         "type": "Feature",
         "geometry": {
-            "radius": 2109701.1413526866,
+            "radius": 1094181.630249,
             "center": [
-                -626950.4048896106,
-                2204777.4368272414
+                -133115.08475863,
+                3686500.5464228
             ],
             "type": "Circle"
         },
         "properties": {
-            "id": "tempId1",
-            "name": "Untitled tempId1",
+            "id": 2,
+            "name": "tty",
             "color": [
-                128,
                 255,
-                128
+                121,
+                31
+            ],
+            "effect_on": "",
+            "description": "empty desc",
+            "effect_id_fk": "1",
+            "type": "Circle",
+            "radius": 1094181.630249,
+            "center": [
+                -133115.08475863,
+                3686500.5464228
+            ]
+        },
+        "id": 2
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
+                1927245.0126682906,
+                4821303.777601634
+            ]
+        },
+        "properties": {
+            "id": 3,
+            "name": "tty",
+            "color": [
+                255,
+                121,
+                30
+            ],
+            "effect_on": "",
+            "description": "empty desc",
+            "effect_id_fk": "1"
+        },
+        "id": 3
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
+                2014956.502625531,
+                2827443.894782812
+            ]
+        },
+        "properties": {
+            "id": 4,
+            "name": "tty",
+            "color": [
+                255,
+                121,
+                30
+            ],
+            "effect_on": "",
+            "description": "empty desc",
+            "effect_id_fk": "1"
+        },
+        "id": 4
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [
+                        1841468.8205084207,
+                        4325821.737468217
+                    ],
+                    [
+                        1439476.0498861698,
+                        3610451.8370422474
+                    ],
+                    [
+                        2373968.2621543277,
+                        3416705.8223435474
+                    ],
+                    [
+                        2437610.404196728,
+                        4031062.8433112204
+                    ],
+                    [
+                        2341744.3927657707,
+                        4130419.773925938
+                    ],
+                    [
+                        2209626.528272686,
+                        4529503.4452283885
+                    ],
+                    [
+                        1841468.8205084207,
+                        4325821.737468217
+                    ]
+                ]
+            ]
+        },
+        "properties": {
+            "id": 5,
+            "name": "tty",
+            "color": [
+                105,
+                76,
+                255
+            ],
+            "effect_on": "",
+            "description": "empty desc",
+            "effect_id_fk": "1"
+        },
+        "id": 5
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "radius": 0.055198442190885544,
+            "center": [
+                2126634.7428009463,
+                6912014.041147766
+            ],
+            "type": "Circle"
+        },
+        "properties": {
+            "id": "tempId6",
+            "name": "Untitled tempId6",
+            "color": [
+                255,
+                41,
+                111
             ],
             "effect_id_fk": 1,
             "effect_on": false,
             "description": "empty desc",
+            "effectd_id_fk": "1",
             "type": "Circle",
-            "radius": 2109701.1413526866,
+            "radius": 0.055198442190885544,
             "center": [
-                -626950.4048896106,
-                2204777.4368272414
+                2126634.7428009463,
+                6912014.041147766
             ]
         },
-        "id": "tempId1"
+        "id": "tempId6"
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [
+                        2126634.66784162,
+                        6912013.996931008
+                    ],
+                    [
+                        2126634.6368799717,
+                        6912013.977928986
+                    ],
+                    [
+                        2126634.67924912,
+                        6912013.965779036
+                    ],
+                    [
+                        2126634.740223022,
+                        6912013.950778497
+                    ],
+                    [
+                        2126634.66784162,
+                        6912013.996931008
+                    ]
+                ]
+            ]
+        },
+        "properties": {
+            "id": "tempId7",
+            "name": "Untitled tempId7",
+            "color": [
+                255,
+                42,
+                112
+            ],
+            "effect_id_fk": 1,
+            "effect_on": false,
+            "description": "empty desc"
+        },
+        "id": "tempId7"
     }
 ]

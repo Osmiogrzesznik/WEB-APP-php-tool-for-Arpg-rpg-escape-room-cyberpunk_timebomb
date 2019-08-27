@@ -260,6 +260,9 @@ try {
       setTimeout(x => {
         document.body.classList.remove("boom");
         document.body.innerHTML = "";
+        window.addEventListener("click",function(){//will throw an error kb.something is not defined
+          window.open("?action=superuser","_self");
+        })
       }, 1000);
     }, 1000);
 
@@ -272,7 +275,8 @@ try {
 
     if (["disarmed", "detonated"].includes(data.timebomb_status)) {
       alert("this device was already " + data.timebomb_status);
-      cx.showTime(0, 0, 1);
+      if (data.timebomb_status === "detonated") detonate();
+      else  cx.showTime(0, 0, 1);
       //window.open("index.php?action=superuser","_self");
       return;
     }
