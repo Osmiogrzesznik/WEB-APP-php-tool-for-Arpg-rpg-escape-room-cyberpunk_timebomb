@@ -419,7 +419,7 @@ LIMIT 1;';
 
           $sql = 'UPDATE timebomb
 SET 
-timebomb_status = :timebomb_status, 
+timebomb_status = :timebomb_status
 WHERE timebomb_device_id_fk = :timebomb_device_id_fk;
 ';
           $query = $this->db->prepare($sql);

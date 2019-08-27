@@ -126,7 +126,6 @@ Destroys devices or inventory around .",1),
 (3,"radar","Radar gets the location of any registered devices and shows them on map. Radars may have different ranges set below. Needs MAP and ol modules for calculations",3),
 (4,"inventory","Inventory . There's option to extend it to Shop.",1)
 ;
-
 ----
 -- Table structure for timebomb
 ----
