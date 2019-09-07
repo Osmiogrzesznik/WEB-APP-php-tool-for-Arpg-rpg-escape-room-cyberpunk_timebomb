@@ -1,9 +1,0 @@
-{
-  "intelephense.completion.insertUseDeclaration": false,
-  "intelephense.environment.includePaths": [
-    "res"
-  ],
-  "open-php-html-js-in-browser.urlToOpen": "custom",
-  "open-php-html-js-in-browser.selectedBrowser": "Chrome",
-  "open-php-html-js-in-browser.customUrlToOpen": "https://k.com/${workspaceFolderBasename}/${relativeFile}"
-}
